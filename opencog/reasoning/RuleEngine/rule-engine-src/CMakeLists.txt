@@ -29,9 +29,9 @@ ADD_LIBRARY(RuleEngineModule SHARED
 TARGET_LINK_LIBRARIES(RuleEngineModule ruleengine  server)
 
 IF (WIN32)
-   INSTALL (TARGETS query DESTINATION "lib${LIB_DIR_SUFFIX}/opencog")
+   INSTALL (TARGETS ruleengine DESTINATION "lib${LIB_DIR_SUFFIX}/opencog")
 ELSEIF (CYGWIN)
-   INSTALL (TARGETS query DESTINATION "lib${LIB_DIR_SUFFIX}/opencog")
+   INSTALL (TARGETS ruleengine DESTINATION "lib${LIB_DIR_SUFFIX}/opencog")
 ENDIF (WIN32)
 
 INSTALL (FILES
