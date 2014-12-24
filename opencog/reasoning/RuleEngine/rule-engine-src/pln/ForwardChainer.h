@@ -28,6 +28,7 @@
 #include "ForwardChainPatternMatchCB.h"
 #include "PLNCommons.h"
 
+#include <opencog/reasoning/RuleEngine/rule-engine-src/ControlPolicy.h>
 #include <opencog/guile/SchemeEval.h>
 
 using namespace std;
@@ -41,12 +42,10 @@ class ForwardChainInputMatchCB;
 class ForwardChainer: public virtual Chainer {
 private:
 	friend class ForwardChainerUTest;
-	int ITERATION_SIZE;
-	bool search_in_af; // = true;
-
-	PLNCommons * commons_;
 	friend class ForwardChainInputMatchCB;
 	friend class ForwardChainPatternMatchCB;
+	PLNCommons * commons_;
+	ControlPolicy * cpolicy_;
 	HandleSeq target_list_; /*potential target list*/
 	HandleSeq chaining_results;
 
@@ -136,11 +135,6 @@ public:
 	 */
 	void choose_rule(void);
 	/**
-	 * Loads all configuration information regarding the forward chaining process
-	 * including loading of chaining rules to target_list_atom_space
-	 */
-	void load_fc_conf();
-	/**
 	 *returns the handle of a BindLink instance Given the scheme variable name for a bindLink which
 	 *returns is already loaded in to the atomspace
 	 *@param name - the scheme variable name for the BindLink epxpression
@@ -156,6 +150,7 @@ public:
 	 *returns the inferences made
 	 */
 	HandleSeq get_chaining_result(void);
+	bool search_in_af;
 };
 
 #endif /* FORWARDCHAINER_H_ */

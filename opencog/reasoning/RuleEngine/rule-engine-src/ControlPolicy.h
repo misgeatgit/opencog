@@ -23,9 +23,9 @@
 #ifndef CONTROL_POLICY_
 #define CONTROL_POLICY_
 /*what do we need? load stuffs. what kind of stuffs.
-  -(load-pln with this config file)
-  -then what rules use
-  -what are rules are mutually exclusive
+ -(load-pln with this config file)
+ -then what rules use
+ -what are rules are mutually exclusive
  */
 #include "Rule.h"
 
@@ -35,18 +35,24 @@ using namespace std;
 class ControlPolicy {
 private:
 	//list of control policy parameters
-	vector<Rule> rules_;
-	vector<vector<Rule>> mutex_rules;
+	vector<Rule*> rules_;
+	vector<vector<Rule*>> mutex_sets_;
+	map<string, Rule*> strname_rule_map_;
 	int max_iter_;
 	bool attention_alloc_;
 	AtomSpace * as_;
-	void load_config(string& conf_path);
+	void load_chaining_rules();
+	void load_mutexes();
+	void load_single_val_params();
 public:
-  ControlPolicy(AtomSpace* as);
-  ~ControlPolicy();
+	void load_config(string& conf_path);
+	ControlPolicy(AtomSpace* as, string conf_path);
+	~ControlPolicy();
+	int get_max_iter(void);
+	bool get_attention_alloc(void);
+	vector<vector<Rule*>> get_mutex_sets(void);
+	vector<Rule*> get_rules(void);
 };
 
 #endif
 
-
- */

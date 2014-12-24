@@ -22,7 +22,7 @@
  */
 
 #ifndef RULE_H_
-#define
+#define RULE_H_
 
 using namespace opencog;
 
@@ -31,9 +31,11 @@ using namespace opencog;
  */
 class Rule {
 private:
-	Handle rule_;
+	Handle rule_handle_;
+	int priority_;
 public:
-	Handle& get_rule();
+	Handle get_rule_handle();
+	int get_priority();
 	/**
 	 * Validates whether  the Handle is of type ImplicationLink or BindLink and then sets @param rule_
 	 */

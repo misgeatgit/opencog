@@ -24,13 +24,18 @@
 #include "Rule.h"
 
 Rule::Rule(Handle rule) {
- rule_=rule;
+	rule_handle_ = rule;
 }
 
 Rule::~Rule() {
 
 }
 
-Handle& Rule::get_rule(){
-	return rule_;
+Handle Rule::get_rule_handle() {
+	return rule_handle_;
 }
+
+int Rule::get_priority() {
+	return priority_;
+}
+

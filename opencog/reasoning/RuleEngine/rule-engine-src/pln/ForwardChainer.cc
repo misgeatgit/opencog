@@ -22,20 +22,13 @@
  */
 #include "ForwardChainer.h"
 
-#include <opencog/guile/load-file.h>
-#include <opencog/util/misc.h>
-#include <opencog/util/Config.h>
-#include <opencog/util/Logger.h>
-
 using namespace opencog;
 
 ForwardChainer::ForwardChainer(AtomSpace * as) :
-		Chainer(as)
-{
-	search_in_af = true;
+		Chainer(as) {
+	cpolicy_ = new ControlPolicy(as, conf_path);
 	hcurrent_choosen_rule_ = Handle::UNDEFINED;
 	commons_ = new PLNCommons(as);
-	scm_eval_ = new SchemeEval(as);
 	fcim_ = new ForwardChainInputMatchCB(main_atom_space,
 			target_list_atom_space, this); //fetching from main and copying it to target_list_atom_space
 	fcpm_ = new ForwardChainPatternMatchCB(target_list_atom_space, this); // chaining PLN rules are applied on the target_list_atom_space
@@ -43,23 +36,20 @@ ForwardChainer::ForwardChainer(AtomSpace * as) :
 	init();
 }
 
-ForwardChainer::~ForwardChainer()
-{
+ForwardChainer::~ForwardChainer() {
+	delete cpolicy_;
 	delete commons_;
 	delete scm_eval_;
 	delete fcim_;
 	delete fcpm_;
 }
 
-void ForwardChainer::init(void)
-{
-	load_fc_conf();
-	if(not search_in_af)
-		main_atom_space->setAttentionalFocusBoundary(0);
+void ForwardChainer::init(void) {
+	cpolicy_ = new ControlPolicy(main_atom_space, conf_path);
+	search_in_af = cpolicy_->get_attention_alloc();
 }
 
-Handle ForwardChainer::tournament_select(map<Handle, float> hfitnes_map)
-{
+Handle ForwardChainer::tournament_select(map<Handle, float> hfitnes_map) {
 	if (hfitnes_map.size() == 1) {
 		return hfitnes_map.begin()->first;
 	}
@@ -84,8 +74,7 @@ Handle ForwardChainer::tournament_select(map<Handle, float> hfitnes_map)
 	return hbest;
 }
 
-Handle ForwardChainer::choose_target_from_list(HandleSeq hs_list)
-{
+Handle ForwardChainer::choose_target_from_list(HandleSeq hs_list) {
 	map<Handle, float> tournament_elem;
 	for (Handle h : hs_list) {
 		float fitness = target_tv_fitness(h);
@@ -94,8 +83,7 @@ Handle ForwardChainer::choose_target_from_list(HandleSeq hs_list)
 	return tournament_select(tournament_elem);
 }
 
-Handle ForwardChainer::choose_target_from_atomspace(AtomSpace * as)
-{
+Handle ForwardChainer::choose_target_from_atomspace(AtomSpace * as) {
 	HandleSeq hs;
 	as->getHandlesByType(back_inserter(hs), ATOM, true); //xxx experimental must be replaced by atoms in AF
 	for (Handle h : hs)
@@ -103,12 +91,11 @@ Handle ForwardChainer::choose_target_from_atomspace(AtomSpace * as)
 	return choose_target_from_list(target_list_);
 }
 
-void ForwardChainer::do_chain(Handle htarget)
-{
+void ForwardChainer::do_chain(Handle htarget) {
 	Handle hcurrent_target;
 	//bool terminate = false;
 	int steps = 0;
-	while (steps <= ITERATION_SIZE /*or !terminate*/) {
+	while (steps <= cpolicy_->get_max_iter()/*or !terminate*/) {
 		if (steps == 0) {
 			if (htarget == Handle::UNDEFINED)
 				hcurrent_target = choose_target_from_atomspace(main_atom_space); //start FC on a random target
@@ -118,21 +105,16 @@ void ForwardChainer::do_chain(Handle htarget)
 			if (!target_list_.empty())
 				hcurrent_target = choose_target_from_list(target_list_);
 		}
-
 		choose_input(hcurrent_target); //add more premise via pattern matching of related atoms to hcurrent_target
-
 		choose_rule(); //TODO use some fitness function instead of randomly selecting
-
 		chaining_pm.do_bindlink(hcurrent_choosen_rule_, *fcpm_); //xxx guide matching to search only the target list
-
 		steps++;
 		//TODO implement termination criteria
 	}
 
 }
 
-void ForwardChainer::choose_input(Handle htarget)
-{
+void ForwardChainer::choose_input(Handle htarget) {
 	if (NodeCast(htarget)) {
 		HandleSeq hs = main_atom_space->getIncoming(htarget);
 		for (Handle h : hs)
@@ -147,11 +129,11 @@ void ForwardChainer::choose_input(Handle htarget)
 	}
 }
 
-map<Handle, string> ForwardChainer::choose_variable(Handle htarget)
-{
+map<Handle, string> ForwardChainer::choose_variable(Handle htarget) {
 	map<Handle, string> hnode_vname_map;
-	vector<Handle> candidates =commons_->get_nodes(htarget, vector<Type>());
+	vector<Handle> candidates = commons_->get_nodes(htarget, vector<Type>());
 	map<Handle, HandleSeq> node_iset_map;
+
 	//xxx don't choose two or more nodes linked by identical reference( i.e choose only one whenever
 	//there are more than one nodes linked by the same link)
 	for (auto it = candidates.begin(); it != candidates.end(); ++it) {
@@ -185,8 +167,7 @@ map<Handle, string> ForwardChainer::choose_variable(Handle htarget)
 }
 
 Handle ForwardChainer::target_to_pmimplicant(Handle htarget,
-		map<Handle, string> hnode_vname_map)
-{
+		map<Handle, string> hnode_vname_map) {
 	Type link_type;
 	HandleSeq hsvariablized;
 
@@ -205,7 +186,8 @@ Handle ForwardChainer::target_to_pmimplicant(Handle htarget,
 			auto it_var = hnode_vname_map.find(htarget); //TODO replace by find-if for linear complexity
 			NodePtr p_htarget = NodeCast(htarget);
 			if (it_var != hnode_vname_map.end())
-				return main_atom_space->addNode(VARIABLE_NODE, it_var->second,TruthValue::TRUE_TV());
+				return main_atom_space->addNode(VARIABLE_NODE, it_var->second,
+						TruthValue::TRUE_TV());
 			else
 				return htarget;
 		}
@@ -213,75 +195,36 @@ Handle ForwardChainer::target_to_pmimplicant(Handle htarget,
 	return Handle::UNDEFINED; //unreachable?
 }
 
-void ForwardChainer::choose_rule()
-{
+void ForwardChainer::choose_rule() {
 	//TODO choose rule via stochastic selection, HOW?
-	string var_name = bind_link_name_[random() % bind_link_name_.size()];
-	//string scm_command = "(" + fc_bind_command_ + "  " + var_name + ")";
-	Handle h = scm_eval_->eval_h(var_name);
-	hcurrent_choosen_rule_ = h;
+	auto rules = cpolicy_->get_rules();
+	Rule* choosen_rule = rules[random() % rules.size()];
+	hcurrent_choosen_rule_ = choosen_rule->get_rule_handle();
 }
 
-void ForwardChainer::load_fc_conf()
-{
-	try {
-		config().load(conf_path.c_str());
-	} catch (RuntimeException &e) {
-		std::cerr << e.getMessage() << std::endl;
-	}
-	vector<string> rules;
-	//FCHAIN_RULES= "[blink-var1,blink-var1,...]:rule_path1","[blink-var2]:rule_path2",...
-	tokenize(config()["FCHAIN_RULES"], back_inserter(rules), ", ");
-	if (!rules.empty()) {
-		for (string rule : rules) {
-			auto it = remove_if(rule.begin(), rule.end(),
-					[](char c) {return (c==']' or c=='[' or c=='"');});
-			rule.erase(it, rule.end());
-
-			vector<string> varlist_rule;
-			tokenize(rule, back_inserter(varlist_rule), ":");
-			assert(varlist_rule.size() == 2);
-			load_scm_file_relative(*target_list_atom_space,
-					varlist_rule[1], vector<string>(0)); // load rules to the chaining processor atomspace (i.e target_list_atom_space)
-			string vars = varlist_rule[0];
-			istringstream is(vars);
-			string var_name;
-			while (getline(is, var_name, ','))
-				bind_link_name_.push_back(var_name);
-		}
-	}
-	//MORE CONFIG PARAM LOADING ...
-	ITERATION_SIZE = config().get_int("ITERATION_SIZE");
-
-	search_in_af = config().get_bool("ATTENTION_ALLOCATION_ENABLED");
-
-	logger().setLevel(Logger::getLevelFromString(config()["FC_LOG_LEVEL"]));
-}
-
-void ForwardChainer::add_to_target_list(Handle h)
-{
+void ForwardChainer::add_to_target_list(Handle h) {
+	bool found = (find(target_list_.begin(), target_list_.end(), h)
+			!= target_list_.end());
 	if (NodeCast(h)) {
-		if (find_if(target_list_.begin(), target_list_.end(),[h](Handle hi){return h.value()==hi.value();}) == target_list_.end())
+		if (found)
 			target_list_.push_back(h);
 	}
 	if (LinkCast(h)) {
-		if (find_if(target_list_.begin(), target_list_.end(),[h](Handle hi){return h.value()==hi.value();}) == target_list_.end())
+		if (found)
 			target_list_.push_back(h);
 		HandleSeq hs = main_atom_space->getOutgoing(h);
-		for (Handle hi : hs) {
-			if (find_if(target_list_.begin(), target_list_.end(),[hi](Handle h){return hi.value()==h.value();}) == target_list_.end())
+		for (Handle hi : hs)
+			if (find(target_list_.begin(), target_list_.end(), hi)
+					== target_list_.end())
 				add_to_target_list(hi);
-		}
 	}
 }
 
-HandleSeq ForwardChainer::get_chaining_result(void)
-{
+HandleSeq ForwardChainer::get_chaining_result(void) {
 	return chaining_results;
 }
 
-bool ForwardChainer::exists(HandleSeq& hseq, Handle& h)
-{
+bool ForwardChainer::exists(HandleSeq& hseq, Handle& h) {
 	for (Handle hi : hseq) {
 		if (hi.value() == h.value())
 			return true;
@@ -289,7 +232,6 @@ bool ForwardChainer::exists(HandleSeq& hseq, Handle& h)
 	return false;
 }
 
-bool ForwardChainer::is_in_target_list(Handle h)
-{
+bool ForwardChainer::is_in_target_list(Handle h) {
 	return exists(target_list_, h);
 }
