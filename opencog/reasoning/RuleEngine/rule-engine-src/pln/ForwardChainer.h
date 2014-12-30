@@ -28,7 +28,7 @@
 #include "ForwardChainPatternMatchCB.h"
 #include "PLNCommons.h"
 
-#include <opencog/reasoning/RuleEngine/rule-engine-src/ControlPolicy.h>
+#include <opencog/reasoning/RuleEngine/rule-engine-src/ControlPolicyLoader.h>
 #include <opencog/guile/SchemeEval.h>
 
 using namespace std;
@@ -45,20 +45,21 @@ private:
 	friend class ForwardChainInputMatchCB;
 	friend class ForwardChainPatternMatchCB;
 	PLNCommons * commons_;
-	ControlPolicy * cpolicy_;
+	ControlPolicyLoader * cp_loader_;
 	HandleSeq target_list_; /*potential target list*/
 	HandleSeq chaining_results;
 
 	HandleSeq prev_chosen_targets;
 	vector<string> bind_link_name_;  // the variable name assigned to a BindLink
-	//  eg. (define human (BindLink ...)human is the variable name
+	//  eg. (define find_human (BindLink ...) find_human is the variable name
 	Handle hcurrent_choosen_rule_; // = Handle::UNDEFINED; //Handle to chosen BindLink on a praticular step of forward chaining
+	HandleSeq applied_rules;
 
 	ForwardChainInputMatchCB * fcim_;
 	ForwardChainPatternMatchCB * fcpm_;
 	SchemeEval * scm_eval_;
 	/**
-	 * chooses a set of nodes to be replaced by a VariableNode with a name for each
+	 * @brief chooses a set of nodes to be replaced by a VariableNode with a name for each
 	 * @param htarget - the target from which nodes are chosen to be replaced by VariableNode
 	 * @return a map of Handle to a node to be replaced by VariableNode and name for the replacing VariableNode
 	 */

@@ -1,0 +1,26 @@
+#include <opencog/reasoning/RuleEngine/rule-engine-src/ControlPolicyLoader.h>
+
+using namespace opencog;
+//#define DEBUG 1
+class ControlPolicyLoaderUTest: public CxxTest::TestSuite {
+private:
+public:
+	ControlPolicyLoaderUTest(){
+
+	}
+	void setUp();
+	void tearDown();
+	void test_load_config();
+
+};
+
+void ControlPolicyLoaderUTest::setUp(){
+
+}
+void ControlPolicyLoaderUTest::tearDown(){
+
+}
+void ControlPolicyLoaderUTest::test_load_config()
+{
+
+}

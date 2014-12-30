@@ -12,7 +12,7 @@ The Rule engine will have two major high level components
 
 #### An API
   The purpose of this is to be used as Production inference rule engine. I envision to have a c++ API to be called from other C++ modules and a scheme binding.This is suitable for specialized knowledge inferece
-  say playing some rule based game. Another mind agent who is playing the game could consult the API inference related stuff .
+  say playing some rule based game. Another mind agent who is playing the game could consult the API inference related stuff.
   
   the parameters
 

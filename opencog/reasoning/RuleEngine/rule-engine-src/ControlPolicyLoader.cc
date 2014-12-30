@@ -20,29 +20,29 @@
  * Free Software Foundation, Inc.,
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
-#include "ControlPolicy.h"
+#include "ControlPolicyLoader.h"
 
 #include <opencog/guile/load-file.h>
 #include <opencog/util/misc.h>
 #include <opencog/util/Config.h>
 #include <opencog/guile/SchemeEval.h>
 
-ControlPolicy::ControlPolicy(AtomSpace * as, string conf_path) :
-		as_(as) {
-	load_config(conf_path);
+ControlPolicyLoader::ControlPolicyLoader(AtomSpace * as, string conf_path) :
+		as_(as), conf_path_(conf_path) {
+	scm_eval_ = new SchemeEval(as_);
 }
 
-ControlPolicy::~ControlPolicy() {
-
+ControlPolicyLoader::~ControlPolicyLoader() {
+	delete scm_eval_;
 }
 
-void ControlPolicy::load_chaining_rules() {
+void ControlPolicyLoader::load_chaining_rules() {
 	vector<string> str_tokens;
 	//FCHAIN_RULES= "[blink-var1,blink-var1,...]:rule_path1","[blink-var2]:rule_path2",...
 	tokenize(config()["FCHAIN_RULES"], back_inserter(str_tokens), ", ");
 
 	if (!str_tokens.empty())
-		throw(exception); //xxx what type of exception?
+		throw std::invalid_argument("no rules specified"); //xxx what type of exception?
 	for (string rule : str_tokens) {
 		auto it = remove_if(rule.begin(), rule.end(),
 				[](char c) {return (c==']' or c=='[' or c=='"');});
@@ -54,20 +54,17 @@ void ControlPolicy::load_chaining_rules() {
 		istringstream is(rule_names[0]);
 		string var_name;
 		while (getline(is, var_name, ',')) {
-			SchemeEval scm_eval = new SchemeEval(as_);
-			Rule r = Rule(scm_eval->eval_h(var_name));
-			rules_.push_back(&r);
-			strname_rule_map_[var_name] = &r;
+			Rule r = Rule(scm_eval_->eval_h(var_name));
+			rules_.push_back(r);
+			strname_rule_map_[var_name] = r;
 		}
 
 	}
 }
 
-void ControlPolicy::load_mutexes() {
-	//a soln for order of call problem
-	//if(strname_rule_map_.empty())
-	//	load_chaining_rules();
+void ControlPolicyLoader::load_mutexes() {
 	vector<string> str_tokens;
+
 	//MUTEX = "nameA,nameB,...","namex,namey,..."
 	tokenize(config()["MUTEX"], back_inserter(str_tokens), ", ");
 	for (string r : str_tokens) {
@@ -77,23 +74,22 @@ void ControlPolicy::load_mutexes() {
 		vector<Rule*> mutexes;
 		istringstream is(r); //make sure the mutexes are already declared in FCHAIN_RULES param
 		while (getline(is, var_name, ','))
-			if (strname_rule_map_[var_name] == strname_rule_map_.end())
-				throw(InvalidParamException);
+			if (strname_rule_map_.find(var_name) == strname_rule_map_.end())
+				throw std::invalid_argument("No rule by name"+var_name+" is declared");
 			else
-				mutexes.push_back(strname_rule_map_[var_name]);
+				mutexes.push_back(&strname_rule_map_[var_name]);
 		mutex_sets_.push_back(mutexes);
 	}
 
 }
-void ControlPolicy::load_single_val_params() {
-	//MORE CONFIG PARAM LOADING ...
+void ControlPolicyLoader::load_single_val_params() {
 	max_iter_ = config().get_int("ITERATION_SIZE");
 	attention_alloc_ = config().get_bool("ATTENTION_ALLOCATION_ENABLED"); //informs the callbacks to look for atoms only on the attentional focus
 }
 
-void ControlPolicy::load_config(std::string& conf_path) {
+void ControlPolicyLoader::load_config() {
 	try {
-		config().load(conf_path.c_str());
+		config().load(conf_path_.c_str());
 	} catch (RuntimeException &e) {
 		std::cerr << e.getMessage() << std::endl;
 	}
@@ -102,18 +98,18 @@ void ControlPolicy::load_config(std::string& conf_path) {
 	load_single_val_params();
 }
 
-int ControlPolicy::get_max_iter() {
+int ControlPolicyLoader::get_max_iter() {
 	return max_iter_;
 }
 
-bool ControlPolicy::get_attention_alloc() {
+bool ControlPolicyLoader::get_attention_alloc() {
 	return attention_alloc_;
 }
 
-vector<Rule*> ControlPolicy::get_rules() {
+vector<Rule>& ControlPolicyLoader::get_rules() {
 	return rules_;
 }
 
-vector<vector<Rule*>> ControlPolicy::get_mutex_sets() {
+vector<vector<Rule*>> ControlPolicyLoader::get_mutex_sets() {
 	return mutex_sets_;
 }

@@ -50,7 +50,7 @@ public:
 	void test_exists(void);
 	void test_target_to_pmimplicant(void);
 	void test_choose_variable(void);
-	void test_load_fc_conf(void);
+	//void test_load_fc_conf(void);
 	void test_choose_target(void);
 	void test_choose_input(void);
 	void test_do_chain(void);
@@ -132,13 +132,13 @@ void ForwardChainerUTest::test_choose_variable(void) {
 	//for (auto mit: var_name_map)
 	//	cout <<endl<< SchemeSmob::to_string(mit.first)<<endl;
 }
-void ForwardChainerUTest::test_load_fc_conf() {
+/*void ForwardChainerUTest::test_load_fc_conf() {
 	fc_->load_fc_conf();
 	for (string s : fc_->bind_link_name_) {
 		cout << endl << "RULE VARIABLES:" << s << endl;
 	}
 
-}
+}*/
 void ForwardChainerUTest::test_choose_target() {
 
 }

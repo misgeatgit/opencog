@@ -1,0 +1,33 @@
+#include <opencog/reasoning/RuleEngine/rule-engine-src/JsonicControlPolicyLoader.h>
+
+#include <opencog/atomspace/AtomSpace.h>
+#include <opencog/server/CogServer.h>
+
+using namespace opencog;
+//#define DEBUG 1
+class JsonicControlPolicyLoaderUTest: public CxxTest::TestSuite {
+private:
+	AtomSpace * as_;
+	JsonicControlPolicyLoader* jcpl;
+public:
+	JsonicControlPolicyLoaderUTest() {
+		server(CogServer::createInstance);
+		as_ = &cogserver().getAtomSpace();
+		jcpl = new JsonicControlPolicyLoader(as_, "cpolicy-config-test.json");
+	}
+	void setUp();
+	void tearDown();
+	void test_load_config();
+
+};
+
+void JsonicControlPolicyLoaderUTest::setUp() {
+
+}
+void JsonicControlPolicyLoaderUTest::tearDown() {
+
+}
+void JsonicControlPolicyLoaderUTest::test_load_config() {
+	jcpl->load_config();
+
+}

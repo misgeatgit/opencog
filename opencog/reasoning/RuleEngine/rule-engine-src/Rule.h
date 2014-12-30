@@ -24,22 +24,37 @@
 #ifndef RULE_H_
 #define RULE_H_
 
-using namespace opencog;
+/*#include <string>
+#include <vector>*/
+#include <opencog/atomspace/Handle.h>
 
+using namespace opencog;
+using namespace std;
 /**
- * A wrapper class for Handles of rule
+ * A wrapper class for rule Handles
  */
 class Rule {
 private:
 	Handle rule_handle_;
-	int priority_;
+	string name_;
+	string category_;
+	int priority_ = -1;
+	vector<Rule*> mutex_rules_;
 public:
 	Handle get_rule_handle();
 	int get_priority();
 	/**
 	 * Validates whether  the Handle is of type ImplicationLink or BindLink and then sets @param rule_
 	 */
-	Rule(Handle rule) throw(InvalidParamException);
+	Rule(Handle rule);
+	Rule();
+	void set_rule_handle(Handle h) throw (exception);
+	void set_name(string name);
+	string get_name();
+	void set_category(string name);
+	void set_priority(int p);
+	void add_mutex(Rule* r);
+	vector<Rule*> get_mutex(void);
 	virtual ~Rule();
 };
 

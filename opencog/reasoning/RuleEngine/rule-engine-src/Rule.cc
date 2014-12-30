@@ -23,8 +23,12 @@
 
 #include "Rule.h"
 
-Rule::Rule(Handle rule) {
+
+Rule::Rule(Handle rule){
 	rule_handle_ = rule;
+}
+
+Rule::Rule() {
 }
 
 Rule::~Rule() {
@@ -39,3 +43,29 @@ int Rule::get_priority() {
 	return priority_;
 }
 
+void Rule::set_category(string name) {
+	category_ = name;
+}
+
+void Rule::set_name(string name) {
+	name_ = name;
+}
+
+string Rule::get_name() {
+	return name_;
+}
+void Rule::set_rule_handle(Handle h) throw(exception) {
+	rule_handle_ = h;
+}
+
+void Rule::set_priority(int p) {
+	priority_ = p;
+}
+
+void Rule::add_mutex(Rule* r) {
+	mutex_rules_.push_back(r);
+}
+
+vector<Rule*> Rule::get_mutex(void) {
+	return mutex_rules_;
+}

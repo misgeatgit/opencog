@@ -22,11 +22,12 @@
  */
 #include "ForwardChainer.h"
 
+#include <opencog/reasoning/RuleEngine/rule-engine-src/Rule.h>
+
 using namespace opencog;
 
 ForwardChainer::ForwardChainer(AtomSpace * as) :
 		Chainer(as) {
-	cpolicy_ = new ControlPolicy(as, conf_path);
 	hcurrent_choosen_rule_ = Handle::UNDEFINED;
 	commons_ = new PLNCommons(as);
 	fcim_ = new ForwardChainInputMatchCB(main_atom_space,
@@ -37,7 +38,7 @@ ForwardChainer::ForwardChainer(AtomSpace * as) :
 }
 
 ForwardChainer::~ForwardChainer() {
-	delete cpolicy_;
+	delete cp_loader_;
 	delete commons_;
 	delete scm_eval_;
 	delete fcim_;
@@ -45,8 +46,8 @@ ForwardChainer::~ForwardChainer() {
 }
 
 void ForwardChainer::init(void) {
-	cpolicy_ = new ControlPolicy(main_atom_space, conf_path);
-	search_in_af = cpolicy_->get_attention_alloc();
+	cp_loader_ = new ControlPolicyLoader(main_atom_space, conf_path);
+	search_in_af = cp_loader_->get_attention_alloc();
 }
 
 Handle ForwardChainer::tournament_select(map<Handle, float> hfitnes_map) {
@@ -95,7 +96,7 @@ void ForwardChainer::do_chain(Handle htarget) {
 	Handle hcurrent_target;
 	//bool terminate = false;
 	int steps = 0;
-	while (steps <= cpolicy_->get_max_iter()/*or !terminate*/) {
+	while (steps <= cp_loader_->get_max_iter()/*or !terminate*/) {
 		if (steps == 0) {
 			if (htarget == Handle::UNDEFINED)
 				hcurrent_target = choose_target_from_atomspace(main_atom_space); //start FC on a random target
@@ -130,12 +131,11 @@ void ForwardChainer::choose_input(Handle htarget) {
 }
 
 map<Handle, string> ForwardChainer::choose_variable(Handle htarget) {
-	map<Handle, string> hnode_vname_map;
 	vector<Handle> candidates = commons_->get_nodes(htarget, vector<Type>());
 	map<Handle, HandleSeq> node_iset_map;
 
-	//xxx don't choose two or more nodes linked by identical reference( i.e choose only one whenever
-	//there are more than one nodes linked by the same link)
+	//xxx don't choose two or more nodes linked by one Link( i.e choose only one whenever
+	//there are more than one node linked by the same link)
 	for (auto it = candidates.begin(); it != candidates.end(); ++it) {
 		HandleSeq hs = main_atom_space->getIncoming(*it);
 		if (distance(candidates.begin(), it) == 0) {
@@ -145,11 +145,10 @@ map<Handle, string> ForwardChainer::choose_variable(Handle htarget) {
 			for (auto i = node_iset_map.begin(); i != node_iset_map.end();
 					++i) {
 				HandleSeq tmp;
-
+				sort(hs.begin(),hs.end());
+				sort(i->second.begin(),i->second.end());
 				set_intersection(hs.begin(), hs.end(), i->second.begin(),
-						i->second.end(), back_inserter((tmp)),
-						[](Handle& h1,Handle& h2) {return h1.value() > h2.value();});
-
+						i->second.end(), back_inserter((tmp)));
 				if (tmp.size() > 0) {
 					has_same_link = true;
 					break;
@@ -159,6 +158,8 @@ map<Handle, string> ForwardChainer::choose_variable(Handle htarget) {
 				node_iset_map[*it] = hs;
 		}
 	}
+
+	map<Handle, string> hnode_vname_map;
 	for (auto it = node_iset_map.begin(); it != node_iset_map.end(); ++it) {
 		Handle h = it->first;
 		hnode_vname_map[h] = ("$var-" + NodeCast((h))->getName());
@@ -197,9 +198,14 @@ Handle ForwardChainer::target_to_pmimplicant(Handle htarget,
 
 void ForwardChainer::choose_rule() {
 	//TODO choose rule via stochastic selection, HOW?
-	auto rules = cpolicy_->get_rules();
-	Rule* choosen_rule = rules[random() % rules.size()];
-	hcurrent_choosen_rule_ = choosen_rule->get_rule_handle();
+	auto rules = cp_loader_->get_rules();
+	vector<vector<Rule*>> mutexe_rules = cp_loader_->get_mutex_sets();
+
+	/*for(vector<Rule*> mset: mutexe_rules){
+
+	}*/
+	Rule choosen_rule = rules[random() % rules.size()];
+	hcurrent_choosen_rule_ = choosen_rule.get_rule_handle();
 }
 
 void ForwardChainer::add_to_target_list(Handle h) {

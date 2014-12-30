@@ -1,0 +1,15 @@
+#include <opencog/reasoning/RuleEngine/rule-engine-src/JsonicControlPolicyLoader.h>
+
+using namespace opencog;
+//#define DEBUG 1
+class JsonicControlPolicyLoaderUTest: public CxxTest::TestSuite {
+private:
+public:
+	JsonicControlPolicyLoaderUTest(){
+
+	}
+	void setUp();
+	void tearDown();
+	void
+
+};

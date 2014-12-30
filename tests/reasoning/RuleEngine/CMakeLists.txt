@@ -25,11 +25,16 @@ IF (HAVE_GUILE)
 	ADD_CXXTEST(ForwardChainerUTest)
 	ADD_CXXTEST(BackwardChainerUTest)
 	ADD_CXXTEST(PLNCommonsUTest)
+	ADD_CXXTEST(ControlPolicyLoaderUTest)
+	ADD_CXXTEST(JsonicControlPolicyLoaderUTest)
 ENDIF (HAVE_GUILE)
 
 CONFIGURE_FILE(${CMAKE_SOURCE_DIR}/tests/reasoning/RuleEngine/simple-assertions.scm
     ${PROJECT_BINARY_DIR}/tests/reasoning/RuleEngine/simple-assertions.scm)
  
 CONFIGURE_FILE(${CMAKE_SOURCE_DIR}/tests/reasoning/RuleEngine/bc-test/bc-example.scm
-    ${PROJECT_BINARY_DIR}/tests/reasoning/RuleEngine/bc-test/bc-example.scm)    
+    ${PROJECT_BINARY_DIR}/tests/reasoning/RuleEngine/bc-test/bc-example.scm)
+
+CONFIGURE_FILE(${CMAKE_SOURCE_DIR}/tests/reasoning/RuleEngine/cpolicy-config-test.json
+    ${PROJECT_BINARY_DIR}/tests/reasoning/RuleEngine/cpolicy-config-test.json)    
     
