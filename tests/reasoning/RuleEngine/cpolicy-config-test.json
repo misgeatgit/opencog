@@ -10,7 +10,7 @@
     { "name":"pln-rule-modus-ponens",
       "file_path":"reasoning/RuleEngine/rules/pln/modus-ponens.scm",
       "priority":1,
-      "mutex":["pln-rule-deduction"],
+      "mutex":["pln-rule-deduction","pln-rule-contextualize-evaluation"],
       "category":"PLN"
     },
     { "name":"pln-rule-contextualize-inheritance",

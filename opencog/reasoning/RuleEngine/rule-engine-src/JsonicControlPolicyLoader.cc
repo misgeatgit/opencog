@@ -68,29 +68,33 @@ void JsonicControlPolicyLoader::read_obj(const Value &v, int lev) {
 	for (Object::size_type i = 0; i < o.size(); ++i) {
 		const Pair& p = o[i];
 		auto key = p.name_;
-		cout << endl << "KEY:" << key << endl;
 		Value value = p.value_;
 		if (key == RULES) {
+			read_json(value, lev + 1);
+		} else if (key == RULE_NAME) {
 			if (cur_read_rule_)
 				rules_.push_back(cur_read_rule_); //xxx take care of pointers
 			cur_read_rule_ = new Rule();
-			read_json(value, lev + 1);
-		} else if (key == RULE_NAME) {
 			cur_read_rule_->set_name(value.get_value<string>());
+
 		} else if (key == FILE_PATH) {
 			load_scm_file_relative(*as_, value.get_value<string>(),
 					vector<string>(0));
 			Handle rule_handle = scm_eval_->eval_h(cur_read_rule_->get_name());
 			cur_read_rule_->set_rule_handle(rule_handle);
+
 		} else if (key == PRIORITY) {
 			cur_read_rule_->set_priority(value.get_value<int>());
 
 		} else if (key == CATEGORY) {
 			cur_read_rule_->set_category(value.get_value<string>());
+
 		} else if (key == ATTENTION_ALLOC) {
 			attention_alloc_ = value.get_value<bool>();
+
 		} else if (key == LOG_LEVEL) {
 			log_level_ = value.get_value<string>();
+
 		} else if (key == MUTEX_RULES and value.type() != null_type) {
 			const Array& a = value.get_array();
 			vector<string> mutex_names;
@@ -98,10 +102,13 @@ void JsonicControlPolicyLoader::read_obj(const Value &v, int lev) {
 				mutex_names.push_back(a[i].get_value<string>());
 			}
 			rule_mutex_map_[cur_read_rule_] = mutex_names;
+
 		} else if (key == MAX_ITER) {
 			max_iter_ = value.get_value<int>();
+
 		} else if (key == LOG_LEVEL) {
 			log_level_ = value.get_value<string>();
+
 		} else {
 			read_json(value, lev + 1);
 		}
@@ -117,21 +124,16 @@ void JsonicControlPolicyLoader::read_json(const Value &v, int level /* = -1*/) {
 	case array_type:
 		read_array(v, level + 1);
 		break;
-		/*case str_type:
-		 read_primitive<string>(v, lev + 1);
-		 break;
-		 case bool_type:
-		 read_primitive<bool>(v, lev + 1);
-		 break;
-		 case int_type:
-		 read_primitive<int>(v, lev + 1);
-		 break;
-		 case real_type:
-		 read_primitive<double>(v, lev + 1);
-		 break;
-		 case null_type:
-		 read_null(v, lev + 1);
-		 break;*/
+	case str_type:
+		break;
+	case bool_type:
+		break;
+	case int_type:
+		break;
+	case real_type:
+		break;
+	case null_type:
+		break;
 	default:
 		break;
 	}

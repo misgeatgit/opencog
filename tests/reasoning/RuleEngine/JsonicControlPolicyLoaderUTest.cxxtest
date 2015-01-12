@@ -22,12 +22,16 @@ public:
 };
 
 void JsonicControlPolicyLoaderUTest::setUp() {
-
+	jcpl->load_config();
 }
 void JsonicControlPolicyLoaderUTest::tearDown() {
 
 }
 void JsonicControlPolicyLoaderUTest::test_load_config() {
-	jcpl->load_config();
-
+	auto rules = jcpl->get_rules();
+	TS_ASSERT_EQUALS(7, rules.size());
+	for (Rule * r : rules) {
+		if (r->get_name() == "pln-rule-modus-ponens")
+			TS_ASSERT_EQUALS(r->get_mutex().size(), 2);
+	}
 }

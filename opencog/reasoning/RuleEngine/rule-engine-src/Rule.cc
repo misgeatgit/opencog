@@ -23,8 +23,7 @@
 
 #include "Rule.h"
 
-
-Rule::Rule(Handle rule){
+Rule::Rule(Handle rule) {
 	rule_handle_ = rule;
 }
 
@@ -47,6 +46,10 @@ void Rule::set_category(string name) {
 	category_ = name;
 }
 
+string& Rule::get_category() {
+	return category_;
+}
+
 void Rule::set_name(string name) {
 	name_ = name;
 }
@@ -54,7 +57,7 @@ void Rule::set_name(string name) {
 string Rule::get_name() {
 	return name_;
 }
-void Rule::set_rule_handle(Handle h) throw(exception) {
+void Rule::set_rule_handle(Handle h) throw (exception) {
 	rule_handle_ = h;
 }
 
