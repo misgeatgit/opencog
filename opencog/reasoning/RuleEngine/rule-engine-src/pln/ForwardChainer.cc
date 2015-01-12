@@ -204,8 +204,8 @@ void ForwardChainer::choose_rule() {
 	/*for(vector<Rule*> mset: mutexe_rules){
 
 	}*/
-	Rule choosen_rule = rules[random() % rules.size()];
-	hcurrent_choosen_rule_ = choosen_rule.get_rule_handle();
+	Rule *choosen_rule = rules[random() % rules.size()];
+	hcurrent_choosen_rule_ = choosen_rule->get_rule_handle();
 }
 
 void ForwardChainer::add_to_target_list(Handle h) {

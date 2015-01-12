@@ -41,9 +41,9 @@ void JsonicControlPolicyLoader::set_mutex_rules(void) {
 }
 
 Rule* JsonicControlPolicyLoader::get_rule(string& name) {
-	for (Rule& r : rules_) {
-		if (r.get_name() == name)
-			return &r;
+	for (Rule* r : rules_) {
+		if (r->get_name() == name)
+			return r;
 	}
 	return NULL;
 }
@@ -72,9 +72,8 @@ void JsonicControlPolicyLoader::read_obj(const Value &v, int lev) {
 		Value value = p.value_;
 		if (key == RULES) {
 			if (cur_read_rule_)
-				rules_.push_back(*cur_read_rule_); //xxx take care of pointers
-			Rule r;
-			cur_read_rule_ = &r;
+				rules_.push_back(cur_read_rule_); //xxx take care of pointers
+			cur_read_rule_ = new Rule();
 			read_json(value, lev + 1);
 		} else if (key == RULE_NAME) {
 			cur_read_rule_->set_name(value.get_value<string>());

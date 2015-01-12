@@ -47,9 +47,9 @@ protected:
 	//list of control policy parameters
 	AtomSpace* as_;
 	SchemeEval* scm_eval_;
-	vector<Rule> rules_;
+	vector<Rule*> rules_;
 	vector<vector<Rule*>> mutex_sets_; //mutually exclusive rules
-	map<string, Rule> strname_rule_map_; //a map of name of the rule as represented in the scheme file and associated c++ rule object
+	map<string, Rule*> strname_rule_map_; //a map of name of the rule as represented in the scheme file and associated c++ rule object
 	int max_iter_;
 	bool attention_alloc_;
 	string conf_path_;
@@ -76,7 +76,7 @@ public:
 	/**
 	 * @return get all rules defined in the control policy config
 	 */
-	vector<Rule>& get_rules(void);
+	vector<Rule*>& get_rules(void);
 };
 
 #endif

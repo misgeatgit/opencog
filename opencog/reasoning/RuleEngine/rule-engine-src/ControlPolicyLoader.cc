@@ -34,6 +34,8 @@ ControlPolicyLoader::ControlPolicyLoader(AtomSpace * as, string conf_path) :
 
 ControlPolicyLoader::~ControlPolicyLoader() {
 	delete scm_eval_;
+	for (Rule *r:rules_)
+		delete r;
 }
 
 void ControlPolicyLoader::load_chaining_rules() {
@@ -54,7 +56,7 @@ void ControlPolicyLoader::load_chaining_rules() {
 		istringstream is(rule_names[0]);
 		string var_name;
 		while (getline(is, var_name, ',')) {
-			Rule r = Rule(scm_eval_->eval_h(var_name));
+			Rule *r =new Rule(scm_eval_->eval_h(var_name));
 			rules_.push_back(r);
 			strname_rule_map_[var_name] = r;
 		}
@@ -77,7 +79,7 @@ void ControlPolicyLoader::load_mutexes() {
 			if (strname_rule_map_.find(var_name) == strname_rule_map_.end())
 				throw std::invalid_argument("No rule by name"+var_name+" is declared");
 			else
-				mutexes.push_back(&strname_rule_map_[var_name]);
+				mutexes.push_back(strname_rule_map_[var_name]);
 		mutex_sets_.push_back(mutexes);
 	}
 
@@ -106,7 +108,7 @@ bool ControlPolicyLoader::get_attention_alloc() {
 	return attention_alloc_;
 }
 
-vector<Rule>& ControlPolicyLoader::get_rules() {
+vector<Rule*>& ControlPolicyLoader::get_rules() {
 	return rules_;
 }
 
