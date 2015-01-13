@@ -54,6 +54,10 @@ protected:
 	bool attention_alloc_;
 	string conf_path_;
 	string log_level_;
+	/**
+	 * @return a set of mutually exclusive rules defined in the control policy file
+	 */
+	vector<vector<Rule*>> get_mutex_sets(void);
 public:
 	ControlPolicyLoader(AtomSpace* as, string conf_path);
 	virtual ~ControlPolicyLoader();
@@ -69,10 +73,6 @@ public:
 	 * @return a boolean flag that tells whether to look only for atoms in the attentional focus or an entire atomspace
 	 */
 	bool get_attention_alloc(void);
-	/**
-	 * @return a set of mutually exclusive rules defined in the control policy file
-	 */
-	vector<vector<Rule*>> get_mutex_sets(void);
 	/**
 	 * @return get all rules defined in the control policy config
 	 */

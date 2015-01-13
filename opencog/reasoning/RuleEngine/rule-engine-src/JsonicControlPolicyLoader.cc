@@ -35,7 +35,7 @@ void JsonicControlPolicyLoader::set_mutex_rules(void) {
 			if (!r)
 				throw invalid_argument(
 						"A rule by name " + name + " doesn't exist"); //TODO throw appropriate exception
-			cur_rule->add_mutex(r);
+			cur_rule->add_mutex_rule(r);
 		}
 	}
 }
@@ -71,6 +71,7 @@ void JsonicControlPolicyLoader::read_obj(const Value &v, int lev) {
 		Value value = p.value_;
 		if (key == RULES) {
 			read_json(value, lev + 1);
+
 		} else if (key == RULE_NAME) {
 			if (cur_read_rule_)
 				rules_.push_back(cur_read_rule_); //xxx take care of pointers

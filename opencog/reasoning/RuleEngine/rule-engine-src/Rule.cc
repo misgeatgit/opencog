@@ -65,10 +65,10 @@ void Rule::set_priority(int p) {
 	priority_ = p;
 }
 
-void Rule::add_mutex(Rule* r) {
+void Rule::add_mutex_rule(Rule* r) {
 	mutex_rules_.push_back(r);
 }
 
-vector<Rule*> Rule::get_mutex(void) {
+vector<Rule*> Rule::get_mutex_rules(void) {
 	return mutex_rules_;
 }

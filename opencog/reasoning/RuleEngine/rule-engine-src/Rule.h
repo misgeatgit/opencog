@@ -54,8 +54,8 @@ public:
 	string& get_category();
 	void set_priority(int p);
 	int get_priority();
-	void add_mutex(Rule* r);
-	vector<Rule*> get_mutex(void);
+	void add_mutex_rule(Rule* r);
+	vector<Rule*> get_mutex_rules(void);
 	virtual ~Rule();
 };
 
