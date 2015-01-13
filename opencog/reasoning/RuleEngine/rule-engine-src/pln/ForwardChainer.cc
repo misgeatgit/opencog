@@ -23,6 +23,7 @@
 #include "ForwardChainer.h"
 
 #include <opencog/reasoning/RuleEngine/rule-engine-src/Rule.h>
+#include <opencog/reasoning/RuleEngine/rule-engine-src/JsonicControlPolicyLoader.h>
 
 using namespace opencog;
 
@@ -38,7 +39,7 @@ ForwardChainer::ForwardChainer(AtomSpace * as) :
 }
 
 ForwardChainer::~ForwardChainer() {
-	delete cp_loader_;
+	delete cpolicy_loader_;
 	delete commons_;
 	delete scm_eval_;
 	delete fcim_;
@@ -46,8 +47,9 @@ ForwardChainer::~ForwardChainer() {
 }
 
 void ForwardChainer::init(void) {
-	cp_loader_ = new ControlPolicyLoader(main_atom_space, conf_path);
-	search_in_af = cp_loader_->get_attention_alloc();
+	cpolicy_loader_ = new JsonicControlPolicyLoader(main_atom_space, conf_path); //new ControlPolicyLoader(main_atom_space, conf_path);
+	search_in_af = cpolicy_loader_->get_attention_alloc();
+	rules_ = cpolicy_loader_->get_rules();
 }
 
 Handle ForwardChainer::tournament_select(map<Handle, float> hfitnes_map) {
@@ -94,9 +96,10 @@ Handle ForwardChainer::choose_target_from_atomspace(AtomSpace * as) {
 
 void ForwardChainer::do_chain(Handle htarget) {
 	Handle hcurrent_target;
-	//bool terminate = false;
 	int steps = 0;
-	while (steps <= cp_loader_->get_max_iter()/*or !terminate*/) {
+	auto max_iter = cpolicy_loader_->get_max_iter();
+	//bool terminate = false;
+	while (steps <= max_iter /*or !terminate*/) {
 		if (steps == 0) {
 			if (htarget == Handle::UNDEFINED)
 				hcurrent_target = choose_target_from_atomspace(main_atom_space); //start FC on a random target
@@ -145,8 +148,8 @@ map<Handle, string> ForwardChainer::choose_variable(Handle htarget) {
 			for (auto i = node_iset_map.begin(); i != node_iset_map.end();
 					++i) {
 				HandleSeq tmp;
-				sort(hs.begin(),hs.end());
-				sort(i->second.begin(),i->second.end());
+				sort(hs.begin(), hs.end());
+				sort(i->second.begin(), i->second.end());
 				set_intersection(hs.begin(), hs.end(), i->second.begin(),
 						i->second.end(), back_inserter((tmp)));
 				if (tmp.size() > 0) {
@@ -198,13 +201,11 @@ Handle ForwardChainer::target_to_pmimplicant(Handle htarget,
 
 void ForwardChainer::choose_rule() {
 	//TODO choose rule via stochastic selection, HOW?
-	auto rules = cp_loader_->get_rules();
-	vector<vector<Rule*>> mutexe_rules = cp_loader_->get_mutex_sets();
-
+	Rule *choosen_rule = rules_[random() % rules_.size()];
+	auto mset = choosen_rule->get_mutex_rules();
 	/*for(vector<Rule*> mset: mutexe_rules){
 
-	}*/
-	Rule *choosen_rule = rules[random() % rules.size()];
+	 }*/
 	hcurrent_choosen_rule_ = choosen_rule->get_rule_handle();
 }
 

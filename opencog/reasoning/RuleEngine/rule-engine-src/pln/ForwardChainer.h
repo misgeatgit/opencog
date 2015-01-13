@@ -44,11 +44,13 @@ private:
 	friend class ForwardChainerUTest;
 	friend class ForwardChainInputMatchCB;
 	friend class ForwardChainPatternMatchCB;
+
 	PLNCommons * commons_;
-	ControlPolicyLoader * cp_loader_;
+	ControlPolicyLoader * cpolicy_loader_;
 	HandleSeq target_list_; /*potential target list*/
 	HandleSeq chaining_results;
 
+	vector<Rule*> rules_; //rules loaded from control policy
 	HandleSeq prev_chosen_targets;
 	vector<string> bind_link_name_;  // the variable name assigned to a BindLink
 	//  eg. (define find_human (BindLink ...) find_human is the variable name
@@ -58,40 +60,50 @@ private:
 	ForwardChainInputMatchCB * fcim_;
 	ForwardChainPatternMatchCB * fcpm_;
 	SchemeEval * scm_eval_;
+
+
 	/**
 	 * @brief chooses a set of nodes to be replaced by a VariableNode with a name for each
 	 * @param htarget - the target from which nodes are chosen to be replaced by VariableNode
 	 * @return a map of Handle to a node to be replaced by VariableNode and name for the replacing VariableNode
 	 */
 	map<Handle, string> choose_variable(Handle htarget);
+
 	/**
 	 * a callback handler for forward chaining invocation from scm shell
 	 */
 	void do_forward_chaining(Handle hinitial_target);
+
 	/**
 	 * checks if a handle already exists in a HandleSeq
 	 */
 	bool exists(HandleSeq& hseq, Handle& h);
+
 	/**
 	 *Initialize the forward chaining listener
 	 */
 	void init(void);
+
 	/**
 	 * tournament selection xxx tournament size is 50% of input
 	 * @param hfitness_map - a handle fitness map
 	 */
 	Handle tournament_select(map<Handle, float> hfitness_map);
+
 	/**
 	 * check if a handle is in the potential target list
 	 * @param h A handle to be looke in the target list
 	 */
 	bool is_in_target_list(Handle h);
+
 public:
 	ForwardChainer(AtomSpace * as);
 	~ForwardChainer();
+
+
 	/**
 	 * Converts a target link or node to a variable containing link or variable replaced node
-	 * and creats the new node in the target_list_atom_space
+	 * and creates the new node in the target_list_atom_space
 	 * eg. InheritanceLink
 	 * 	      ConceptNode Cat
 	 * 	      ConceptNode Animal
@@ -105,23 +117,27 @@ public:
 	 */
 	Handle target_to_pmimplicant(Handle htarget,
 			map<Handle, string> vname_vnode_map);
+
 	/**
 	 * choose next target from potential target list based on some factors
 	 *  (xxx currently based on fitness) other factors might be included later
 	 */
 	Handle choose_target_from_list(HandleSeq hs_list);
+
 	/**
 	 * choose a random target to start forward chaining with. This is useful when there is no target
 	 * specified ahead to the forward chaining process.
 	 * @param as - the atomspace instance from which target is selected
 	 */
 	Handle choose_target_from_atomspace(AtomSpace *);
+
 	/**
 	 * chaining main entry point
 	 * @param htarget - the target atom which the forward chaining will be, if htarget is Handle::UNDEFINED
 	 *                  chaining will be over the entire atomspace
 	 */
 	void do_chain(Handle htarget);
+
 	/**
 	 * Choose additional premises for the rule via one of two options: A) searching the focus set
 	 * specified, or B) searching the potential-target list itself. In each case, search proceeds using
@@ -129,12 +145,14 @@ public:
 	 * fitness functions for the additional premises)
 	 */
 	void choose_input(Handle target);
+
 	/**
 	 * chooses a bindLink name from the available set of BindLinks in  the bind_link_name and then executes
 	 * the scm command (cog-fc-bind choosen_bindLink) so that the handle object to the bindLink name will be
 	 * stored in hcurrent_bind_link
 	 */
 	void choose_rule(void);
+
 	/**
 	 *returns the handle of a BindLink instance Given the scheme variable name for a bindLink which
 	 *returns is already loaded in to the atomspace
@@ -142,11 +160,13 @@ public:
 	 *@return - a handle to the BindLink instance
 	 */
 	Handle get_hbindLink(string& name);
+
 	/**
 	 * adds a reference to a a node or a a link and its member nodes in the target_list
 	 * @param h- a handle to a node or a link
 	 */
 	void add_to_target_list(Handle h);
+
 	/**
 	 *returns the inferences made
 	 */
