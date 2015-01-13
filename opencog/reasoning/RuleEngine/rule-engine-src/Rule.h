@@ -41,7 +41,7 @@ private:
 	int priority_ = -1;
 	vector<Rule*> mutex_rules_;
 public:
-	Handle get_rule_handle();
+	Handle get_handle();
 	/**
 	 * Validates whether  the Handle is of type ImplicationLink or BindLink and then sets @param rule_
 	 */

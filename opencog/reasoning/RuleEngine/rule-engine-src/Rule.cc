@@ -34,7 +34,7 @@ Rule::~Rule() {
 
 }
 
-Handle Rule::get_rule_handle() {
+Handle Rule::get_handle() {
 	return rule_handle_;
 }
 

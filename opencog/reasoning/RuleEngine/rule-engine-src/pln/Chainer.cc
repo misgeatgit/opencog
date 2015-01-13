@@ -22,27 +22,23 @@
  */
 #include "Chainer.h"
 
-Chainer::Chainer(AtomSpace * atom_space)
-	: ctv_fitnes(0.9), conf_path("rule-engine.conf")
-{
-	main_atom_space = atom_space;
+Chainer::Chainer(AtomSpace * as) {
+	main_atom_space_ = as;
+	target_list_atom_space_ = as;
 	//target_list_atom_space = new AtomSpace(); //xxx a rejected idea about using separate atomspace.maybe later.
-	target_list_atom_space = atom_space;
 }
 void Chainer::set_htarget(Handle& h) {
 
 }
-Chainer::~Chainer()
-{
+Chainer::~Chainer() {
 	//delete target_list_atom_space;
 }
 
-float Chainer::target_tv_fitness(Handle h)
-{
-	TruthValuePtr ptv = target_list_atom_space->getTV(h);
+float Chainer::target_tv_fitness(Handle h) {
+	TruthValuePtr ptv = target_list_atom_space_->getTV(h);
 	confidence_t c = ptv->getConfidence();
 	strength_t s = ptv->getMean();
 
-	return (pow((1 - s), ctv_fitnes) * (pow(c, (2 - ctv_fitnes))));
+	return (pow((1 - s), ctv_fitnes_) * (pow(c, (2 - ctv_fitnes_))));
 }
 

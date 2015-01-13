@@ -37,11 +37,12 @@ private:
 	ForwardChainer * fc_;
 public:
 	/**
-	 * @param main_as the big main atomspace where initial target is fetched from
-	 * @param target_list_as the mini chaining specific atomspace where targets is copied from the main atomspace
+	 * @param main_as the main atomspace where initial target is fetched from
+	 * @param target_list_as the chaining specific atomspace where targets is copied from the main atomspace
 	 *  where PLN rules are applied on target lists for new knowledge discovery.
 	 *
-	 *  one can set the above two pointers to  the same atomspace object if there is no intention of chaining in a separate atomspace
+	 *  one can set the above two pointers to  the same atomspace object (wich now is the default way)
+	 *  if there is no intention of chaining in a separate atomspace.
 	 */
 	ForwardChainInputMatchCB(AtomSpace * main_as, AtomSpace * target_list_as,
 			ForwardChainer * fc);

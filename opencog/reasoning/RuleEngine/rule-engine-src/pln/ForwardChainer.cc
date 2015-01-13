@@ -27,14 +27,25 @@
 
 using namespace opencog;
 
-ForwardChainer::ForwardChainer(AtomSpace * as) :
+ForwardChainer::ForwardChainer(AtomSpace * as, string conf_path/*=""*/) :
 		Chainer(as) {
-	hcurrent_choosen_rule_ = Handle::UNDEFINED;
-	commons_ = new PLNCommons(as);
-	fcim_ = new ForwardChainInputMatchCB(main_atom_space,
-			target_list_atom_space, this); //fetching from main and copying it to target_list_atom_space
-	fcpm_ = new ForwardChainPatternMatchCB(target_list_atom_space, this); // chaining PLN rules are applied on the target_list_atom_space
+	if (conf_path != "")
+		conf_path_ = conf_path;
 
+	//set to default ones
+	fcim_ = new ForwardChainInputMatchCB(main_atom_space_,
+			target_list_atom_space_, this); //fetching from main and copying it to target_list_atom_space
+	fcpm_ = new ForwardChainPatternMatchCB(target_list_atom_space_, this); // chaining PLN rules are applied on the target_list_atom_space
+	init();
+}
+
+ForwardChainer::ForwardChainer(AtomSpace * as, Implicator* input_match_cb,
+		Implicator* pm_cb, string conf_path /*=""*/) :
+		Chainer(as) {
+	if (conf_path != "")
+		conf_path_ = conf_path;
+	fcim_ = input_match_cb;
+	fcpm_ = pm_cb;
 	init();
 }
 
@@ -47,9 +58,12 @@ ForwardChainer::~ForwardChainer() {
 }
 
 void ForwardChainer::init(void) {
-	cpolicy_loader_ = new JsonicControlPolicyLoader(main_atom_space, conf_path); //new ControlPolicyLoader(main_atom_space, conf_path);
+	cpolicy_loader_ = new JsonicControlPolicyLoader(main_atom_space_,
+			conf_path_); //new ControlPolicyLoader(main_atom_space, conf_path);
+	commons_ = new PLNCommons(main_atom_space_);
 	search_in_af = cpolicy_loader_->get_attention_alloc();
 	rules_ = cpolicy_loader_->get_rules();
+	hcurrent_choosen_rule_ = Handle::UNDEFINED;
 }
 
 Handle ForwardChainer::tournament_select(map<Handle, float> hfitnes_map) {
@@ -102,16 +116,18 @@ void ForwardChainer::do_chain(Handle htarget) {
 	while (steps <= max_iter /*or !terminate*/) {
 		if (steps == 0) {
 			if (htarget == Handle::UNDEFINED)
-				hcurrent_target = choose_target_from_atomspace(main_atom_space); //start FC on a random target
+				hcurrent_target = choose_target_from_atomspace(
+						main_atom_space_); //start FC on a random target
 			else
 				hcurrent_target = htarget;
 		} else {
 			if (!target_list_.empty())
 				hcurrent_target = choose_target_from_list(target_list_);
 		}
+
 		choose_input(hcurrent_target); //add more premise via pattern matching of related atoms to hcurrent_target
-		choose_rule(); //TODO use some fitness function instead of randomly selecting
-		chaining_pm.do_bindlink(hcurrent_choosen_rule_, *fcpm_); //xxx guide matching to search only the target list
+		choose_rule();
+		chaining_pm_.do_bindlink(hcurrent_choosen_rule_, *fcpm_); //xxx guide matching to search only the target list
 		steps++;
 		//TODO implement termination criteria
 	}
@@ -120,7 +136,7 @@ void ForwardChainer::do_chain(Handle htarget) {
 
 void ForwardChainer::choose_input(Handle htarget) {
 	if (NodeCast(htarget)) {
-		HandleSeq hs = main_atom_space->getIncoming(htarget);
+		HandleSeq hs = main_atom_space_->getIncoming(htarget);
 		for (Handle h : hs)
 			add_to_target_list(h); //add to potential target list
 	}
@@ -129,7 +145,7 @@ void ForwardChainer::choose_input(Handle htarget) {
 		Handle implicant = target_to_pmimplicant(htarget, hnode_vname_map);
 		Handle bindLink = commons_->create_bindLink(implicant);
 		//match all in main_atom_space using the above bindLink and add them to target list
-		chaining_pm.do_bindlink(bindLink, *fcim_); //result is added to target_list in fcim_'s grounding call back handler
+		chaining_pm_.do_bindlink(bindLink, *fcim_); //result is added to target_list in fcim_'s grounding call back handler
 	}
 }
 
@@ -140,7 +156,7 @@ map<Handle, string> ForwardChainer::choose_variable(Handle htarget) {
 	//xxx don't choose two or more nodes linked by one Link( i.e choose only one whenever
 	//there are more than one node linked by the same link)
 	for (auto it = candidates.begin(); it != candidates.end(); ++it) {
-		HandleSeq hs = main_atom_space->getIncoming(*it);
+		HandleSeq hs = main_atom_space_->getIncoming(*it);
 		if (distance(candidates.begin(), it) == 0) {
 			node_iset_map[*it] = hs;
 		} else {
@@ -178,19 +194,19 @@ Handle ForwardChainer::target_to_pmimplicant(Handle htarget,
 	if (LinkCast(htarget)) {
 		LinkPtr p_htarget = LinkCast(htarget);
 		link_type = p_htarget->getType();
-		HandleSeq hsoutgoing = main_atom_space->getOutgoing(htarget);
+		HandleSeq hsoutgoing = main_atom_space_->getOutgoing(htarget);
 		for (auto i = hsoutgoing.begin(); i != hsoutgoing.end(); ++i) {
 			Handle htmp = target_to_pmimplicant(*i, hnode_vname_map);
 			hsvariablized.push_back(htmp);
 		}
-		return main_atom_space->addLink(link_type, hsvariablized,
+		return main_atom_space_->addLink(link_type, hsvariablized,
 				TruthValue::TRUE_TV());
 	} else {
 		if (NodeCast(htarget)) {
 			auto it_var = hnode_vname_map.find(htarget); //TODO replace by find-if for linear complexity
 			NodePtr p_htarget = NodeCast(htarget);
 			if (it_var != hnode_vname_map.end())
-				return main_atom_space->addNode(VARIABLE_NODE, it_var->second,
+				return main_atom_space_->addNode(VARIABLE_NODE, it_var->second,
 						TruthValue::TRUE_TV());
 			else
 				return htarget;
@@ -200,13 +216,10 @@ Handle ForwardChainer::target_to_pmimplicant(Handle htarget,
 }
 
 void ForwardChainer::choose_rule() {
-	//TODO choose rule via stochastic selection, HOW?
+	//TODO choose rule via stochastic selection or fitness selection
 	Rule *choosen_rule = rules_[random() % rules_.size()];
 	auto mset = choosen_rule->get_mutex_rules();
-	/*for(vector<Rule*> mset: mutexe_rules){
-
-	 }*/
-	hcurrent_choosen_rule_ = choosen_rule->get_rule_handle();
+	hcurrent_choosen_rule_ = choosen_rule->get_handle();
 }
 
 void ForwardChainer::add_to_target_list(Handle h) {
@@ -219,7 +232,7 @@ void ForwardChainer::add_to_target_list(Handle h) {
 	if (LinkCast(h)) {
 		if (found)
 			target_list_.push_back(h);
-		HandleSeq hs = main_atom_space->getOutgoing(h);
+		HandleSeq hs = main_atom_space_->getOutgoing(h);
 		for (Handle hi : hs)
 			if (find(target_list_.begin(), target_list_.end(), hi)
 					== target_list_.end())

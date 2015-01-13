@@ -52,7 +52,7 @@ HandleSeq BackwardChainer::query_rule_base(Handle htarget) {
 #if DEBUG
 	cout << "QUERY-RB:" << endl << SchemeSmob::to_string(hbind_link) << endl;
 #endif
-	chaining_pm.do_bindlink(hbind_link, *bcpm_);
+	chaining_pm_.do_bindlink(hbind_link, *bcpm_);
 	commons_->clean_up_bind_link(hbind_link);
 
 	auto result = bcpm_->get_result_list();
@@ -65,7 +65,7 @@ HandleSeq BackwardChainer::query_knowledge_base(Handle htarget) {
 #if DEBUG
 	cout << "QUERY-KB:" << endl << SchemeSmob::to_string(hbind_link) << endl;
 #endif
-	chaining_pm.do_bindlink(hbind_link, *bcpm_);
+	chaining_pm_.do_bindlink(hbind_link, *bcpm_);
 	commons_->clean_up_bind_link(hbind_link);
 
 	auto result = bcpm_->get_result_list();

@@ -28,6 +28,7 @@
 #include "ForwardChainPatternMatchCB.h"
 #include "PLNCommons.h"
 
+#include <opencog/query/DefaultImplicator.h>
 #include <opencog/reasoning/RuleEngine/rule-engine-src/ControlPolicyLoader.h>
 #include <opencog/guile/SchemeEval.h>
 
@@ -57,11 +58,10 @@ private:
 	Handle hcurrent_choosen_rule_; // = Handle::UNDEFINED; //Handle to chosen BindLink on a praticular step of forward chaining
 	HandleSeq applied_rules;
 
-	ForwardChainInputMatchCB * fcim_;
-	ForwardChainPatternMatchCB * fcpm_;
+	Implicator * fcim_; //xxx why doesn't the compiler like changing the type to PatternMatchCallBack
+	Implicator * fcpm_;
 	SchemeEval * scm_eval_;
-
-
+	bool search_in_af;
 	/**
 	 * @brief chooses a set of nodes to be replaced by a VariableNode with a name for each
 	 * @param htarget - the target from which nodes are chosen to be replaced by VariableNode
@@ -97,9 +97,14 @@ private:
 	bool is_in_target_list(Handle h);
 
 public:
-	ForwardChainer(AtomSpace * as);
-	~ForwardChainer();
+	ForwardChainer(AtomSpace * as, string conf_path = "");
+	/**
+	 * For custom callbacks. eg. R2L might need to handle mathching in a particular way.
+	 */
+	ForwardChainer(AtomSpace * as, Implicator* input_match_cb,
+			Implicator* pm_cb, string conf_path = "");
 
+	~ForwardChainer();
 
 	/**
 	 * Converts a target link or node to a variable containing link or variable replaced node
@@ -171,7 +176,7 @@ public:
 	 *returns the inferences made
 	 */
 	HandleSeq get_chaining_result(void);
-	bool search_in_af;
+
 };
 
 #endif /* FORWARDCHAINER_H_ */
