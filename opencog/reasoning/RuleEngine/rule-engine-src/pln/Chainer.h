@@ -28,19 +28,17 @@
 using namespace opencog;
 
 /**
- * Abstract class for forward and backward chaining control policy
- * all derived concrete are supposed to implement the PM callbacks and
- * pure virtuals here
+ * Abstract class for forward and backward chaining
  */
 class Chainer {
 private:
-	const float ctv_fitnes_ = 0.9; // = 0.9; // this might need to be configurable at runtime
+	const float _ctv_fitnes = 0.9; // from the PLN book
 protected:
-	AtomSpace * main_atom_space_; // knowledge base atomspace
-	AtomSpace * target_list_atom_space_;
-	Handle hinitial_target_;
-	PatternMatch chaining_pm_;
-    std::string conf_path_ ="default_cpolicy.json"; // = "rule-engine.conf";
+	AtomSpace * _main_atom_space; // knowledge base atomspace
+	AtomSpace * _target_list_atom_space; //supposed to store selected premises
+	Handle _initial_target;
+	PatternMatch _pattern_matcher;
+    std::string _conf_path ="default_cpolicy.json";
 public:
 	Chainer(AtomSpace *);
 	virtual ~Chainer();

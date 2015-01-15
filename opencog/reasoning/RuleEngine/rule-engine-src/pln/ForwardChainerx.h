@@ -1,24 +1,134 @@
 /*
- * ForwardChainerx.h
+ * ForwardChainer.h
  *
- *  Created on: 14 Jan, 2015
- *      Author: misgana
+ * Copyright (C) 2014 Misgana Bayetta
+ *
+ * Author: Misgana Bayetta <misgana.bayetta@gmail.com>  Sept 2014
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License v3 as
+ * published by the Free Software Foundation and including the exceptions
+ * at http://opencog.org/wiki/Licenses
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program; if not, write to:
+ * Free Software Foundation, Inc.,
+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
-
-#ifndef FORWARDCHAINERX_H_
-#define FORWARDCHAINERX_H_
+#ifndef FORWARDCHAINER_H_
+#define FORWARDCHAINER_H_
 
 #include "Chainer.h"
-#include "PLNCommons.h"
-#include "ForwardChainerCallBack.h"
 #include "ForwardChainInputMatchCB.h"
 #include "ForwardChainPatternMatchCB.h"
+#include "PLNCommons.h"
 
 #include <opencog/query/DefaultImplicator.h>
 #include <opencog/reasoning/RuleEngine/rule-engine-src/ControlPolicyLoader.h>
+#include <opencog/guile/SchemeEval.h>
 
+using namespace std;
+
+class ForwardChainPatternMatchCB;
+class ForwardChainInputMatchCB;
+
+/**
+ * A class that encpasulates all the PLN forward chaining
+ */
 class ForwardChainerx: public virtual Chainer {
 private:
+	friend class ForwardChainerUTest;
+	friend class ForwardChainInputMatchCB;
+	friend class ForwardChainPatternMatchCB;
+
+	PLNCommons * commons_;
+	ControlPolicyLoader * cpolicy_loader_;
+	HandleSeq target_list_; /*potential target list*/
+	HandleSeq chaining_results;
+
+	vector<Rule*> rules_; //rules loaded from control policy
+	HandleSeq prev_chosen_targets;
+	vector<string> bind_link_name_;  // the variable name assigned to a BindLink
+	//  eg. (define find_human (BindLink ...) find_human is the variable name
+	Handle hcurrent_choosen_rule_; // = Handle::UNDEFINED; //Handle to chosen BindLink on a praticular step of forward chaining
+	HandleSeq applied_rules;
+
+	Implicator * fcim_; //xxx why doesn't the compiler like changing the type to PatternMatchCallBack
+	Implicator * fcpm_;
+	SchemeEval * scm_eval_;
+	bool search_in_af;
+	/**
+	 * @brief chooses a set of nodes to be replaced by a VariableNode with a name for each
+	 * @param htarget - the target from which nodes are chosen to be replaced by VariableNode
+	 * @return a map of Handle to a node to be replaced by VariableNode and name for the replacing VariableNode
+	 */
+	map<Handle, string> choose_variable(Handle htarget);
+
+	/**
+	 * a callback handler for forward chaining invocation from scm shell
+	 */
+	void do_forward_chaining(Handle hinitial_target);
+
+	/**
+	 * checks if a handle already exists in a HandleSeq
+	 */
+	bool exists(HandleSeq& hseq, Handle& h);
+
+	/**
+	 *Initialize the forward chaining listener
+	 */
+	void init(void);
+
+	/**
+	 * tournament selection xxx tournament size is 50% of input
+	 * @param hfitness_map - a handle fitness map
+	 */
+	Handle tournament_select(map<Handle, float> hfitness_map);
+
+	/**
+	 * check if a handle is in the potential target list
+	 * @param h A handle to be looke in the target list
+	 */
+	bool is_in_target_list(Handle h);
+
+public:
+	ForwardChainerx(AtomSpace * as, string conf_path = "");
+	/**
+	 * For custom callbacks. eg. R2L might need to handle mathching in a particular way.
+	 */
+	ForwardChainerx(AtomSpace * as, Implicator* input_match_cb,
+			Implicator* pm_cb, string conf_path = "");
+
+	~ForwardChainerx();
+
+	/**
+	 * Converts a target link or node to a variable containing link or variable replaced node
+	 * and creates the new node in the target_list_atom_space
+	 * eg. InheritanceLink
+	 * 	      ConceptNode Cat
+	 * 	      ConceptNode Animal
+	 * 	   lets choose cat to be changed by VariableNode $x
+	 * 	   			InheritanceLink
+	 * 	   				ConceptNode $x
+	 * 	   				ConceptNode Animal
+	 * @param htarget - the input atom to be converted
+	 * @param vname_vnode_map - a set of tuples of name string and node to be replaced by VariableNode
+	 * @return - a new atom(node or link) created by changing part of htarget to variable nodes
+	 */
+	Handle target_to_pmimplicant(Handle htarget,
+			map<Handle, string> vname_vnode_map);
+
+	/**
+	 * choose next target from potential target list based on some factors
+	 *  (xxx currently based on fitness) other factors might be included later
+	 */
+	Handle choose_target_from_list(HandleSeq hs_list);
+
 	/**
 	 * choose a random target to start forward chaining with. This is useful when there is no target
 	 * specified ahead to the forward chaining process.
@@ -26,23 +136,48 @@ private:
 	 */
 	Handle choose_target_from_atomspace(AtomSpace *);
 
-	Implicator * fcim_; //xxx why doesn't the compiler like changing the type to PatternMatchCallBack
-	Implicator * fcpm_;
-	bool search_in_af;
+	/**
+	 * chaining main entry point
+	 * @param htarget - the target atom which the forward chaining will be, if htarget is Handle::UNDEFINED
+	 *                  chaining will be over the entire atomspace
+	 */
+	void do_chain(Handle htarget);
 
-	ControlPolicyLoader * cpolicy_loader_;
-	HandleSeq target_list_; /*potential target list*/
-	HandleSeq chaining_results;
+	/**
+	 * Choose additional premises for the rule via one of two options: A) searching the focus set
+	 * specified, or B) searching the potential-target list itself. In each case, search proceeds using
+	 * the PatternMatcher (with an appropriate callback to guide the PMs search based on the
+	 * fitness functions for the additional premises)
+	 */
+	void choose_input(Handle target);
 
-	vector<Rule*> rules_; //rules loaded from control policy
-	Handle cur_rule_; // = Handle::UNDEFINED; //Handle to chosen BindLink on a praticular step of forward chaining
-	ForwardChainerCallBack* fcb_;
-public:
-	ForwardChainerx(AtomSpace * as, Implicator* input_match_cb,
-			Implicator* pm_cb, string conf_path = "");
-	virtual ~ForwardChainerx();
-	void do_chain(ForwardChainerCallBack* fcb,Handle htarget);
-	void init();
+	/**
+	 * chooses a bindLink name from the available set of BindLinks in  the bind_link_name and then executes
+	 * the scm command (cog-fc-bind choosen_bindLink) so that the handle object to the bindLink name will be
+	 * stored in hcurrent_bind_link
+	 */
+	void choose_rule(void);
+
+	/**
+	 *returns the handle of a BindLink instance Given the scheme variable name for a bindLink which
+	 *returns is already loaded in to the atomspace
+	 *@param name - the scheme variable name for the BindLink epxpression
+	 *@return - a handle to the BindLink instance
+	 */
+	Handle get_hbindLink(string& name);
+
+	/**
+	 * adds a reference to a a node or a a link and its member nodes in the target_list
+	 * @param h- a handle to a node or a link
+	 */
+	void add_to_target_list(Handle h);
+
+	/**
+	 *returns the inferences made
+	 */
+	HandleSeq get_chaining_result(void);
+
 };
 
-#endif /* FORWARDCHAINERX_H_ */
+#endif /* FORWARDCHAINER_H_ */
+

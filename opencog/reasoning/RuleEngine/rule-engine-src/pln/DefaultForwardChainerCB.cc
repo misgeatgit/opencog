@@ -6,10 +6,10 @@
  */
 
 #include "DefaultForwardChainerCB.h"
+#include "FCMemory.h"
 
-DefaultForwardChainerCB::DefaultForwardChainerCB(AtomSpace* as,
-		vector<Rule*> rules, HandleSeq premise) :
-		ForwardChainerCallBack(as, rules, premise) {
+DefaultForwardChainerCB::DefaultForwardChainerCB(AtomSpace* as) :
+		ForwardChainerCallBack(as) {
 
 }
 
@@ -17,46 +17,52 @@ DefaultForwardChainerCB::~DefaultForwardChainerCB() {
 }
 
 //-----------------callbacks-------------------------------------------------------------------------------//
-Rule& DefaultForwardChainerCB::choose_rule(Handle target) {
+
+Rule& DefaultForwardChainerCB::choose_rule(FCMemory& fcm) {
 	//TODO choose rule via stochastic selection or fitness selection
-	//TODO handle mutual exclusions
+	auto rules_ = fcm.get_rules();
 	Rule *choosen_rule = rules_[random() % rules_.size()];
 	return choosen_rule;
-	//auto mset = choosen_rule->get_mutex_rules();
+	//TODO handle mutual exclusions
 }
 
-void DefaultForwardChainerCB::choose_input(Handle htarget) {
+HandleSeq DefaultForwardChainerCB::choose_input(FCMemory& fcm) {
+	Handle htarget = fcm.get_cur_target();
 	if (NodeCast(htarget)) {
-		HandleSeq hs = as_->getIncoming(htarget);
+		HandleSeq hs = _as->getIncoming(htarget);
 		for (Handle h : hs)
 			add_to_target_list(h); //add to potential target list
 	}
 	if (LinkCast(htarget)) {
 		map<Handle, string> hnode_vname_map = choose_variable(htarget);
 		Handle implicant = target_to_pmimplicant(htarget, hnode_vname_map);
-		Handle bindLink = commons_->create_bindLink(implicant);
-		chaining_pm_.do_bindlink(bindLink, *fcim_); //result is added to target_list in fcim_'s grounding call back handler
+		Handle bindLink = _commons->create_bindLink(implicant);
+		_pattern_matcher.do_bindlink(bindLink, *fcim_); //result is added to target_list in fcim_'s grounding call back handler
 	}
 }
 
-Handle DefaultForwardChainerCB::choose_next_target() {
+Handle DefaultForwardChainerCB::choose_next_target(FCMemory& fcm) {
+	HandleSeq tlist = fcm.get_target_list();
 	map<Handle, float> tournament_elem;
-	for (Handle h : target_list_) {
-		float fitness = target_tv_fitness(h);
-		tournament_elem[h] = fitness;
+	for (Handle t : tlist) {
+		float fitness = target_tv_fitness(t);
+		tournament_elem[t] = fitness;
 	}
 	return tournament_select(tournament_elem);
 }
 
+HandleSeq DefaultForwardChainerCB::apply_rule(FCMemory& fcm) {
+
+}
 //-------------------private methods------------------------------------------------------------------------------//
 
 map<Handle, string> DefaultForwardChainerCB::choose_variable(Handle htarget) {
-	vector<Handle> candidates = commons_->get_nodes(htarget, vector<Type>());
+	vector<Handle> candidates = _commons->get_nodes(htarget, vector<Type>());
 	map<Handle, HandleSeq> node_iset_map;
 //xxx don't choose two or more nodes linked by one Link( i.e choose only one whenever
 //there are more than one node linked by the same link)
 	for (auto it = candidates.begin(); it != candidates.end(); ++it) {
-		HandleSeq hs = as_->getIncoming(*it);
+		HandleSeq hs = _as->getIncoming(*it);
 		if (distance(candidates.begin(), it) == 0) {
 			node_iset_map[*it] = hs;
 		} else {
@@ -87,18 +93,18 @@ Handle DefaultForwardChainerCB::target_to_pmimplicant(Handle htarget,
 	if (LinkCast(htarget)) {
 		LinkPtr p_htarget = LinkCast(htarget);
 		link_type = p_htarget->getType();
-		HandleSeq hsoutgoing = as_->getOutgoing(htarget);
+		HandleSeq hsoutgoing = _as->getOutgoing(htarget);
 		for (auto i = hsoutgoing.begin(); i != hsoutgoing.end(); ++i) {
 			Handle htmp = target_to_pmimplicant(*i, hnode_vname_map);
 			hsvariablized.push_back(htmp);
 		}
-		return as_->addLink(link_type, hsvariablized, TruthValue::TRUE_TV());
+		return _as->addLink(link_type, hsvariablized, TruthValue::TRUE_TV());
 	} else {
 		if (NodeCast(htarget)) {
 			auto it_var = hnode_vname_map.find(htarget); //TODO replace by find-if for linear complexity
 			NodePtr p_htarget = NodeCast(htarget);
 			if (it_var != hnode_vname_map.end())
-				return as_->addNode(VARIABLE_NODE, it_var->second,
+				return _as->addNode(VARIABLE_NODE, it_var->second,
 						TruthValue::TRUE_TV());
 			else
 				return htarget;
@@ -117,7 +123,7 @@ void DefaultForwardChainerCB::add_to_target_list(Handle h) {
 	if (LinkCast(h)) {
 		if (found)
 			target_list_.push_back(h);
-		HandleSeq hs = as_->getOutgoing(h);
+		HandleSeq hs = _as->getOutgoing(h);
 		for (Handle hi : hs)
 			if (find(target_list_.begin(), target_list_.end(), hi)
 					== target_list_.end())
@@ -125,10 +131,10 @@ void DefaultForwardChainerCB::add_to_target_list(Handle h) {
 	}
 }
 
-
 //-----------helper functions------------------------------------------------------//
 
-Handle DefaultForwardChainerCB::tournament_select(map<Handle, float> hfitnes_map) {
+Handle DefaultForwardChainerCB::tournament_select(
+		map<Handle, float> hfitnes_map) {
 	if (hfitnes_map.size() == 1) {
 		return hfitnes_map.begin()->first;
 	}

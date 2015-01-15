@@ -9,21 +9,24 @@
 #define DEFAULTFORWARDCHAINERCB_H_
 
 #include "ForwardChainerCallBack.h"
+#include "FCMemory.h"
 
 class DefaultForwardChainerCB: public virtual ForwardChainerCallBack {
 private:
 	map<Handle, string> choose_variable(Handle h);
-	Handle target_to_pmimplicant(Handle htarget,	map<Handle, string> hnode_vname_map);
+	Handle target_to_pmimplicant(Handle htarget,
+			map<Handle, string> hnode_vname_map);
 	void add_to_target_list(Handle h);
-	Handle tournament_select(map<Handle, float> hfitnes_map)
+	Handle tournament_select(map<Handle, float> hfitnes_map);
 public:
-	DefaultForwardChainerCB(AtomSpace* as, vector<Rule*> rules,
-			HandleSeq premise);
+	DefaultForwardChainerCB(AtomSpace* as);
 	virtual ~DefaultForwardChainerCB();
 
-	virtual Rule& choose_rule(Handle target);
-	virtual void choose_input(Handle target);
-	virtual Handle choose_next_target();
+//callbacks
+	virtual Rule& choose_rule(FCMemory& fcm);
+	virtual HandleSeq choose_input(FCMemory& fcm);
+	virtual Handle choose_next_target(FCMemory& fcm);
+	virtual HandleSeq apply_rule(FCMemory& fcm);
 };
 
 #endif /* DEFAULTFORWARDCHAINERCB_H_ */

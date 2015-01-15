@@ -23,8 +23,8 @@
 #include "Chainer.h"
 
 Chainer::Chainer(AtomSpace * as) {
-	main_atom_space_ = as;
-	target_list_atom_space_ = as;
+	_main_atom_space = as;
+	_target_list_atom_space = as;
 	//target_list_atom_space = new AtomSpace(); //xxx a rejected idea about using separate atomspace.maybe later.
 }
 void Chainer::set_htarget(Handle& h) {
@@ -35,10 +35,10 @@ Chainer::~Chainer() {
 }
 
 float Chainer::target_tv_fitness(Handle h) {
-	TruthValuePtr ptv = target_list_atom_space_->getTV(h);
+	TruthValuePtr ptv = _target_list_atom_space->getTV(h);
 	confidence_t c = ptv->getConfidence();
 	strength_t s = ptv->getMean();
 
-	return (pow((1 - s), ctv_fitnes_) * (pow(c, (2 - ctv_fitnes_))));
+	return (pow((1 - s), _ctv_fitnes) * (pow(c, (2 - _ctv_fitnes))));
 }
 

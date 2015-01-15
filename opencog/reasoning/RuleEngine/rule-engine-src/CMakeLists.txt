@@ -5,8 +5,6 @@ pln/PLNCommons.cc
 pln/ForwardChainer.cc
 pln/Chainer.cc
 pln/BCPatternMatch.cc
-pln/ForwardChainInputMatchCB.cc
-pln/ForwardChainPatternMatchCB.cc
 Rule.cc
 ControlPolicyLoader.cc
 JsonicControlPolicyLoader.cc
@@ -41,8 +39,6 @@ INSTALL (FILES
 pln/ForwardChainer.h
 pln/Chainer.h
 pln/BCPatternMatch.h
-pln/ForwardChainInputMatchCB.h
-pln/ForwardChainPatternMatchCB.h
 Rule.h
 ControlPolicyLoader.h
 DESTINATION "include/${PROJECT_NAME}/reasoning/RuleEngine/rule-engine-src"

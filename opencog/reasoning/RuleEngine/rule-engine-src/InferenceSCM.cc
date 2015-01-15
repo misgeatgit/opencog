@@ -56,11 +56,11 @@ void InferenceSCM::init(void) {
 
 Handle InferenceSCM::do_forward_chaining(Handle h) {
 #ifdef HAVE_GUILE
-	AtomSpace *as = SchemeSmob::ss_get_env_as("cog-fc");
+	/*AtomSpace *as = SchemeSmob::ss_get_env_as("cog-fc");
 	ForwardChainer fc(as);
 	fc.do_chain(h); //START FORWARD CHAINING
 	HandleSeq result = fc.get_chaining_result();
-	return as->addLink(LIST_LINK, result, TruthValue::DEFAULT_TV());
+	return as->addLink(LIST_LINK, result, TruthValue::DEFAULT_TV());*/
 #else
 	return Handle::UNDEFINED;
 #endif

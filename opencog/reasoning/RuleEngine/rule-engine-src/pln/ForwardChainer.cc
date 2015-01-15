@@ -1,9 +1,9 @@
 /*
  * ForwardChainer.cc
  *
- * Copyright (C) 2014 Misgana Bayetta
+ * Copyright (C) 2014,2015 Misgana Bayetta
  *
- * Author: Misgana Bayetta <misgana.bayetta@gmail.com>  Sept 2014
+ * Author: Misgana Bayetta <misgana.bayetta@gmail.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License v3 as
@@ -20,238 +20,55 @@
  * Free Software Foundation, Inc.,
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
-#include "ForwardChainer.h"
 
-#include <opencog/reasoning/RuleEngine/rule-engine-src/Rule.h>
+#include "ForwardChainer.h"
 #include <opencog/reasoning/RuleEngine/rule-engine-src/JsonicControlPolicyLoader.h>
 
-using namespace opencog;
-
-ForwardChainer::ForwardChainer(AtomSpace * as, string conf_path/*=""*/) :
+ForwardChainer::ForwardChainer(AtomSpace * as, string conf_path /*=""*/) :
 		Chainer(as) {
+	_as = as;
 	if (conf_path != "")
-		conf_path_ = conf_path;
-
-	//set to default ones
-	fcim_ = new ForwardChainInputMatchCB(main_atom_space_,
-			target_list_atom_space_, this); //fetching from main and copying it to target_list_atom_space
-	fcpm_ = new ForwardChainPatternMatchCB(target_list_atom_space_, this); // chaining PLN rules are applied on the target_list_atom_space
-	init();
-}
-
-ForwardChainer::ForwardChainer(AtomSpace * as, Implicator* input_match_cb,
-		Implicator* pm_cb, string conf_path /*=""*/) :
-		Chainer(as) {
-	if (conf_path != "")
-		conf_path_ = conf_path;
-	fcim_ = input_match_cb;
-	fcpm_ = pm_cb;
+		_conf_path = conf_path;
 	init();
 }
 
 ForwardChainer::~ForwardChainer() {
-	delete cpolicy_loader_;
-	delete commons_;
-	delete scm_eval_;
-	delete fcim_;
-	delete fcpm_;
+
 }
 
-void ForwardChainer::init(void) {
-	cpolicy_loader_ = new JsonicControlPolicyLoader(main_atom_space_,
-			conf_path_); //new ControlPolicyLoader(main_atom_space, conf_path);
-	commons_ = new PLNCommons(main_atom_space_);
-	search_in_af = cpolicy_loader_->get_attention_alloc();
-	rules_ = cpolicy_loader_->get_rules();
-	hcurrent_choosen_rule_ = Handle::UNDEFINED;
+void ForwardChainer::init() {
+	_cpolicy_loader = new JsonicControlPolicyLoader(_main_atom_space,
+			_conf_path);
+	_fcmem._search_in_af = _cpolicy_loader->get_attention_alloc();
+	_fcmem._rules = _cpolicy_loader->get_rules();
+	_fcmem._cur_rule = nullptr;
 }
 
-Handle ForwardChainer::tournament_select(map<Handle, float> hfitnes_map) {
-	if (hfitnes_map.size() == 1) {
-		return hfitnes_map.begin()->first;
-	}
-
-	map<Handle, float> winners;
-	int size = hfitnes_map.size() / 2; //TODO change the way tournament size is calculated
-	for (auto i = 0; i < size; i++) {
-		int index = (random() % hfitnes_map.size());
-		auto it = hfitnes_map.begin();
-		advance(it, index);
-		winners[it->first] = it->second;
-	}
-	auto it = winners.begin();
-	Handle hbest = it->first;
-	float max = it->second;
-	for (; it != winners.end(); ++it) {
-		if (it->second > max) {
-			hbest = it->first;
-			max = it->second;
-		}
-	}
-	return hbest;
-}
-
-Handle ForwardChainer::choose_target_from_list(HandleSeq hs_list) {
-	map<Handle, float> tournament_elem;
-	for (Handle h : hs_list) {
-		float fitness = target_tv_fitness(h);
-		tournament_elem[h] = fitness;
-	}
-	return tournament_select(tournament_elem);
-}
-
-Handle ForwardChainer::choose_target_from_atomspace(AtomSpace * as) {
-	HandleSeq hs;
-	as->getHandlesByType(back_inserter(hs), ATOM, true); //xxx experimental must be replaced by atoms in AF
-	for (Handle h : hs)
-		add_to_target_list(h);
-	return choose_target_from_list(target_list_);
-}
-
-void ForwardChainer::do_chain(Handle htarget) {
-	Handle hcurrent_target;
+void ForwardChainer::do_chain(ForwardChainerCallBack* fcb,
+		Handle htarget/*=Handle::UNDEFINED*/) {
+	Handle hcur_target;
 	int steps = 0;
-	auto max_iter = cpolicy_loader_->get_max_iter();
-	//bool terminate = false;
-	while (steps <= max_iter /*or !terminate*/) {
-		if (steps == 0) {
-			if (htarget == Handle::UNDEFINED)
-				hcurrent_target = choose_target_from_atomspace(
-						main_atom_space_); //start FC on a random target
-			else
-				hcurrent_target = htarget;
-		} else {
-			if (!target_list_.empty())
-				hcurrent_target = choose_target_from_list(target_list_);
-		}
-
-		choose_input(hcurrent_target); //add more premise via pattern matching of related atoms to hcurrent_target
-		choose_rule();
-		chaining_pm_.do_bindlink(hcurrent_choosen_rule_, *fcpm_); //xxx guide matching to search only the target list
+	auto max_iter = _cpolicy_loader->get_max_iter();
+	//TODO implement termination criteria
+	while (steps < max_iter /*OR other termination criteria*/) {
+		//set target
+		if (htarget == Handle::UNDEFINED and steps == 0)
+			hcur_target = choose_target_from_atomspace(_main_atom_space); //start FC on a random target
+		else if (htarget != Handle::UNDEFINED and steps == 0)
+			hcur_target = htarget;
+		else
+			hcur_target = fcb->choose_next_target(_fcmem);
+		//add more premise to hcurrent_target by pattern matching
+		HandleSeq input = fcb->choose_input(_fcmem);
+		_fcmem.expand_target_list(input);
+		//choose the best rule to apply
+		Rule& r = fcb->choose_rule(_fcmem);
+		_fcmem._cur_rule = &r;
+		//apply rule
+		HandleSeq product = fcb->apply_rule(_fcmem);
+		_fcmem.add_currule_product(product);
+		//proceed, xxx this seems very naive.
 		steps++;
-		//TODO implement termination criteria
-	}
-
-}
-
-void ForwardChainer::choose_input(Handle htarget) {
-	if (NodeCast(htarget)) {
-		HandleSeq hs = main_atom_space_->getIncoming(htarget);
-		for (Handle h : hs)
-			add_to_target_list(h); //add to potential target list
-	}
-	if (LinkCast(htarget)) {
-		map<Handle, string> hnode_vname_map = choose_variable(htarget);
-		Handle implicant = target_to_pmimplicant(htarget, hnode_vname_map);
-		Handle bindLink = commons_->create_bindLink(implicant);
-		//match all in main_atom_space using the above bindLink and add them to target list
-		chaining_pm_.do_bindlink(bindLink, *fcim_); //result is added to target_list in fcim_'s grounding call back handler
 	}
 }
 
-map<Handle, string> ForwardChainer::choose_variable(Handle htarget) {
-	vector<Handle> candidates = commons_->get_nodes(htarget, vector<Type>());
-	map<Handle, HandleSeq> node_iset_map;
-
-	//xxx don't choose two or more nodes linked by one Link( i.e choose only one whenever
-	//there are more than one node linked by the same link)
-	for (auto it = candidates.begin(); it != candidates.end(); ++it) {
-		HandleSeq hs = main_atom_space_->getIncoming(*it);
-		if (distance(candidates.begin(), it) == 0) {
-			node_iset_map[*it] = hs;
-		} else {
-			bool has_same_link = false;
-			for (auto i = node_iset_map.begin(); i != node_iset_map.end();
-					++i) {
-				HandleSeq tmp;
-				sort(hs.begin(), hs.end());
-				sort(i->second.begin(), i->second.end());
-				set_intersection(hs.begin(), hs.end(), i->second.begin(),
-						i->second.end(), back_inserter((tmp)));
-				if (tmp.size() > 0) {
-					has_same_link = true;
-					break;
-				}
-			}
-			if (!has_same_link)
-				node_iset_map[*it] = hs;
-		}
-	}
-
-	map<Handle, string> hnode_vname_map;
-	for (auto it = node_iset_map.begin(); it != node_iset_map.end(); ++it) {
-		Handle h = it->first;
-		hnode_vname_map[h] = ("$var-" + NodeCast((h))->getName());
-	}
-	return hnode_vname_map;
-}
-
-Handle ForwardChainer::target_to_pmimplicant(Handle htarget,
-		map<Handle, string> hnode_vname_map) {
-	Type link_type;
-	HandleSeq hsvariablized;
-
-	if (LinkCast(htarget)) {
-		LinkPtr p_htarget = LinkCast(htarget);
-		link_type = p_htarget->getType();
-		HandleSeq hsoutgoing = main_atom_space_->getOutgoing(htarget);
-		for (auto i = hsoutgoing.begin(); i != hsoutgoing.end(); ++i) {
-			Handle htmp = target_to_pmimplicant(*i, hnode_vname_map);
-			hsvariablized.push_back(htmp);
-		}
-		return main_atom_space_->addLink(link_type, hsvariablized,
-				TruthValue::TRUE_TV());
-	} else {
-		if (NodeCast(htarget)) {
-			auto it_var = hnode_vname_map.find(htarget); //TODO replace by find-if for linear complexity
-			NodePtr p_htarget = NodeCast(htarget);
-			if (it_var != hnode_vname_map.end())
-				return main_atom_space_->addNode(VARIABLE_NODE, it_var->second,
-						TruthValue::TRUE_TV());
-			else
-				return htarget;
-		}
-	}
-	return Handle::UNDEFINED; //unreachable?
-}
-
-void ForwardChainer::choose_rule() {
-	//TODO choose rule via stochastic selection or fitness selection
-	Rule *choosen_rule = rules_[random() % rules_.size()];
-	auto mset = choosen_rule->get_mutex_rules();
-	hcurrent_choosen_rule_ = choosen_rule->get_handle();
-}
-
-void ForwardChainer::add_to_target_list(Handle h) {
-	bool found = (find(target_list_.begin(), target_list_.end(), h)
-			!= target_list_.end());
-	if (NodeCast(h)) {
-		if (found)
-			target_list_.push_back(h);
-	}
-	if (LinkCast(h)) {
-		if (found)
-			target_list_.push_back(h);
-		HandleSeq hs = main_atom_space_->getOutgoing(h);
-		for (Handle hi : hs)
-			if (find(target_list_.begin(), target_list_.end(), hi)
-					== target_list_.end())
-				add_to_target_list(hi);
-	}
-}
-
-HandleSeq ForwardChainer::get_chaining_result(void) {
-	return chaining_results;
-}
-
-bool ForwardChainer::exists(HandleSeq& hseq, Handle& h) {
-	for (Handle hi : hseq) {
-		if (hi.value() == h.value())
-			return true;
-	}
-	return false;
-}
-
-bool ForwardChainer::is_in_target_list(Handle h) {
-	return exists(target_list_, h);
-}
