@@ -22,6 +22,7 @@
  */
 
 #include "ForwardChainer.h"
+#include "ForwardChainerCallBack.h"
 #include <opencog/reasoning/RuleEngine/rule-engine-src/JsonicControlPolicyLoader.h>
 
 ForwardChainer::ForwardChainer(AtomSpace * as, string conf_path /*=""*/) :
@@ -44,7 +45,7 @@ void ForwardChainer::init() {
 	_fcmem._cur_rule = nullptr;
 }
 
-void ForwardChainer::do_chain(ForwardChainerCallBack* fcb,
+void ForwardChainer::do_chain(ForwardChainerCallBack& fcb,
 		Handle htarget/*=Handle::UNDEFINED*/) {
 	Handle hcur_target;
 	int steps = 0;
@@ -57,17 +58,18 @@ void ForwardChainer::do_chain(ForwardChainerCallBack* fcb,
 		else if (htarget != Handle::UNDEFINED and steps == 0)
 			hcur_target = htarget;
 		else
-			hcur_target = fcb->choose_next_target(_fcmem);
+			hcur_target = fcb.choose_next_target(_fcmem);
 		//add more premise to hcurrent_target by pattern matching
-		HandleSeq input = fcb->choose_input(_fcmem);
+		HandleSeq input = fcb.choose_input(_fcmem);
 		_fcmem.expand_target_list(input);
 		//choose the best rule to apply
-		Rule& r = fcb->choose_rule(_fcmem);
+		Rule& r = fcb.choose_rule(_fcmem);
 		_fcmem._cur_rule = &r;
 		//apply rule
-		HandleSeq product = fcb->apply_rule(_fcmem);
-		_fcmem.add_currule_product(product);
-		//proceed, xxx this seems very naive.
+		HandleSeq product = fcb.apply_rule(_fcmem);
+		//TODO add to potential target list
+		_fcmem.add_rules_product(product);
+
 		steps++;
 	}
 }

@@ -25,7 +25,6 @@
 #define FORWARDCHAINERCALLBACK_H_
 
 #include "PLNCommons.h"
-#include "ForwardChainer.h"
 #include "FCMemory.h"
 #include <opencog/reasoning/RuleEngine/rule-engine-src/Rule.h>
 
@@ -48,24 +47,24 @@ public:
 	 * given a set of rules,choose next rule to be applied based on
 	 * target,fitness evaluation,weight of rule in the current context...etc
 	 */
-	virtual Rule& choose_rule(FCMemory& fcm) = 0;
+	virtual Rule& choose_rule(FCMemory& fcmem) = 0;
 	/**
 	 * Choose additional premises to the chainer based on fitness
 	 * evaluation in the focus set.
 	 * @return a set of Handles chosen as a result of applying fitness
 	 * criteria with respect to the current target.
 	 */
-	virtual HandleSeq choose_input(FCMemory& fcm) = 0;
+	virtual HandleSeq choose_input(FCMemory& fcmem) = 0;
 	/**
 	 * choose next target from the target list
 	 * @return a handle to the chosen target from target list
 	 */
-	virtual Handle choose_next_target(FCMemory& fcm) = 0;
+	virtual Handle choose_next_target(FCMemory& fcmem) = 0;
 	/**
 	 * apply chosen rule. the default will wrap a custom PM callback class.
 	 * i.e invokes _pattern_matcher.
 	 * @return a set of handles created as a result of applying current choosen rule
 	 */
-	virtual HandleSeq apply_rule(FCMemory& fcm) = 0;
+	virtual HandleSeq apply_rule(FCMemory& fcmem) = 0;
 };
 #endif /* FORWARDCHAINERCALLBACK_H_ */

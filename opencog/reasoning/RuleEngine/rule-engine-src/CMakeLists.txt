@@ -10,6 +10,7 @@ ControlPolicyLoader.cc
 JsonicControlPolicyLoader.cc
 RuleEngineModule.cc
 InferenceSCM.cc
+pln/DefaultForwardChainerCB.cc
 )
 
 ADD_DEPENDENCIES(ruleengine

@@ -24,7 +24,7 @@
 #ifndef FORWARDCHAINPATTERNMATCHCB_H_
 #define FORWARDCHAINPATTERNMATCHCB_H_
 
-#include "ForwardChainer.h"
+#include "FCMemory.h"
 
 #include <opencog/query/DefaultImplicator.h>
 
@@ -33,15 +33,15 @@ using namespace opencog;
 class ForwardChainer;
 class ForwardChainPatternMatchCB: public virtual PLNImplicator {
 private:
-	AtomSpace * as_;
-	ForwardChainer * fc_;
+	AtomSpace* _as;
+	FCMemory * _fcmem;
+	HandleSeq _products;
 public:
-	ForwardChainPatternMatchCB(AtomSpace * as, ForwardChainer * fc);
+	ForwardChainPatternMatchCB(AtomSpace * as);
 	virtual ~ForwardChainPatternMatchCB();
-	HandleSeq& get_results();
-
+	HandleSeq get_products(void);
+    void set_fcmme(FCMemory *fcmem);
 	//the follwing callbacks are used for guiding the PM to look only the target list
-	//based on step 3 of http://wiki.opencog.org/w/New_PLN_Chainer_Design#Overall_Forward_Chaining_Process
 	bool node_match(Handle& node1, Handle& node2);
 	bool link_match(LinkPtr& lpat, LinkPtr& lsoln);
 
@@ -50,6 +50,7 @@ public:
 	 */
 	bool grounding(const std::map<Handle, Handle> &var_soln,
 				const std::map<Handle, Handle> &pred_soln);
+
 };
 
 #endif /* FORWARDCHAINPATTERNMATCHCB_H_ */

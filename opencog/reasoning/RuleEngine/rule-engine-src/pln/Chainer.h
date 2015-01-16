@@ -32,7 +32,6 @@ using namespace opencog;
  */
 class Chainer {
 private:
-	const float _ctv_fitnes = 0.9; // from the PLN book
 protected:
 	AtomSpace * _main_atom_space; // knowledge base atomspace
 	AtomSpace * _target_list_atom_space; //supposed to store selected premises
@@ -42,15 +41,6 @@ protected:
 public:
 	Chainer(AtomSpace *);
 	virtual ~Chainer();
-	virtual void do_chain(Handle htarget) = 0;
-	virtual void choose_rule(void) = 0;
-	/**
-	 * calculates fitness values in target_list_atom_space using the formula F = s^x * c^(2-x)
-	 * where s is strength,c is confidence and x is some fixed value
-	 * @param h - a handle
-	 * @return a fitness value
-	 */
-	float target_tv_fitness(Handle h);
 	void set_htarget(Handle& h);
 };
 #endif /* CHAINER_H_ */

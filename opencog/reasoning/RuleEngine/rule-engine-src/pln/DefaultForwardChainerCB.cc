@@ -1,48 +1,68 @@
 /*
  * DefaultForwardChainerCB.cc
  *
- *  Created on: 14 Jan, 2015
- *      Author: misgana
+ * Copyright (C) 2015 Misgana Bayetta
+ *
+ * Author: Misgana Bayetta <misgana.bayetta@gmail.com>
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License v3 as
+ * published by the Free Software Foundation and including the exceptions
+ * at http://opencog.org/wiki/Licenses
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program; if not, write to:
+ * Free Software Foundation, Inc.,
+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
 #include "DefaultForwardChainerCB.h"
-#include "FCMemory.h"
 
 DefaultForwardChainerCB::DefaultForwardChainerCB(AtomSpace* as) :
 		ForwardChainerCallBack(as) {
-
+	_fcim = new ForwardChainInputMatchCB(as);
+	_fcpm = new ForwardChainPatternMatchCB(as);
 }
 
 DefaultForwardChainerCB::~DefaultForwardChainerCB() {
+	delete _fcim;
+	delete _fcpm;
 }
 
 //-----------------callbacks-------------------------------------------------------------------------------//
 
-Rule& DefaultForwardChainerCB::choose_rule(FCMemory& fcm) {
-	//TODO choose rule via stochastic selection or fitness selection
-	auto rules_ = fcm.get_rules();
-	Rule *choosen_rule = rules_[random() % rules_.size()];
-	return choosen_rule;
+Rule& DefaultForwardChainerCB::choose_rule(FCMemory& fcmem) {
+	//TODO choose rule via stochastic selection or fitness based selection
+	auto rules = fcmem.get_rules();
+	Rule *choosen_rule = rules[random() % rules.size()];
+	return *choosen_rule;
 	//TODO handle mutual exclusions
 }
 
-HandleSeq DefaultForwardChainerCB::choose_input(FCMemory& fcm) {
-	Handle htarget = fcm.get_cur_target();
-	if (NodeCast(htarget)) {
-		HandleSeq hs = _as->getIncoming(htarget);
-		for (Handle h : hs)
-			add_to_target_list(h); //add to potential target list
-	}
+HandleSeq DefaultForwardChainerCB::choose_input(FCMemory& fcmem) {
+	Handle htarget = fcmem.get_cur_target();
+	HandleSeq inputs;
+	if (NodeCast(htarget))
+		inputs = _as->getIncoming(htarget);
+
 	if (LinkCast(htarget)) {
 		map<Handle, string> hnode_vname_map = choose_variable(htarget);
 		Handle implicant = target_to_pmimplicant(htarget, hnode_vname_map);
 		Handle bindLink = _commons->create_bindLink(implicant);
-		_pattern_matcher.do_bindlink(bindLink, *fcim_); //result is added to target_list in fcim_'s grounding call back handler
+		//find inputs by pattern matching with custom callback _fcim
+		_pattern_matcher.do_bindlink(bindLink, *_fcim);
+		inputs = _fcim->get_input_matches();
 	}
+	return inputs;
 }
 
-Handle DefaultForwardChainerCB::choose_next_target(FCMemory& fcm) {
-	HandleSeq tlist = fcm.get_target_list();
+Handle DefaultForwardChainerCB::choose_next_target(FCMemory& fcmem) {
+	HandleSeq tlist = fcmem.get_target_list();
 	map<Handle, float> tournament_elem;
 	for (Handle t : tlist) {
 		float fitness = target_tv_fitness(t);
@@ -51,16 +71,20 @@ Handle DefaultForwardChainerCB::choose_next_target(FCMemory& fcm) {
 	return tournament_select(tournament_elem);
 }
 
-HandleSeq DefaultForwardChainerCB::apply_rule(FCMemory& fcm) {
+HandleSeq DefaultForwardChainerCB::apply_rule(FCMemory& fcmem) {
+	Rule * cur_rule = fcmem.get_cur_rule();
+	_fcpm->set_fcmme(&fcmem);
+	_pattern_matcher.do_bindlink(cur_rule->get_handle(), *_fcpm);
 
+	return _fcpm->get_products();
 }
-//-------------------private methods------------------------------------------------------------------------------//
+
+//-------------------private helper methods------------------------------------------------------------------------------//
 
 map<Handle, string> DefaultForwardChainerCB::choose_variable(Handle htarget) {
 	vector<Handle> candidates = _commons->get_nodes(htarget, vector<Type>());
 	map<Handle, HandleSeq> node_iset_map;
-//xxx don't choose two or more nodes linked by one Link( i.e choose only one whenever
-//there are more than one node linked by the same link)
+	//enforce not choosing two or more variables in the same Link
 	for (auto it = candidates.begin(); it != candidates.end(); ++it) {
 		HandleSeq hs = _as->getIncoming(*it);
 		if (distance(candidates.begin(), it) == 0) {
@@ -83,6 +107,12 @@ map<Handle, string> DefaultForwardChainerCB::choose_variable(Handle htarget) {
 				node_iset_map[*it] = hs;
 		}
 	}
+	map<Handle, string> hnode_vname_map;
+	for (auto it = node_iset_map.begin(); it != node_iset_map.end(); ++it) {
+		Handle h = it->first;
+		hnode_vname_map[h] = ("$var-" + NodeCast((h))->getName());
+	}
+	return hnode_vname_map;
 }
 
 Handle DefaultForwardChainerCB::target_to_pmimplicant(Handle htarget,
@@ -113,26 +143,6 @@ Handle DefaultForwardChainerCB::target_to_pmimplicant(Handle htarget,
 	return Handle::UNDEFINED; //unreachable?
 }
 
-void DefaultForwardChainerCB::add_to_target_list(Handle h) {
-	bool found = (find(target_list_.begin(), target_list_.end(), h)
-			!= target_list_.end());
-	if (NodeCast(h)) {
-		if (found)
-			target_list_.push_back(h);
-	}
-	if (LinkCast(h)) {
-		if (found)
-			target_list_.push_back(h);
-		HandleSeq hs = _as->getOutgoing(h);
-		for (Handle hi : hs)
-			if (find(target_list_.begin(), target_list_.end(), hi)
-					== target_list_.end())
-				add_to_target_list(hi);
-	}
-}
-
-//-----------helper functions------------------------------------------------------//
-
 Handle DefaultForwardChainerCB::tournament_select(
 		map<Handle, float> hfitnes_map) {
 	if (hfitnes_map.size() == 1) {
@@ -158,3 +168,12 @@ Handle DefaultForwardChainerCB::tournament_select(
 	}
 	return hbest;
 }
+
+float DefaultForwardChainerCB::target_tv_fitness(Handle h) {
+	TruthValuePtr ptv = _as->getTV(h);
+	confidence_t c = ptv->getConfidence();
+	strength_t s = ptv->getMean();
+
+	return (pow((1 - s), _ctv_fitnes) * (pow(c, (2 - _ctv_fitnes))));
+}
+

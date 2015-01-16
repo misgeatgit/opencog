@@ -26,11 +26,12 @@
 
 #include "Chainer.h"
 #include "PLNCommons.h"
-#include "ForwardChainerCallBack.h"
 #include "FCMemory.h"
-
 #include <opencog/reasoning/RuleEngine/rule-engine-src/ControlPolicyLoader.h>
 
+using namespace opencog;
+
+class ForwardChainerCallBack;
 class ForwardChainer: public virtual Chainer {
 private:
 	ControlPolicyLoader* _cpolicy_loader;
@@ -47,7 +48,7 @@ private:
 public:
 	ForwardChainer(AtomSpace * as, string conf_path = "");
 	virtual ~ForwardChainer();
-	void do_chain(ForwardChainerCallBack* fcb, Handle htarget =
+	void do_chain(ForwardChainerCallBack& fcb, Handle htarget =
 			Handle::UNDEFINED);
 	/**
 	 * initialize config methods

@@ -24,17 +24,14 @@
 #ifndef FORWARDCHAININPUTMATCHCB_H_
 #define FORWARDCHAININPUTMATCHCB_H_
 
-#include "ForwardChainer.h"
-
 #include <opencog/query/DefaultImplicator.h>
 
 using namespace opencog;
 
-class ForwardChainer;
 class ForwardChainInputMatchCB: public virtual PLNImplicator {
 private:
-	AtomSpace * as_;
-	ForwardChainer * fc_;
+	AtomSpace* _as;
+	HandleSeq _input_match;
 public:
 	/**
 	 * @param main_as the main atomspace where initial target is fetched from
@@ -44,15 +41,8 @@ public:
 	 *  one can set the above two pointers to  the same atomspace object (wich now is the default way)
 	 *  if there is no intention of chaining in a separate atomspace.
 	 */
-	ForwardChainInputMatchCB(AtomSpace * main_as, AtomSpace * target_list_as,
-			ForwardChainer * fc);
+	ForwardChainInputMatchCB(AtomSpace * as);
 	virtual ~ForwardChainInputMatchCB();
-	/**
-	 *set the atomspace of the Instantiator member of Implicator object
-	 */
-	void set_instantiators_atom_space(AtomSpace * as);
-
-	HandleSeq get_result_list(void);
 
 	/**
 	 * callback handler passed to the PatternMatcher. Called when fully grounded soln is found.
@@ -60,6 +50,14 @@ public:
 	bool grounding(const std::map<Handle, Handle> &var_soln,
 			const std::map<Handle, Handle> &pred_soln);
 
+	/**
+	 *set the atomspace of the Instantiator member of Implicator object
+	 */
+	void set_instantiators_atom_space(AtomSpace * as);
+	/**
+	 * @return the matched inputs
+	 */
+	HandleSeq get_input_matches(void);
 };
 
 #endif /* FORWARDCHAININPUTMATCHCB_H_ */

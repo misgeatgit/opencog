@@ -8,7 +8,6 @@
 #ifndef FCMEMORY_H_
 #define FCMEMORY_H_
 
-#include "ForwardChainer.h"
 #include <opencog/reasoning/RuleEngine/rule-engine-src/Rule.h>
 
 using namespace opencog;
@@ -19,6 +18,7 @@ struct inference {
 	HandleSeq inf_product;
 };
 
+class ForwardChainer;
 class FCMemory {
 private:
 	friend class ForwardChainer; //allow access to private
@@ -28,39 +28,18 @@ private:
 	Rule* _cur_rule;
 	Handle _cur_target;
 	vector<inference> _inf_history; //inference history
-
-	void expand_target_list(HandleSeq input) {
-		_target_list.insert(_target_list.end(), input.begin(), input.end());
-	}
+	void expand_target_list(HandleSeq input);
 public:
 	FCMemory();
 	~FCMemory();
-	vector<Rule*>& get_rules(void) {
-		return _rules;
-	}
-	HandleSeq get_target_list(void) {
-		return _target_list;
-	}
-	bool is_search_in_af(void) {
-		return _search_in_af;
-	}
-	Rule* get_cur_rule(void) {
-		return _cur_rule;
-	}
-	void set_cur_rule(Rule* r) {
-		_cur_rule = r;
-	}
-	void add_currule_product(HandleSeq product) {
-		for (Handle p : product) {
-			inference inf;
-			inf.applied_rule = _cur_rule;
-			inf.inf_product.push_back(p);
-			_inf_history.push_back(inf);
-		}
-	}
-	Handle get_cur_target(void) {
-		return _cur_target;
-	}
+	vector<Rule*>& get_rules(void) ;
+	HandleSeq get_target_list(void);
+	bool is_search_in_af(void);
+	Rule* get_cur_rule(void);
+	void set_cur_rule(Rule* r) ;
+	void add_rules_product(HandleSeq product);
+	Handle get_cur_target(void) ;
+	bool is_in_target(Handle h);
 };
 
 #endif /* FCMEMORY_H_ */
