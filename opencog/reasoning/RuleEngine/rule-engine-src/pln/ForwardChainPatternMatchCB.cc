@@ -33,25 +33,22 @@ ForwardChainPatternMatchCB::~ForwardChainPatternMatchCB() {
 }
 
 bool ForwardChainPatternMatchCB::node_match(Handle& node1, Handle& node2) {
-	if (not AttentionalFocusCB::node_match(node1, node2)
-			or not _fcmem->is_search_in_af()) {
-		//force inference to be made only in the target list
-		bool result = not _fcmem->is_in_target(node1);
-		return result;
-
-	} else {
-		return true;
-	}
+	//constrain search within target list
+	if (_fcmem->is_search_in_af())
+		return (AttentionalFocusCB::node_match(node1, node2)
+				and _fcmem->isin_target_list(node2));
+	else
+		return (DefaultPatternMatchCB::node_match(node1, node2)
+				and _fcmem->isin_target_list(node2));
 }
 bool ForwardChainPatternMatchCB::link_match(LinkPtr& lpat, LinkPtr& lsoln) {
-	if (not AttentionalFocusCB::link_match(lpat, lsoln)
-			or not _fcmem->is_search_in_af()) {
-		//force inference to be made only in the target list
-		bool result = not _fcmem->is_in_target(Handle(lsoln));
-		return result;
-	} else
-		return true;
-
+	//constrain search within target list
+	if (_fcmem->is_search_in_af())
+		return (AttentionalFocusCB::link_match(lpat, lsoln)
+				and _fcmem->isin_target_list(Handle(lsoln)));
+	else
+		return (DefaultPatternMatchCB::link_match(lpat, lsoln)
+				and _fcmem->isin_target_list(Handle(lsoln)));
 }
 bool ForwardChainPatternMatchCB::grounding(
 		const std::map<Handle, Handle> &var_soln,
@@ -59,7 +56,6 @@ bool ForwardChainPatternMatchCB::grounding(
 	Handle h = inst.instantiate(implicand, var_soln);
 	if (Handle::UNDEFINED != h) {
 		_products.push_back(h);
-		//add to chaining result
 	}
 	return false;
 }

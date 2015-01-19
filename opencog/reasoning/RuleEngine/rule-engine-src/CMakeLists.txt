@@ -11,7 +11,11 @@ JsonicControlPolicyLoader.cc
 RuleEngineModule.cc
 InferenceSCM.cc
 pln/DefaultForwardChainerCB.cc
+pln/ForwardChainInputMatchCB.cc
+pln/ForwardChainPatternMatchCB.cc
+pln/ForwardChainerCallBack.h
 pln/RelexToLogicCB.cc
+pln/FCMemory.cc
 )
 
 ADD_DEPENDENCIES(ruleengine

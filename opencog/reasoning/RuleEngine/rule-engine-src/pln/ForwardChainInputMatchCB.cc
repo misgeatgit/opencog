@@ -25,7 +25,7 @@
 
 #include <opencog/guile/SchemeSmob.h>
 
-ForwardChainInputMatchCB::ForwardChainInputMatchCB(AtomSpace * as,
+ForwardChainInputMatchCB::ForwardChainInputMatchCB(AtomSpace * as
 ) :
 		Implicator(as), DefaultPatternMatchCB(as), AttentionalFocusCB(as), PLNImplicator(
 				as), _as(as) {

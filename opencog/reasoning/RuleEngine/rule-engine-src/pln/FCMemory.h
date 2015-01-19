@@ -9,14 +9,15 @@
 #define FCMEMORY_H_
 
 #include <opencog/reasoning/RuleEngine/rule-engine-src/Rule.h>
+#include <opencog/atomspace/AtomSpace.h>
 
-using namespace opencog;
-
-struct inference {
+struct Inference {
 	int step;
 	Rule* applied_rule;
 	HandleSeq inf_product;
 };
+
+using namespace opencog;
 
 class ForwardChainer;
 class FCMemory {
@@ -27,10 +28,11 @@ private:
 	HandleSeq _target_list; //selected targets on each forward chaining steps
 	Rule* _cur_rule;
 	Handle _cur_target;
-	vector<inference> _inf_history; //inference history
-	void expand_target_list(HandleSeq input);
+	vector<Inference> _inf_history; //inference history
+	AtomSpace* _as;
+	void update_target_list(HandleSeq input);
 public:
-	FCMemory();
+	FCMemory(AtomSpace* as);
 	~FCMemory();
 	vector<Rule*>& get_rules(void) ;
 	HandleSeq get_target_list(void);
@@ -39,7 +41,8 @@ public:
 	void set_cur_rule(Rule* r) ;
 	void add_rules_product(HandleSeq product);
 	Handle get_cur_target(void) ;
-	bool is_in_target(Handle h);
+	bool isin_target_list(Handle h);
+	HandleSeq get_result(void);
 };
 
 #endif /* FCMEMORY_H_ */

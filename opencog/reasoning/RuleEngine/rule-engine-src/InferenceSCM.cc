@@ -61,8 +61,8 @@ Handle InferenceSCM::do_forward_chaining(Handle h) {
 	DefaultForwardChainerCB dfc(as);
 	ForwardChainer fc(as);
 	fc.do_chain(dfc); //START FORWARD CHAINING
-	//HandleSeq result = fc.get_chaining_result();
-	//return as->addLink(LIST_LINK, result, TruthValue::DEFAULT_TV());
+	HandleSeq result = fc.get_chaining_result();
+	return as->addLink(LIST_LINK, result, TruthValue::DEFAULT_TV());
 #else
 	return Handle::UNDEFINED;
 #endif

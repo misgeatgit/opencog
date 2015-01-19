@@ -36,7 +36,11 @@ class ForwardChainer: public virtual Chainer {
 private:
 	ControlPolicyLoader* _cpolicy_loader;
 	AtomSpace * _as;
-	FCMemory _fcmem;
+	FCMemory* _fcmem;
+	/**
+	 * initialize config methods
+	 */
+	void init();
 	//TODO this is duplicate method
 	/**
 	 * choose a random target to start forward chaining with. This is useful when there is no target
@@ -50,10 +54,7 @@ public:
 	virtual ~ForwardChainer();
 	void do_chain(ForwardChainerCallBack& fcb, Handle htarget =
 			Handle::UNDEFINED);
-	/**
-	 * initialize config methods
-	 */
-	void init();
+     HandleSeq get_chaining_result(void);
 };
 
 #endif /* FORWARDCHAINERX_H_ */
