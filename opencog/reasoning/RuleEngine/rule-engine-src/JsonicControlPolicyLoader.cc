@@ -98,11 +98,9 @@ void JsonicControlPolicyLoader::read_obj(const Value &v, int lev) {
 
 		} else if (key == MUTEX_RULES and value.type() != null_type) {
 			const Array& a = value.get_array();
-			vector<string> mutex_names;
 			for (Array::size_type i = 0; i < a.size(); ++i) {
-				mutex_names.push_back(a[i].get_value<string>());
+				rule_mutex_map_[cur_read_rule_].push_back(a[i].get_value<string>());
 			}
-			rule_mutex_map_[cur_read_rule_] = mutex_names;
 
 		} else if (key == MAX_ITER) {
 			max_iter_ = value.get_value<int>();
