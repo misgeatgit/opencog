@@ -73,11 +73,9 @@ void JsonicControlPolicyLoader::read_obj(const Value &v, int lev) {
 			read_json(value, lev + 1);
 
 		} else if (key == RULE_NAME) {
-			if (cur_read_rule_)
-				rules_.push_back(cur_read_rule_); //xxx take care of pointers
 			cur_read_rule_ = new Rule();
 			cur_read_rule_->set_name(value.get_value<string>());
-
+			rules_.push_back(cur_read_rule_); //xxx take care of pointers
 		} else if (key == FILE_PATH) {
 			load_scm_file_relative(*as_, value.get_value<string>(),
 					vector<string>(0));
@@ -99,7 +97,8 @@ void JsonicControlPolicyLoader::read_obj(const Value &v, int lev) {
 		} else if (key == MUTEX_RULES and value.type() != null_type) {
 			const Array& a = value.get_array();
 			for (Array::size_type i = 0; i < a.size(); ++i) {
-				rule_mutex_map_[cur_read_rule_].push_back(a[i].get_value<string>());
+				rule_mutex_map_[cur_read_rule_].push_back(
+						a[i].get_value<string>());
 			}
 
 		} else if (key == MAX_ITER) {

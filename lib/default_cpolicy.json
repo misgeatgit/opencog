@@ -83,10 +83,6 @@
 			],
 
 			"category": "PLN"
-		},
-
-		{
-			"BUG_FIX": "JsonicControlPolicyLoader isn't picking the last array object.Appending a dummy object like this fixes the issue."
 		}
 	],
 
