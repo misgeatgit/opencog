@@ -28,7 +28,8 @@
 #include <opencog/guile/SchemeEval.h>
 
 ControlPolicyLoader::ControlPolicyLoader(AtomSpace * as, string conf_path) :
-		as_(as), conf_path_(conf_path) {
+		as_(as){
+	_conf_path = conf_path;
 	scm_eval_ = new SchemeEval(as_);
 }
 
@@ -92,7 +93,7 @@ void ControlPolicyLoader::load_single_val_params() {
 
 void ControlPolicyLoader::load_config() {
 	try {
-		config().load(conf_path_.c_str());
+		config().load(_conf_path.c_str());
 	} catch (RuntimeException &e) {
 		std::cerr << e.getMessage() << std::endl;
 	}

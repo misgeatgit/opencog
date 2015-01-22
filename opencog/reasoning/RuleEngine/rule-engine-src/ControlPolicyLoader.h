@@ -52,7 +52,7 @@ protected:
 	map<string, Rule*> strname_rule_map_; //a map of name of the rule as represented in the scheme file and associated c++ rule object
 	int max_iter_;
 	bool attention_alloc_;
-	string conf_path_;
+	string _conf_path;
 	string log_level_;
 	/**
 	 * @return a set of mutually exclusive rules defined in the control policy file
