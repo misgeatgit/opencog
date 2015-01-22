@@ -60,7 +60,7 @@ bool ForwardChainPatternMatchCB::grounding(
 	return false;
 }
 
-void ForwardChainPatternMatchCB::set_fcmme(FCMemory *fcmem) {
+void ForwardChainPatternMatchCB::set_fcmem(FCMemory *fcmem) {
 	_fcmem = fcmem;
 }
 HandleSeq ForwardChainPatternMatchCB::get_products() {
