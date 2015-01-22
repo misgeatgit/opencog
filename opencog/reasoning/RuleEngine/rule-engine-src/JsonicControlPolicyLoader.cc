@@ -9,6 +9,7 @@
 #include "PolicyParams.h"
 
 #include <fstream>
+#include <lib/json_spirit/json_spirit.h>
 #include <lib/json_spirit/json_spirit_stream_reader.h>
 
 #include <opencog/guile/load-file.h>
@@ -49,7 +50,7 @@ Rule* JsonicControlPolicyLoader::get_rule(string& name) {
 }
 
 void JsonicControlPolicyLoader::load_config() {
-	ifstream is(conf_path_);
+	ifstream is("lib/"+_conf_path); //assumes json files are always installed in build/lib dir
 	Stream_reader<ifstream, Value> reader(is);
 	Value value;
 	while (reader.read_next(value))
