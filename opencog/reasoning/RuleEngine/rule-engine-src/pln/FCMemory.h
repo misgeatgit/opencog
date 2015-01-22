@@ -35,6 +35,7 @@ public:
 	FCMemory(AtomSpace* as);
 	~FCMemory();
 	vector<Rule*>& get_rules(void) ;
+	void set_target(Handle target);
 	HandleSeq get_target_list(void);
 	bool is_search_in_af(void);
 	Rule* get_cur_rule(void);

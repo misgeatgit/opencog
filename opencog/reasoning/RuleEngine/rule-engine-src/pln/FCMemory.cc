@@ -25,6 +25,10 @@ void FCMemory::update_target_list(HandleSeq input) {
 vector<Rule*>& FCMemory::get_rules(void) {
 	return _rules;
 }
+void FCMemory::set_target(Handle target){
+  _cur_target = target;
+  _target_list.push_back(_cur_target);
+}
 HandleSeq FCMemory::get_target_list(void) {
 	return _target_list;
 }
