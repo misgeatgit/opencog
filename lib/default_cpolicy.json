@@ -86,7 +86,7 @@
 		}
 	],
 
-	"attention-allocation": false,
-	"max-iter": 20,
-	"log-level": "debug"
+	"attention_allocation": false,
+	"max_iter": 20,
+	"log_level": "debug"
 }
