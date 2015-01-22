@@ -25,7 +25,7 @@ void JsonicControlPolicyLoaderUTest::setUp() {
 	jcpl->load_config();
 }
 void JsonicControlPolicyLoaderUTest::tearDown() {
-
+   delete jcpl;
 }
 void JsonicControlPolicyLoaderUTest::test_load_config() {
 	auto rules = jcpl->get_rules();
