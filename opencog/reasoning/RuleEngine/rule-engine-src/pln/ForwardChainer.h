@@ -47,8 +47,9 @@ private:
 	 * specified ahead to the forward chaining process.
 	 * @param as - the atomspace instance from which target is selected
 	 */
-	Handle choose_target_from_atomspace(AtomSpace *);
+	Handle choose_random_target(AtomSpace *);
 	void add_to_target_list(Handle h);
+	void init_target(Handle target);
 public:
 	ForwardChainer(AtomSpace * as, string conf_path = "");
 	virtual ~ForwardChainer();

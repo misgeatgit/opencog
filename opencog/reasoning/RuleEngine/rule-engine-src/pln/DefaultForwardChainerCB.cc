@@ -23,6 +23,8 @@
 
 #include "DefaultForwardChainerCB.h"
 
+#include <opencog/guile/SchemeSmob.h>
+
 DefaultForwardChainerCB::DefaultForwardChainerCB(AtomSpace* as) :
 		ForwardChainerCallBack(as) {
 	_fcim = new ForwardChainInputMatchCB(as);
@@ -47,13 +49,16 @@ Rule& DefaultForwardChainerCB::choose_rule(FCMemory& fcmem) {
 HandleSeq DefaultForwardChainerCB::choose_input(FCMemory& fcmem) {
 	Handle htarget = fcmem.get_cur_target();
 	HandleSeq inputs;
-	if (NodeCast(htarget))
+	if (NodeCast(htarget)) {
 		inputs = _as->getIncoming(htarget);
+	}
 
 	if (LinkCast(htarget)) {
 		map<Handle, string> hnode_vname_map = choose_variable(htarget);
 		Handle implicant = target_to_pmimplicant(htarget, hnode_vname_map);
+		cout << "IMPLINK: " << SchemeSmob::to_string(implicant) << endl;
 		Handle bindLink = _commons->create_bindLink(implicant);
+		cout << "BIND_LINK: " << SchemeSmob::to_string(bindLink) << endl;
 		//find inputs by pattern matching with custom callback _fcim
 		_pattern_matcher.do_bindlink(bindLink, *_fcim);
 		inputs = _fcim->get_input_matches();
@@ -73,7 +78,8 @@ Handle DefaultForwardChainerCB::choose_next_target(FCMemory& fcmem) {
 
 HandleSeq DefaultForwardChainerCB::apply_rule(FCMemory& fcmem) {
 	Rule * cur_rule = fcmem.get_cur_rule();
-	_fcpm->set_fcmme(&fcmem);
+	_fcpm->set_fcmem(&fcmem);
+	cout << "RULE IS:" << SchemeSmob::to_string(cur_rule->get_handle()) << endl;
 	_pattern_matcher.do_bindlink(cur_rule->get_handle(), *_fcpm);
 
 	return _fcpm->get_products();
