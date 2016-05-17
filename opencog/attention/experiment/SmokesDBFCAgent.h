@@ -102,7 +102,7 @@ private:
         if(out.size() == 0)
             return;
         auto comparator =
-                [](Handle& h1, Handle& h2) {return h1->getSTI() > h2->getSTI();};
+                [](const Handle& h1, const Handle& h2) {return h1->getSTI() > h2->getSTI();};
         std::sort(out.begin(), out.end(), comparator);
 
         AttentionValue::sti_t afboundary;

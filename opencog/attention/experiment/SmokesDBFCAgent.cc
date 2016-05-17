@@ -331,7 +331,7 @@ float SmokesDBFCAgent::surprisingness_value(const Handle& hx)
         h = hx;
 
     strength_t mean_tv = 0.0f;
-    bool val = false;
+    //bool val = false;
     float mi = 0.0f;
     save("smokes-fc-result.data", HandleSeq { }, "\n");
     if (is_friendship_reln(h)) {
