@@ -35,7 +35,7 @@ DECLARE_MODULE(ExperimentSetupModule);
 
 std::map<Handle, std::vector<AValues>> ExperimentSetupModule::_av_data;
 std::map<Handle, std::vector<TValues>> ExperimentSetupModule::_hebtv_data;
-std::map<Handle, std::vector<TValues>>  ExperimentSetupModule::_hascancer_tv_data;
+std::map<Handle, std::vector<TValues>> ExperimentSetupModule::_hascancer_tv_data;
 
 ExperimentSetupModule::ExperimentSetupModule(CogServer& cs) :
         Module(cs), _cs(cs)
