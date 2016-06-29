@@ -14,8 +14,12 @@
 #include <opencog/cogserver/server/Agent.h>
 #include <opencog/cogserver/server/Factory.h>
 
-#include "Globals.h"
+#include <opencog/attention/experimental/AFImportanceDiffusionAgent.h>
+#include <opencog/attention/experimental/WAImportanceDiffusionAgent.h>
+#include <opencog/attention/experimental/AFRentCollectionAgent.h>
+#include <opencog/attention/experimental/WARentCollectionAgent.h>
 
+#include "Globals.h"
 
 namespace opencog {
 
@@ -44,11 +48,21 @@ private:
     AgentPtr _sentencegenstim_agentptr;
     AgentPtr _artificialstimulatoragentptr;
     AgentPtr _smokes_fc_agentptr;
+    
+    AgentPtr _afImportanceAgentPtr; 
+    AgentPtr _waImportanceAgentPtr;    
+    AgentPtr _waRentAgentPtr;
+    AgentPtr _afRentAgentPtr;
 
     Factory<ArtificialStimulatorAgent, Agent> artificialStimulatorAgentFactory;
     Factory<SentenceGenStimulateAgent, Agent> sentenceGenStimulateFactory;
     Factory<SmokesDBFCAgent, Agent> smokesFCAgnetFactory;
-
+    
+    Factory<AFImportanceDiffusionAgent, Agent>  afImportanceFactory;
+    Factory<WAImportanceDiffusionAgent, Agent>  waImportanceFactory;    
+    Factory<AFRentCollectionAgent, Agent>  afRentFactory;
+    Factory<WARentCollectionAgent, Agent>  waRentFactory;
+   
     AtomSpace * _as;
     CogServer& _cs;
     Logger * _log;
