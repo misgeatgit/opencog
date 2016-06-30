@@ -78,9 +78,10 @@ namespace opencog {
                 sti_update_times.push_back(diff);
                 last_update = current;
 
-                float average_time = std::accumulate(sti_update_times.begin(),
-                        sti_update_times.end(), chrono_d(0)).count()
-                        / sti_update_times.size();
+                float sum = std::accumulate(sti_update_times.begin(),
+                        sti_update_times.end(), chrono_d(0)).count();
+                
+                float average_time = sum / sti_update_times.size();
 
                 freq = 1 / average_time;
             }
@@ -96,4 +97,3 @@ namespace opencog {
         std::vector<Bin> merge_bins(std::vector<Bin>& past, std::vector<Bin>& recent, float bias);
     }
 }
-
