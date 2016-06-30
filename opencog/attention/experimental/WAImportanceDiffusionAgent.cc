@@ -51,7 +51,8 @@ void WAImportanceDiffusionAgent::run()
         spreadImportance();
         
         //some sleep code
-        std::cout << "[DEBUG] [WAImportanceDiffusionAgent] sleeping for " <<  get_sleep_time() << "\n"; 
+        std::cout << "[DEBUG] [WAImportanceDiffusionAgent] sleeping for " 
+                  <<  get_sleep_time() << "\n"; 
         std::this_thread::sleep_for(std::chrono::milliseconds(get_sleep_time()));
     }
 }

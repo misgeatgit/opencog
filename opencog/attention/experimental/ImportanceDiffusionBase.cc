@@ -22,8 +22,11 @@
  * Free Software Foundation, Inc.,
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
-#include <time.h>
-#include <math.h>
+#include <ctime>
+#include <cmath>
+#include <fstream>
+#include <chrono>
+
 
 #include <opencog/util/algorithm.h>
 #include <opencog/util/Config.h>
@@ -267,15 +270,47 @@ void ImportanceDiffusionBase::diffuseAtom(Handle source)
 /*
  * Trades STI between a source atom and a target atom
  */
+
+using  sys_clock = std::chrono::system_clock;
+
 void ImportanceDiffusionBase::tradeSTI(DiffusionEventType event)
 {
+    auto src_sti = event.source->getSTI();
+    auto trgt_sti = event.target->getSTI();
+    auto diff_amount = event.amount;
+    auto src_uuid = event.source.value();
+    auto trgt_uuid = event.target.value();
+    auto in_time_t = sys_clock::to_time_t(sys_clock::now());
+    
     // Trade STI between the source and target atoms
-    as->set_STI(event.source, as->get_STI(event.source) - event.amount);
-    as->set_STI(event.target, as->get_STI(event.target) + event.amount);
+    as->set_STI(event.source, src_sti - diff_amount);
+    as->set_STI(event.target, trgt_sti + diff_amount);
+    
+    // src_uuid  src_sti  trgt_uuid trgt_sti  time amount af_sti
+    std::ofstream outf("diffusion.data", std::ofstream::out | std::ofstream::app);
+   
+    // Log diffusion stat 
+    static bool first_time = true;
+    if(first_time){
+        outf << "src_uuid  src_sti  trgt_uuid  trgt_sti  diff_amount  " 
+             << "af_sti  time\n" ;
+      first_time = false;
+    }
+    
+    char buff[31];
+    strftime(buff, 30, "%H:%M:%S", std::localtime(&in_time_t));
+    std::string ts(buff);
+
+    outf << src_uuid << " " << src_sti << " " << trgt_uuid << " " << trgt_sti 
+         << diff_amount << " " << as->get_attentional_focus_boundary() 
+         << " " << ts <<"\n";
+
+    outf.flush();
+    outf.close();  
 
 #ifdef DEBUG
     std::cout << "tradeSTI: " << event.amount << " from " << event.source
-              << " to " << event.target << "." << std::endl;
+        << " to " << event.target << "." << std::endl;
 #endif
 
     // TODO: How to make this a transaction? This could go wrong if there
@@ -290,7 +325,7 @@ void ImportanceDiffusionBase::tradeSTI(DiffusionEventType event)
     // diffuse more STI than it has. This also can cause an atom to not
     // diffuse any STI when the amount to be diffused is less than 1.
     //   * See: https://github.com/opencog/opencog/issues/676
-    
+
 }
 
 /*
@@ -301,9 +336,9 @@ void ImportanceDiffusionBase::tradeSTI(DiffusionEventType event)
  */
 HandleSeq ImportanceDiffusionBase::diffusionSourceVector(bool af_only)
 {
-    
+
     HandleSeq resultSet;
-    
+
     if(af_only)
         as->get_handle_set_in_attentional_focus(back_inserter(resultSet));
     else
@@ -312,48 +347,48 @@ HandleSeq ImportanceDiffusionBase::diffusionSourceVector(bool af_only)
 #ifdef DEBUG
     std::cout << "Calculating diffusionSourceVector." << std::endl;
     std::cout << "AF Size before removing hebbian links: " <<
-                 resultSet.size() << "\n";
+        resultSet.size() << "\n";
 #endif
 
     // Remove the hebbian links
     auto it_end =
         std::remove_if(resultSet.begin(), resultSet.end(),
-                       [=](const Handle& h)
-                       {
-                           Type type = as->get_type(h);
+                [=](const Handle& h)
+                {
+                Type type = as->get_type(h);
 
 #ifdef DEBUG
-                           std::cout << "Checking atom of type: " <<
-                                        classserver().getTypeName(type) << "\n";
+                std::cout << "Checking atom of type: " <<
+                classserver().getTypeName(type) << "\n";
 #endif
 
-                           if (type == ASYMMETRIC_HEBBIAN_LINK ||
-                               type == HEBBIAN_LINK ||
-                               type == SYMMETRIC_HEBBIAN_LINK ||
-                               type == INVERSE_HEBBIAN_LINK ||
-                               type == SYMMETRIC_INVERSE_HEBBIAN_LINK)
-                           {
+                if (type == ASYMMETRIC_HEBBIAN_LINK ||
+                    type == HEBBIAN_LINK ||
+                    type == SYMMETRIC_HEBBIAN_LINK ||
+                    type == INVERSE_HEBBIAN_LINK ||
+                    type == SYMMETRIC_INVERSE_HEBBIAN_LINK)
+                {
 #ifdef DEBUG
-                               std::cout << "Atom is hebbian" << "\n";
+                std::cout << "Atom is hebbian" << "\n";
 #endif
-                               return true;
-                           }
-                           else
-                           {
+                return true;
+                }
+                else
+                {
 #ifdef DEBUG
-                               std::cout << "Atom is not hebbian" << "\n";
+                    std::cout << "Atom is not hebbian" << "\n";
 #endif
-                               return false;
-                           }
-                       });
+                    return false;
+                }
+                });
     resultSet.erase(it_end, resultSet.end());
 
 #ifdef DEBUG
     std::cout << "AF Size after removing hebbian links: " <<
-    resultSet.size() << "\n";
+        resultSet.size() << "\n";
 #endif
 
-    
+
     return resultSet;
 }
 
@@ -390,7 +425,7 @@ HandleSeq ImportanceDiffusionBase::hebbianAdjacentAtoms(Handle h)
     // Chase the hebbian links originating at this atom and obtain the
     // adjacent atoms that are found by traversing those links
     HandleSeq resultSet =
-            get_target_neighbors(h, ASYMMETRIC_HEBBIAN_LINK);
+        get_target_neighbors(h, ASYMMETRIC_HEBBIAN_LINK);
 
     return resultSet;
 }
@@ -403,7 +438,7 @@ HandleSeq ImportanceDiffusionBase::hebbianAdjacentAtoms(Handle h)
  *
  * TODO: The ideal formula to use here is a subject of current research
  */
-std::map<Handle, double>
+    std::map<Handle, double>
 ImportanceDiffusionBase::probabilityVectorIncident(HandleSeq handles)
 {
     std::map<Handle, double> result;
@@ -427,7 +462,7 @@ ImportanceDiffusionBase::probabilityVectorIncident(HandleSeq handles)
  *
  * The specifics of the algorithm are a subject of current research
  */
-std::map<Handle, double>
+    std::map<Handle, double>
 ImportanceDiffusionBase::probabilityVectorHebbianAdjacent(
         Handle source, HandleSeq targets)
 {
@@ -454,7 +489,7 @@ ImportanceDiffusionBase::probabilityVectorHebbianAdjacent(
         // Calculate the discounted diffusion amount based on the link
         // attributes
         double diffusionAmount =
-                maxAllocation * calculateHebbianDiffusionPercentage(link);
+            maxAllocation * calculateHebbianDiffusionPercentage(link);
 
         // Insert the diffusionAmount into the map
         result.insert({target, diffusionAmount});
@@ -477,7 +512,7 @@ ImportanceDiffusionBase::probabilityVectorHebbianAdjacent(
  *
  * The specifics of the algorithm are a subject of current research
  */
-std::map<Handle, double>
+    std::map<Handle, double>
 ImportanceDiffusionBase::combineIncidentAdjacentVectors(
         std::map<Handle, double> incidentVector,
         std::map<Handle, double> adjacentVector)
@@ -490,14 +525,14 @@ ImportanceDiffusionBase::combineIncidentAdjacentVectors(
     // Calculate the maximum proportion that could be used for diffusion to
     // all hebbian adjacent atoms
     double hebbianDiffusionAvailable =
-            hebbianMaxAllocationPercentage * diffusionAvailable;
+        hebbianMaxAllocationPercentage * diffusionAvailable;
 
     // Calculate the maximum proportion that could be allocated to any
     // particular hebbian adjacent atom, as the total amount available for
     // allocation to all hebbian adjacent atoms, divided by the count of
     // hebbian adjacent atoms
     double hebbianMaximumLinkAllocation =
-            hebbianDiffusionAvailable / adjacentVector.size();
+        hebbianDiffusionAvailable / adjacentVector.size();
 
     // Keep track of how much diffusion has been allocated to hebbian adjacent
     // atoms
@@ -508,12 +543,12 @@ ImportanceDiffusionBase::combineIncidentAdjacentVectors(
     // available for allocation to any particular individual atom
     typedef std::map<Handle, double>::iterator it_type;
     for(it_type iterator = adjacentVector.begin();
-        iterator != adjacentVector.end(); ++iterator)
+            iterator != adjacentVector.end(); ++iterator)
     {
         // iterator->second is the entry in the probability vector for this
         // handle
         double diffusionAmount =
-                hebbianMaximumLinkAllocation * iterator->second;
+            hebbianMaximumLinkAllocation * iterator->second;
 
         // iterator->first is the handle
         result.insert({iterator->first, diffusionAmount});
@@ -534,10 +569,10 @@ ImportanceDiffusionBase::combineIncidentAdjacentVectors(
     // Allocate the remaining diffusion amount to the incident atoms according
     // to the probability vector for the targets
     for(it_type iterator = incidentVector.begin();
-        iterator != incidentVector.end(); ++iterator)
+            iterator != incidentVector.end(); ++iterator)
     {
         double diffusionAmount =
-                diffusionAvailable * iterator->second;
+            diffusionAvailable * iterator->second;
         result.insert({iterator->first, diffusionAmount});
 
         incidentDiffusionUsed += diffusionAmount;
@@ -603,7 +638,7 @@ float ImportanceDiffusionBase::calculateHebbianDiffusionPercentage(
  */
 void ImportanceDiffusionBase::processDiffusionStack()
 {
-    
+
 #ifdef DEBUG
     // Keep track of the total amount of STI traded for debugging
     AttentionValue::sti_t totalAmountTraded = 0;
@@ -625,6 +660,6 @@ void ImportanceDiffusionBase::processDiffusionStack()
     // trades, it should be equal to twice the amount that was diffused
     std::cout << "Total STI traded: " << totalAmountTraded << std::endl;
 #endif
-    
+
 }
 

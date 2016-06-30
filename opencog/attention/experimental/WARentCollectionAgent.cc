@@ -74,7 +74,6 @@ void WARentCollectionAgent::selectTargets(HandleSeq &targetSetOut)
 
         // Select the atoms with the highest STI amongst the samples
         targetSetOut.push_back(*result);
-
         // set diffusionSource vector to the current samples.
         atoms = tmp;
     }
