@@ -205,8 +205,8 @@ std::string ExperimentSetupModule::do_ecan_start(Request *req,
      _cs.startAgent(_afImportanceAgentPtr, true, afImportance);
      _cs.startAgent(_waImportanceAgentPtr, true, waImportance);
  
-     //_cs.startAgent(_afRentAgentPtr, true, afRent);
-     //_cs.startAgent(_waRentAgentPtr, true, waRent);
+     _cs.startAgent(_afRentAgentPtr, true, afRent);
+     _cs.startAgent(_waRentAgentPtr, true, waRent);
      
     return "The following agents were started:\n" + ECAN_EXP_AGENTS;
 }
