@@ -190,7 +190,7 @@ void SmokesDBFCAgent::run()
                 auto sv = surprisingness_value(h);
 
                 std::cerr << "Scaling stimulus \n";
-                auto scaled_stim = 4 * pow(10, sv) * sv;
+                AttentionValue::sti_t scaled_stim = 4 * pow(10, sv) * sv;
 
                 std::cerr << "Saving scaled stimuli \n";
                 /*save("smokes-fc-result.data",
@@ -199,7 +199,8 @@ void SmokesDBFCAgent::run()
                   + std::to_string(scaled_stim));*/
 
                 //stimulateAtom(h, scaled_stim);
-                h->setSTI(scaled_stim);
+                log_reward(h,scaled_stim);
+                h->setSTI(h->getSTI()+scaled_stim);
             }
             source = select_source(); // tournament selection by STI
 
@@ -311,9 +312,10 @@ void SmokesDBFCAgent::run()
         // Stimulate surprising unique results.
         for (Handle& h : unique_set) {
             auto sv = surprisingness_value(h);
-            auto scaled_stim = 8 * pow(10, sv) * sv;
+            AttentionValue::sti_t scaled_stim = 8 * pow(10, sv) * sv;
             //stimulateAtom(h, scaled_stim);
-            h->setSTI(scaled_stim);
+            log_reward(h,scaled_stim);
+            h->setSTI(h->getSTI()+scaled_stim);
 
             if (not interesting_atom(h).empty()) {
                 save("smokes-fc-result.data",
@@ -380,4 +382,27 @@ float SmokesDBFCAgent::surprisingness_value(const Handle& hx)
     }
 
     return mi;
+}
+
+using  sys_clock = std::chrono::system_clock;
+
+void SmokesDBFCAgent::log_reward(const Handle& h, AttentionValue::sti_t sti_reward){
+    auto in_time_t = sys_clock::to_time_t(sys_clock::now());
+    static bool first_time = true;
+    std::ofstream outf("reward.data", std::ofstream::out | std::ofstream::app);
+
+    if(first_time){
+        outf << "uuid  sti  rewarded  af_boundary  time\n";
+        first_time = false;
+    }
+
+    char buff[31];
+    strftime(buff, 30, "%H:%M:%S", std::localtime(&in_time_t));
+    std::string ts(buff);
+
+    outf << h.value() << "  " << h->getSTI() << "  " << sti_reward << "  "
+        << _atomspace.get_attentional_focus_boundary() << "  " << ts << "\n";
+
+    outf.flush();
+    outf.close();  
 }

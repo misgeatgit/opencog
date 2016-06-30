@@ -134,6 +134,8 @@ public:
     void run();
 
     float surprisingness_value(const Handle& h);
+    
+    void log_reward(const Handle& h, AttentionValue::sti_t sti_reward);
 };
 
 #endif
