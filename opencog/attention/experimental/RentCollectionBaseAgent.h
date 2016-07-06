@@ -26,6 +26,7 @@
 #include <string>
 #include <iostream>
 #include <sstream>
+#include <mutex>
 
 #include <opencog/util/Logger.h>
 #include <opencog/util/RandGen.h>
@@ -59,9 +60,9 @@ class RentCollectionBaseAgent : public Agent
 
 private:
      int sleep_time_ms;
+     std::mutex mtx;
 
 protected:
-
     AtomSpace* as;
 
     AttentionValue::sti_t STIAtomRent; //!< Current atom STI rent.
@@ -83,6 +84,7 @@ protected:
 
     Logger *log; //!< Logger object for Agent
 
+   void  log_rent(const Handle& h, AttentionValue::sti_t charged);
 public:
     RentCollectionBaseAgent(CogServer& cs);
     ~RentCollectionBaseAgent();

@@ -190,7 +190,7 @@ void SmokesDBFCAgent::run()
                 auto sv = surprisingness_value(h);
 
                 std::cerr << "Scaling stimulus \n";
-                AttentionValue::sti_t scaled_stim = 4 * pow(10, sv) * sv;
+                AttentionValue::sti_t scaled_stim = 8 * pow(10, sv) * sv;
 
                 std::cerr << "Saving scaled stimuli \n";
                 /*save("smokes-fc-result.data",
@@ -199,7 +199,9 @@ void SmokesDBFCAgent::run()
                   + std::to_string(scaled_stim));*/
 
                 //stimulateAtom(h, scaled_stim);
-                log_reward(h,scaled_stim);
+                if (scaled_stim > 0)
+                  log_reward(h,scaled_stim);
+
                 h->setSTI(h->getSTI()+scaled_stim);
             }
             source = select_source(); // tournament selection by STI
@@ -331,7 +333,7 @@ void SmokesDBFCAgent::run()
         }
 
         std::cout << "[DEBUG] [SmokesDBFCAgent] sleeping for \n";
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
     } //END OF WHILE 
 
 }
@@ -392,7 +394,7 @@ void SmokesDBFCAgent::log_reward(const Handle& h, AttentionValue::sti_t sti_rewa
     std::ofstream outf("reward.data", std::ofstream::out | std::ofstream::app);
 
     if(first_time){
-        outf << "uuid  sti  rewarded  af_boundary  time\n";
+        outf << "uuid,sti,rewarded,af_boundary,time\n";
         first_time = false;
     }
 
@@ -400,8 +402,8 @@ void SmokesDBFCAgent::log_reward(const Handle& h, AttentionValue::sti_t sti_rewa
     strftime(buff, 30, "%H:%M:%S", std::localtime(&in_time_t));
     std::string ts(buff);
 
-    outf << h.value() << "  " << h->getSTI() << "  " << sti_reward << "  "
-        << _atomspace.get_attentional_focus_boundary() << "  " << ts << "\n";
+    outf << h.value() << "," << h->getSTI() << "," << sti_reward << ","
+        << _atomspace.get_attentional_focus_boundary() << "," << ts << "\n";
 
     outf.flush();
     outf.close();  

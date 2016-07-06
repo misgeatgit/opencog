@@ -23,6 +23,8 @@
 #include <algorithm>
 #include <math.h>
 #include <time.h>
+#include <chrono>
+#include <fstream>
 
 #include <opencog/util/Config.h>
 #include <opencog/util/mt19937ar.h>
@@ -37,8 +39,9 @@
 
 using namespace opencog;
 
+
 RentCollectionBaseAgent::RentCollectionBaseAgent(CogServer& cs) :
-    Agent(cs)
+    Agent(cs)  
 {
     as = &cs.getAtomSpace();
 
@@ -55,7 +58,7 @@ RentCollectionBaseAgent::RentCollectionBaseAgent(CogServer& cs) :
     // Provide a logger
     log = NULL;
     setLogger(new opencog::Logger("RentCollectionAgent.log", Logger::FINE,
-    true));
+                true));
 }
 
 RentCollectionBaseAgent::~RentCollectionBaseAgent()
@@ -76,9 +79,11 @@ Logger* RentCollectionBaseAgent::getLogger()
     return log;
 }
 
+
 void RentCollectionBaseAgent::run()
 {
-    while (true) {
+
+       while (true) {
         HandleSeq targetSet;
         selectTargets(targetSet);
 
@@ -96,7 +101,10 @@ void RentCollectionBaseAgent::run()
 
             if (ltiRent > lti)
                 ltiRent = lti;
-
+            
+            if(stiRent > 0)
+              log_rent(h, stiRent);
+            
             h->setSTI(sti - stiRent);
             h->setLTI(lti - ltiRent);
         }
@@ -133,4 +141,28 @@ int RentCollectionBaseAgent::calculate_LTI_Rent()
     ndiff = std::max(ndiff,-1.0f);
 
     return LTIAtomRent + (LTIAtomRent * ndiff);
+}
+
+using  sys_clock = std::chrono::system_clock;
+
+void RentCollectionBaseAgent::log_rent(const Handle& h, AttentionValue::sti_t charged)
+{  
+    auto in_time_t = sys_clock::to_time_t(sys_clock::now());
+    static bool first_time = true;
+    char buff[31];
+    strftime(buff, 30, "%H:%M:%S", std::localtime(&in_time_t));
+    std::string ts(buff);
+
+   // mtx.lock();
+    std::ofstream outf("rent.data", std::ofstream::out | std::ofstream::app);
+    if(first_time){
+        outf << "uuid,sti,charged,af_boundary,time\n";
+        first_time = false;
+    }
+
+    outf << h.value() << "," << h->getSTI() << "," << charged << ","
+        << as->get_attentional_focus_boundary() << "," << ts << "\n";
+    outf.flush();
+    outf.close();  
+    //mtx.unlock();
 }

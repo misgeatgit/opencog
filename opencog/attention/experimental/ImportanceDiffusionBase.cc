@@ -292,8 +292,8 @@ void ImportanceDiffusionBase::tradeSTI(DiffusionEventType event)
     // Log diffusion stat 
     static bool first_time = true;
     if(first_time){
-        outf << "src_uuid  src_sti  trgt_uuid  trgt_sti  diff_amount  " 
-             << "af_sti  time\n" ;
+        outf << "src_uuid,src_sti,trgt_uuid,trgt_sti,diff_amount," 
+             << "af_sti,time\n" ;
       first_time = false;
     }
     
@@ -301,10 +301,11 @@ void ImportanceDiffusionBase::tradeSTI(DiffusionEventType event)
     strftime(buff, 30, "%H:%M:%S", std::localtime(&in_time_t));
     std::string ts(buff);
 
-    outf << src_uuid << " " << src_sti << " " << trgt_uuid << " " << trgt_sti 
-         << diff_amount << " " << as->get_attentional_focus_boundary() 
-         << " " << ts <<"\n";
-
+    if ( diff_amount > 0){
+    outf << src_uuid << "," << src_sti << "," << trgt_uuid << "," << trgt_sti 
+         <<","<< diff_amount << "," << as->get_attentional_focus_boundary() 
+         << "," << ts <<"\n";
+    }
     outf.flush();
     outf.close();  
 
