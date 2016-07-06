@@ -202,9 +202,19 @@ std::string ExperimentSetupModule::do_ecan_start(Request *req,
      std::string afRent = AFRentCollectionAgent::info().id;
      std::string waRent = WARentCollectionAgent::info().id;
  
+     std::dynamic_pointer_cast<AFImportanceDiffusionAgent>
+                              (_afImportanceAgentPtr)->set_sleep_time(200);
+     std::dynamic_pointer_cast<WAImportanceDiffusionAgent>
+                              (_waImportanceAgentPtr)->set_sleep_time(700);
+
      _cs.startAgent(_afImportanceAgentPtr, true, afImportance);
      _cs.startAgent(_waImportanceAgentPtr, true, waImportance);
- 
+
+     std::dynamic_pointer_cast<AFRentCollectionAgent>
+                             (_afRentAgentPtr)->set_sleep_time(1000); 
+     std::dynamic_pointer_cast<WARentCollectionAgent>
+                             (_waRentAgentPtr)->set_sleep_time(2000);
+
      _cs.startAgent(_afRentAgentPtr, true, afRent);
      _cs.startAgent(_waRentAgentPtr, true, waRent);
      
