@@ -38,7 +38,7 @@ using namespace opencog;
 AFImportanceDiffusionAgent::AFImportanceDiffusionAgent(CogServer& cs) :
     Agent(cs), ImportanceDiffusionBase(cs)
 {
-   set_sleep_time(500); 
+   set_sleep_time(200); 
 }
 AFImportanceDiffusionAgent::~AFImportanceDiffusionAgent(){
 

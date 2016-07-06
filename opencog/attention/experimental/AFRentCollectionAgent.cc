@@ -39,7 +39,7 @@ using namespace opencog;
 
 AFRentCollectionAgent::AFRentCollectionAgent(CogServer& cs) : RentCollectionBaseAgent(cs)
 {
-    set_sleep_time(500);
+    set_sleep_time(1000);
 }
 
 AFRentCollectionAgent::~AFRentCollectionAgent() {
