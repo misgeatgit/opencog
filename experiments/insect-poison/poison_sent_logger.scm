@@ -32,7 +32,8 @@
               (sleep 2) ;sleep for few seconds to let attentino spreading happen
               (display (strftime "\n[time %H:%M:%S]\n" (localtime (current-time))) fl)
               (display (string-append "SENTENCE: " sentence "\n") fl)
-              (display (string-append "AFB: " (object->string (cog-af-boundary)) "\n") fl)
+              ;(display (string-append "AFB: " (object->string (cog-af-boundary)) "\n") fl)
+              (display (string-append "AFB: " "1" "\n") fl)
               ;(display (cog-af) fl) 
               (display (get-af-json) fl) 
               (set! sentence (read-line fp))))                   
