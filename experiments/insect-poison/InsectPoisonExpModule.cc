@@ -93,8 +93,8 @@ std::string InsectPoisonExpModule::do_dump_af_stat(Request *req,
           <<"       LastSeenAt"
           <<"       DurationInAF" 
           <<"       IsNLPParseOutput" 
-         <<"        DirectSTI" 
-         <<"        GainFromSpreading" << std::setw(5) << "\n";
+          <<"       DirectSTI"
+          <<"       GainFromSpreading" << std::setw(5) << "\n";
 
     for(auto p : (_logger_agent)->handle_atomstat_map)
     {

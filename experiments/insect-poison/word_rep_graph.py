@@ -24,9 +24,10 @@ with open(fl, 'r') as words:
         word_cycles[word] = [cycle]
 
 for word, cycles in word_cycles.iteritems():
-  print word
-  print cycles
+  print "Word: "+ word.rstrip('\n')
+  print "Cycles: " + "".join(str(s)+" " for s in cycles)+"\n"
 
+'''
 word_graph ={}
 for word in word_cycles:
   for ccl in range(1,cycle+1):
@@ -39,7 +40,7 @@ for word in word_cycles:
 
 #for word, bar in word_graph.iteritems():
 #  print word+":"+bar
-
+'''
 
 
        

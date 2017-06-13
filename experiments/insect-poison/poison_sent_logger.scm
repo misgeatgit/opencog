@@ -29,7 +29,7 @@
  (let ((sentence (read-line fp)))
        (while (not (eof-object? sentence))              
               (nlp-parse sentence)
-              (sleep 2) ;sleep for few seconds to let attentino spreading happen
+              (sleep 1) ;sleep for few seconds to let attentino spreading happen
               (display (strftime "\n[time %H:%M:%S]\n" (localtime (current-time))) fl)
               (display (string-append "SENTENCE: " sentence "\n") fl)
               ;(display (string-append "AFB: " (object->string (cog-af-boundary)) "\n") fl)
