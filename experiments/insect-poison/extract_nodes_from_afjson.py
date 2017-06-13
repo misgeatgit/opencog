@@ -14,6 +14,7 @@ with open(fl) as jsonf:
   atoms = jsond["result"]["atoms"] 
   #print atoms
   for atom in atoms:
-    print atom["name"]
+    if len(atom["name"]) != 0 :
+      print atom["name"]
 
 
