@@ -29,6 +29,12 @@ LoggerAgent::LoggerAgent(CogServer& cs) : Agent(cs), _start(system_clock::now())
 
     af_size_stat.reserve(MAX_SAMPLES); //allocate 50K sample holding space.
 
+    try{
+        corpus_wordnodes.reserve(4*pow(10,6));
+    } catch(const std::exception& e) {
+        std::cout << "Allocation Error: " << e.what() << '\n';
+    }
+
 }
 
 
@@ -82,8 +88,9 @@ void LoggerAgent::run(void){
     }
 
     int count = 0;
-    for(const Handle& h : afset){
+    for(const Handle h : afset){
         bool is_nlp_parse_output = false;
+        
         auto it = std::find(corpus_wordnodes.begin(), corpus_wordnodes.end(), h);
         if(it != corpus_wordnodes.end()){
             count ++;
