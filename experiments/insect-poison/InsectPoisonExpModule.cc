@@ -47,6 +47,7 @@ void InsectPoisonExpModule::registerAgentRequests()
     do_set_topic_switched_register();
     do_dump_af_size_register();
     do_start_logger_register();
+    do_parse_sent_register();
 }
 
 void InsectPoisonExpModule::unregisterAgentRequests()
@@ -55,6 +56,7 @@ void InsectPoisonExpModule::unregisterAgentRequests()
     do_set_topic_switched_unregister();
     do_dump_af_size_unregister();
     do_start_logger_unregister();
+    do_parse_sent_unregister();
 }
 
 #define LOGGER_AGENT_PTR(AGENT_PTR) (dynamic_cast<LoggerAgent*>(AGENT_PTR.get()))
@@ -135,4 +137,36 @@ std::string InsectPoisonExpModule::do_set_topic_switched(Request *req,
 std::string InsectPoisonExpModule::do_start_logger(Request* req, std::list<std::string> args){
     _cs.startAgent(_logger_agentptr, true, "AFLogger");
     return "LoggerAgent started\n";
+}
+
+std::string InsectPoisonExpModule::do_parse_sent(Request* req, std::list<std::string> args){
+    auto it = args.begin();
+     std::string sentence_file = *it;
+     ++it;
+     int stimulus_amount = stoi(*it);
+     ++it;
+     int topic_switched = stoi(*it);
+     
+     SchemeEval _scm_eval(_as);
+     _scm_eval.eval_h("(use-modules (opencog )) \
+             (use-modules (opencog nlp relex2logic)) \
+             (use-modules (opencog nlp chatbot))");
+
+     std::string cmd1 = "(nlp-start-stimulation"+ std::to_string(stimulus_amount) +")";
+     _scm_eval.eval_h(cmd1.c_str());  
+
+     std::ifstream ifs;
+     std::string line;
+     ifs.open(sentence_file, std::ifstream::in);
+    
+     LoggerAgent::topic_changed = topic_switched;
+     
+     for (std::string line; getline( ifs, line ); ){
+         std::cout << "Parsing " << line << '\n';
+         std::string cmd2 = "(nlp-parse \""+ line +"\")";
+        _scm_eval.eval_h(cmd1.c_str());  
+
+     }    
+
+     return "LoggerAgent started\n";
 }

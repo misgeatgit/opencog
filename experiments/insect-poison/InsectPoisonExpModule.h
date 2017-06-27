@@ -63,7 +63,12 @@ private:
             "Starts logger agent",
             "Usage: start-logger\n",
             false, true)
-
+    
+    DECLARE_CMD_REQUEST(InsectPoisonExpModule, "parse-sentences",do_parse_sent,
+            "Parses insect sentences.",
+            "Usage: parse-sentences <PATH_TO_SENTENCE_FILE> <nlp_stimulation_amount> <topic_switched_flag> \n",
+            false, true)
+    
     void registerAgentRequests();
     void unregisterAgentRequests();
 
