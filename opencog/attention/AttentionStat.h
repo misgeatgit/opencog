@@ -30,7 +30,7 @@ struct AVStat{
 extern std::unordered_map<opencog::Handle, AVStat> atom_avstat;
 
  /*  
- *  TODO
+  *  TODO
  *  Derive direct_sti_gain from the above two
  *
  */
