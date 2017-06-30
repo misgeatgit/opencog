@@ -7,6 +7,7 @@
  * Attention Related statistics.
  * Things we want to know:
  *    - What time did an an atom leave the AF.
+ *    - What time did it leave.
  *    - How much sti did an atom gained via spreading.
  *      - How much of the spreading happened via Hebbian links.
  *      - How much of the spreading happend via non-hebbian links.
