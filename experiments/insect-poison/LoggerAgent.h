@@ -33,7 +33,6 @@
 #include <opencog/cogserver/server/CogServer.h>
 #include <opencog/nlp/types/atom_types.h>
 #include <opencog/attentionbank/AttentionBank.h>
-
 #include <unordered_set>
 #include <chrono>
 
@@ -62,8 +61,8 @@ namespace opencog {
                 duration<double> dr; //duration of stay in sec.
                 time_point<system_clock> last_active;
                 bool is_nlp_parse_output = false;
-                float percentage_sti_gain_from_spreading = 0;
-                //float percentage_sti_gain_from_stimulation; = 1 - p_spreading;
+                //float psti_gain_via_heblink;
+                //float psti_gain_via_link;
             };
 
             struct atomstat_hash : public std::unary_function<AtomStat, size_t>{
