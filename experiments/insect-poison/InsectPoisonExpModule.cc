@@ -18,8 +18,9 @@
 
 #include <opencog/cogserver/server/CogServer.h>
 #include <opencog/cogserver/server/Module.h>
-
 #include <opencog/util/Config.h>
+
+#include <opencog/attention/AttentionStat.h>
 
 #include "InsectPoisonExpModule.h"
 
@@ -74,43 +75,52 @@ void InsectPoisonExpModule::init(void)
 std::string InsectPoisonExpModule::do_dump_af_stat(Request *req,
         std::list<std::string> args)
 {
-    std::string file_name = args.front();
-    std::ofstream outf(file_name + "-af.data", std::ofstream::trunc);
+    std::string file_name = args.front(); //get file name if provided.
+    
+    // case when dump-af-stat is called with no argument  
+    if(file_name.empty()){
+        file_name = "afstat.data";
+    } else {
+        file_name += ".data";
+    }
 
+    std::ofstream outf(file_name, std::ofstream::trunc);
+    
     outf << "NLP_parse_percentage_in_AF: "
-        << (_logger_agent)->nlp_parse_percentage_in_af <<"\n"; 
+         << (_logger_agent)->nlp_parse_percentage_in_af <<"\n"; 
 
     outf << "Logged_at: "
-        << print_timept((_logger_agent)->last_probing_time) <<"\n"; 
+         << print_timept((_logger_agent)->last_probing_time) <<"\n"; 
 
     if(LoggerAgent::topic_changed){
-        outf << "prev_topic_percentage_in_af: " 
+        outf << "Prev_topic_percentage_in_af: " 
              << (_logger_agent)->prev_topic_percentage << "\n"; 
-        outf << "current_topic_percentage_in_af: "
+        outf << "Current_topic_percentage_in_af: "
              << (_logger_agent)->current_topic_percentage << "\n"; 
     }
 
-    outf << "Atom(uuid)      " 
-          <<"       EnteredAt" 
-          <<"       LastSeenAt"
-          <<"       DurationInAF" 
-          <<"       IsNLPParseOutput" 
-          <<"       DirectSTI"
-          <<"       GainFromSpreading" << std::setw(5) << "\n";
+    outf  << "Atom(uuid)" << ",EnteredAt" << ",LastSeenAt" << ",DurationInAF" 
+          << ",IsNLPParseOutput" << ",DirectSTI"<< ",GainFromSpreading"<< "\n";
 
     for(auto p : (_logger_agent)->handle_atomstat_map)
     {
         LoggerAgent::AtomStat ast = p.second;
-        outf <<  ast.h.value() <<"      "<< print_timept(ast.entered_at) 
-             <<"     " << print_timept(ast.last_active)
-             << "     " << ast.dr.count() << "      "
-             << ast.is_nlp_parse_output << "     " 
-            /* <<"DirectSTI" << std::setw(5)  << "GainFromSpreading" << std::setw(5)*/ << "\n";
+        outf << ast.h.value() <<","<< print_timept(ast.entered_at) 
+             << "," << print_timept(ast.last_active)
+             << "," << ast.dr.count()  << ","
+             << ast.is_nlp_parse_output<< ",";
+        if(atom_avstat.find(ast.h) != atom_avstat.end()){ 
+         outf<< atom_avstat[ast.h].direct_sti_gain << ","
+             << (atom_avstat[ast.h].heblink_sti_gain + atom_avstat[ast.h].link_sti_gain)
+             << '\n';
+        }else{
+          outf<< " - " << ","
+             <<  " - "
+             << '\n';
+        }
     }
-
     outf.flush();
     outf.close();
-
     return "Dumped it to " + file_name + "\n";
 }
 

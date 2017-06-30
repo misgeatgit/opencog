@@ -73,10 +73,12 @@ private:
     void unregisterAgentRequests();
 
     std::string print_timept(time_point<system_clock> tpt){
+        auto ms = duration_cast<milliseconds>(tpt.time_since_epoch()) % 1000;
         std::time_t t = system_clock::to_time_t(tpt);
         std::stringstream ss;
         std::tm tm = *std::localtime(&t);
         ss << std::put_time(&tm, "%H:%M:%S");
+        ss << ':' << std::setfill('0') << std::setw(3) << ms.count();
         return ss.str();
     };
 
