@@ -24,17 +24,22 @@ step 2 - Load wordnet and conceptnet data
 NOTE: wordnet.scm and conceptnet4.scm are not included in the dir due to their large size. 
 
 step 3 - Start the logger agent and all or some of the ecan agents
+
 ``` opencog> agents-start opencog::LoggerAgent ```
+
 or
+
 ``` opencog> start-logger ```
 
 usually, we start all the ECAN agents together unless we want to try them one by one or with fewer sets of them. There is a handy command when we want to start all of them
+
 ``` opencog> start-ecan ```
 
-step 3 - Set stimulation amount for wordnodes and the start parsing the insect sentence
+step 4 - Set stimulation amount for wordnodes and the start parsing the insect sentence
+
  ``` scm> (nlp-start-stimulation 70)  (parse-all nlp-parse PATH_TO/insect-poison/exp1_insects_sent.txt") ```   
  
-step 4 - While sentence is being parsed or after finishes parsing you could dump ECAN related statistics by typing
+step 5 - While sentence is being parsed or after finishes parsing you could dump ECAN related statistics by typing
 
 ``` opencog> dump-af-stat $A_FILE_NAME ``` 
 
