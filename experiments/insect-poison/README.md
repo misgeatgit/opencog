@@ -57,7 +57,7 @@ The start parsing poison senenteces
 
 Now You may dump statistical information using the ***dump-af-stat** command with a different filename so that it won't overrwrithe the previous one.
 
-###TODO
+**TODO***
 
 Extend the logger so that we will have information regarding :
    1. How much STI has been diffused via Hebbian links
