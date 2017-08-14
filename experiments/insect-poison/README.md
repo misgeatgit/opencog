@@ -15,6 +15,7 @@
 
 step 1 - Load ecan module and libinsect-poison-exp module 
 ``` opencog>load opencog/experiments/insect-poison/ibinsect-poison-exp.so```
+
 ``` opencog>load opencog/attention/ibattention.so```
 
 step 2 - Load wordnet and conceptnet data
@@ -36,6 +37,7 @@ step 3 - Set stimulation amount for wordnodes and the start parsing the insect s
 step 4 - While sentence is being parsed or after finishes parsing you could dump ECAN related statistics by typing
 
 ``` opencog> dump-af-stat $A_FILE_NAME ``` 
+
 File $A_FILE_NAME will be created under inside the dir where cogserver was lauched.
 
 ** Swithcing topic to poison**
@@ -43,6 +45,7 @@ File $A_FILE_NAME will be created under inside the dir where cogserver was lauch
 For topic switched related statistics to work properly, the logger agent should be informed that topic is going to be changed. The steps to follow are:
 
 - Set topic switched to true by typic ```opencog> topic-switched 1 ```
+
 The start parsing poison senenteces
 
 - ``` (parse-all nlp-parse PATH_TO/insect-poison/exp1_poison_sent.txt") ```
@@ -50,6 +53,7 @@ The start parsing poison senenteces
 Now You may dump statistical information using the ***dump-af-stat** command with a different filename so that it won't overrwrithe the previous one.
 
 ###TODO
+
 Extend the logger so that we will have information regarding :
    1. How much STI has been diffused via Hebbian links
    2. How much STI gained from direct stimulation
