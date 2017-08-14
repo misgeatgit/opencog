@@ -13,27 +13,61 @@
 **Running the experiment**
 **Experiment 1**
 
-step 1 - Load wordnet and conceptnet data
+step 1 - Load ecan module and libinsect-poison-exp module 
+``` opencog>load opencog/experiments/insect-poison/ibinsect-poison-exp.so```
+``` opencog>load opencog/attention/ibattention.so```
 
-step 2 - Load load_exp1_insect.scm
+step 2 - Load wordnet and conceptnet data
+``` scm> (load "PATH_TO/wordnet.scm")  (load "PATH_TO/cocpetnet4.scm")```
 
-step 3 - Load aflogger.scm
+NOTE: wordnet.scm and conceptnet4.scm are not included in the dir due to their large size. 
 
-aflogger.scm will dump the content of af every 2sec as new sentences about poison are parsed by the atomspace.
+step 3 - Start the logger agent and all or some of the ecan agents
+``` opencog> agents-start opencog::LoggerAgent ```
+or
+``` opencog> start-logger ```
 
+usually, we start all the ECAN agents together unless we want to try them one by one or with fewer sets of them. There is a handy command when we want to start all of them
+``` opencog> start-ecan ```
+
+step 3 - Set stimulation amount for wordnodes and the start parsing the insect sentence
+ ``` scm> (nlp-start-stimulation 70)  (parse-all nlp-parse PATH_TO/insect-poison/exp1_insects_sent.txt") ```   
+ 
+step 4 - While sentence is being parsed or after finishes parsing you could dump ECAN related statistics by typing
+
+``` opencog> dump-af-stat $A_FILE_NAME ``` 
+File $A_FILE_NAME will be created under inside the dir where cogserver was lauched.
+
+** Swithcing topic to poison**
+
+For topic switched related statistics to work properly, the logger agent should be informed that topic is going to be changed. The steps to follow are:
+
+- Set topic switched to true by typic ```opencog> topic-switched 1 ```
+The start parsing poison senenteces
+
+- ``` (parse-all nlp-parse PATH_TO/insect-poison/exp1_poison_sent.txt") ```
+
+Now You may dump statistical information using the ***dump-af-stat** command with a different filename so that it won't overrwrithe the previous one.
+
+###TODO
+Extend the logger so that we will have information regarding :
+   1. How much STI has been diffused via Hebbian links
+   2. How much STI gained from direct stimulation
+   3. Visualize the statistical data dumped by dump-af-stat (i.e plot graphs showin various relationships) extract-items.cc tries to do this although it is incomplete and its scope is not well defined.
 
 **Helpful opencog commands**
 
-- *start-ecan*
-- *stop-ecan*
-- *list-ecan-param*
-- *set-ecan-param \<param_name\> \<value\>*
-- *agents-active*
-- *agents-stop \<agent-name\>*
+- *start-ecan*  - Starts all the ecan agents
+- *stop-ecan*  - Stops all ECAN agents
+- *list-ecan-param* - Lists ECAN paraemter-name, value pairs
+- *set-ecan-param \<param_name\> \<value\>* - Sets a value for a given ECAN parameter name 
+- *agents-active* - Lists currently running agents
+- *agents-start <agent-name>* - Starts an agent
+- *agents-stop \<agent-name\>* - Stops an agent
 
 **Helpful scheme functions**
 
-- *cog-af*
-- *cog-af-boundary*
+- *cog-af* 
+- *cog-af-boundary* deprecated. 
 
 
