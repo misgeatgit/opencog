@@ -62,11 +62,11 @@ The start parsing poison senenteces
 Now You may dump statistical information using the ***dump-af-stat** command with a different filename so that it won't overrwrithe the previous one.
 
 **TODO***
-
-1. Extend the logger so that we will have information regarding :
+1. Write a script which automates all the above steps so that we could run the whole thing in one go.
+2. Extend the logger so that we will have information regarding :
    * How much STI has been diffused via Hebbian links
    * How much STI gained from direct stimulation
-2. Visualize the statistical data dumped by dump-af-stat (i.e plot graphs showin various relationships) extract-items.cc tries to do this although it is incomplete and its scope is not well defined.
+3. Visualize the statistical data dumped by dump-af-stat (i.e plot graphs showin various relationships) extract-items.cc tries to do this although it is incomplete and its scope is not well defined.
 
 **Helpful opencog commands**
 
