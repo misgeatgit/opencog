@@ -19,7 +19,7 @@ step 1 - Load ecan module and libinsect-poison-exp module
 ``` opencog>load opencog/attention/ibattention.so```
 
 step 2 - Load wordnet and conceptnet data
-``` scm> (load "PATH_TO/wordnet.scm")  (load "PATH_TO/cocpetnet4.scm")```
+``` scm> (primitive-load "PATH_TO/wordnet.scm")  (primitive-load "PATH_TO/cocpetnet4.scm")```
 
 NOTE: wordnet.scm and conceptnet4.scm are not included in the dir due to their large size. 
 
