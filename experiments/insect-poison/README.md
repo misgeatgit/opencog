@@ -19,6 +19,9 @@ step 1 - Load ecan module and libinsect-poison-exp module
 ``` opencog>load opencog/attention/ibattention.so```
 
 step 2 - Load wordnet and conceptnet data
+ Import the necessary opencog modules first.
+```scm>  (use-modules (opencog nlp))  ```
+
 ``` scm> (primitive-load "PATH_TO/wordnet.scm")  (primitive-load "PATH_TO/cocpetnet4.scm")```
 
 NOTE: wordnet.scm and conceptnet4.scm are not included in the dir due to their large size. 
@@ -52,8 +55,9 @@ For topic switched related statistics to work properly, the logger agent should 
 - Set topic switched to true by typic ```opencog> topic-switched 1 ```
 
 The start parsing poison senenteces
+```scm> (use-modules (opencog nlp relex2logic)) (use-modules (opencog nlp chatbot)) ```
 
-- ``` (parse-all nlp-parse PATH_TO/insect-poison/exp1_poison_sent.txt") ```
+ ```scm> (parse-all nlp-parse PATH_TO/insect-poison/exp1_poison_sent.txt") ```
 
 Now You may dump statistical information using the ***dump-af-stat** command with a different filename so that it won't overrwrithe the previous one.
 
