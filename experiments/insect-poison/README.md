@@ -59,10 +59,10 @@ Now You may dump statistical information using the ***dump-af-stat** command wit
 
 **TODO***
 
-Extend the logger so that we will have information regarding :
-   1. How much STI has been diffused via Hebbian links
-   2. How much STI gained from direct stimulation
-   3. Visualize the statistical data dumped by dump-af-stat (i.e plot graphs showin various relationships) extract-items.cc tries to do this although it is incomplete and its scope is not well defined.
+1. Extend the logger so that we will have information regarding :
+   * How much STI has been diffused via Hebbian links
+   * How much STI gained from direct stimulation
+2. Visualize the statistical data dumped by dump-af-stat (i.e plot graphs showin various relationships) extract-items.cc tries to do this although it is incomplete and its scope is not well defined.
 
 **Helpful opencog commands**
 
