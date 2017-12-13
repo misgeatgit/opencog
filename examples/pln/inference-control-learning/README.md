@@ -4,41 +4,82 @@ Inference Control Learning
 Experiment with inference control learning. The plan is to
 
 1. run a series of backward inferences,
-2. create a corpus of successful ones,
-3. Run the pattern miner over them,
-4. build cognitive schematics out of these patterns,
-5. repeat with more inferences passing these cognitive schematics to
-   the backward chainer for speeding it up.
+2. create a corpus of inference traces,
+3. Run the pattern miner and other learning algorithms over them,
+4. build inference control rules out of these patterns,
+5. repeat while reusing these learned inference control rules to speed
+   up the backward chainer.
 
 For now it is a toy experiment with a small taylored series over a
-small, constant knowledge-base. No ECAN is even necessary. The learned
-inference control rules, or control rules for short, should be that
-double, triple, etc deductions are useful.
+small, constant knowledge-base. No ECAN is even necessary.
 
 Knowledge-base
 --------------
 
 The knowledge-base is the upper case latin alphabet order. The order
 relationship is represented with Inheritance between 2 consecutive
-letters:
+letters.
 
 ```
 Inheritance (stv 1 1)
-  Concept "A" (stv 1/26 1)
-  Concept "B" (stv 2/26 1)
+  Concept "a" (stv 1/26 1)
+  Concept "b" (stv 2/26 1)
 ...
 Inheritance (stv 1 1)
-  Concept "Y" (stv 25/26 1)
-  Concept "Z" (stv 26/26 1)
+  Concept "y" (stv 25/26 1)
+  Concept "z" (stv 26/26 1)
 ```
 
 The concept strengths, 1/26 to 26/26, are defined to be consistent
 with PLN semantics.
 
+On top of that we have the knowledge that A precedes all other
+letters.
+
+```
+Evaluation (stv 1 1)
+  Predicate "alphabetical-order"
+  List
+    Concept "a"
+    Concept "b"
+...
+Evaluation (stv 1 1)
+  Predicate "alphabetical-order"
+  List
+    Concept "a"
+    Concept "z"
+```
+
+Combined with a rule to infer that if letter X occurs before Y, then X
+inherits Y.
+
+```
+ImplicationScope (stv 1 1)
+  VariableList
+    TypedVariable
+      Variable "$X"
+      Type "ConceptNode"
+    TypedVariable
+      Variable "$Y"
+      Type "ConceptNode"
+  Evaluation
+    Predicate "alphabetical-order"
+    List
+      Variable "$X"
+      Variable "$Y"
+  Inheritance
+    Variable "$X"
+    Variable "$Y"
+```
+
+TODO add the z pattern, that when is Inheritance X z, then using
+conditional instantiation is worthless.
+
 Rule-base
 ---------
 
-All PLN rules are included, to make solving problems more difficult.
+As many PLN rules are included, to make solving problems more
+difficult.
 
 Targets
 -------
@@ -52,6 +93,33 @@ Inheritance
 ```
 
 where X is a letter preceding Y.
+
+Goal
+----
+
+The goal of the experiment is to learn control rules. There will be 2
+types of useful control rules.
+
+1. Deduction is often useful. That is because chaining an number of
+   deductions is enough to prove that any 2 letters are ordered.
+2. If the target is of the form Inheritance a X, then conditional
+   instantiation is useful. That is because in that case we can use
+   this rule over the fact that
+   ```
+   Evaluation
+     alphabetical-order
+     List
+       a
+       X
+   ```
+   is true for all other letters, combined with the implication that
+   is letter X occurs before Y then X inherits from Y.
+
+The first control rule can easily be learned by PLN alone, using
+direct evaluation. The second rule however requires something more
+sophisticated like the pattern miner to notice that using conditional
+instantiation is only fruitful when the first letter of the target is
+`a`.
 
 Usage
 -----
@@ -84,7 +152,7 @@ Experiment High Level Algorithm
    Save the logs of each problem in opencog-i-j.log.
 2. Store in Si the number of solved problems for this iteration.
 3. Given opencog-i-j.log for j in 0 to N-1, build a collection of
-   control rules, called ICRi (see Setion Control Rule).
+   control rules, called ICRi (see Section Control Rule).
 4. If meta-termination hasn't occured repeat step 1 with passing ICRi
    to the BC.
 
@@ -115,13 +183,13 @@ where
 
 A preproof is a back-inference-tree prefix (or suffix if you start
 from the axioms) of a complete proof of T. In other words it is a
-subtree with root T (such as in graph theory, not computer data
-structure) of an inference tree proving T. The reason we use preproof
-as measure of success, as opposed to say the likelihood of finding a
-proof within the allocated effort, is because it is independent on the
-difficulty of the problem. If we can find a preproof it means we're on
-the right track no matter. This may hopefully make it easier to
-transfer this knowledge across problem difficulties.
+subtree with root T (induced subtree, not bottom-up subtree) of an
+inference tree proving T. The reason we use preproof as measure of
+success, as opposed to say the likelihood of finding a proof within
+the allocated effort, is because it is independent on the difficulty
+of the problem. If we can find a preproof it means we're on the right
+track no matter what. This may hopefully make it easier to transfer
+this knowledge across problem difficulties.
 
 This experiment is simple enough that the context that the backward
 chainer has been queried to prove T can be ignored. The context that
@@ -129,8 +197,8 @@ it is about to decide what rule to expand can be ignored as well since
 it is the universal context of our experiment anyway. The context that
 A is a preproof of T seems strange as we have no way to know whether
 it is true or not, but we don't need to! It's enough that there is
-some positive probability, however small it may be, to put such rule
-in use, the conditional instantiation should ultimately take this
+some positive probability, however small that it may be, to put such
+rule in use, the conditional instantiation should ultimately take this
 probability into about to estimate the probability of R expanding A
 into a preproof of T.
 
@@ -166,12 +234,12 @@ ImplicationScope <TV>
         Variable "$R"
       Variable "$B"
     Evaluation
-      Predicate "preproof"
+      Predicate "preproof-of"
       List
         Variable "$A"
         Variable "$T"
   Evaluation
-    Predicate "preproof"
+    Predicate "preproof-of"
     List
       Variable "$B"
       Variable "$T"
@@ -210,12 +278,12 @@ ImplicationScope <rule-TV>
         <rule>
       Variable "$B"
     Evaluation
-      Predicate "preproof"
+      Predicate "preproof-of"
       List
         Variable "$A"
         Variable "$T"
   Evaluation
-    Predicate "preproof"
+    Predicate "preproof-of"
     List
       Variable "$B"
       Variable "$T"
@@ -245,12 +313,12 @@ ImplicationScope <target-andbit-rule-TV>
         <rule>
       Variable "$B"
     Evaluation
-      Predicate "preproof"
+      Predicate "preproof-of"
       List
         <andbit>
         <target>
   Evaluation
-    Predicate "preproof"
+    Predicate "preproof-of"
     List
       Variable "$B"
       <target>
@@ -266,7 +334,7 @@ it a low prior and in turn will lower the confidence of the produced
 term by conditional instantiation (see Section Conditional
 Instantiation Confidence).
 
-To go beyond this level-0 meta-learning type we need to introduce more
+To go beyond this level-0 meta-learning we need to introduce more
 expressive specializations in order to generalize well when new
 instances of T, A, L, etc, are encountered.
 
@@ -292,14 +360,14 @@ ImplicationScope <TV>
         Variable "$L"
         Variable "$R"
       Variable "$B"
-    <pattern>
     Evaluation
-      Predicate "preproof"
+      Predicate "preproof-of"
       List
         Variable "$A"
         Variable "$T"
+    <pattern>
   Evaluation
-    Predicate "preproof"
+    Predicate "preproof-of"
     List
       Variable "$B"
       Variable "$T"
@@ -308,19 +376,18 @@ ImplicationScope <TV>
 where `<pattern>` is a predicate body involving all or some of the
 variables T, A, L and R.
 
+The other option is to specialize the preproof and expansion clauses
+instead of having an explicit `<pattern>` clause, as we'll see below.
+
 Finally, it's important to realize that B never needs to be
-instantiated, in other words, we don't need to try to expand A and
+instantiated. In other words, we don't need to try to expand A and
 produce B to estimate whether the expansion is worthwhile.
 
 ### Example
 
-In this example we craft a rule saying that double deduction, a
-deduction on top of a deduction tends to produce preproofs. In fact
-since a double deduction requires a single deduction it is likely that
-a rule saying that a single deduction is likely to produce a preproof
-will exist as well, albeit with perhaps a smaller strength since it is
-less specific. Anyway, we solely focus on double deduction
-here. Such rule may look like
+In this example we craft a rule saying that if the first letter in the
+target (or premise leaf) is A, then conditional instantiation almost
+surely produces a preproof. Such rule may look like
 
 ```
 ImplicationScope <TV>
@@ -339,33 +406,85 @@ ImplicationScope <TV>
       List
         Variable "$A"
         Variable "$L"
-        <deduction-rule>
+        <conditional-instantiation>
       Variable "$B"
     Evaluation
-      Predicate "preproof"
+      Predicate "preproof-of"
       List
         Variable "$A"
         Variable "$T"
     Evaluation
-      Predicate "is-premise-of-rule"
-      List
-        Variable "$A"
-        Variable "$L"
-        <deduction-rule>
+      Predicate "first-letter-is-a"
+      Variable "$L"
   Evaluation
-    Predicate "preproof"
+    Predicate "preproof-of"
     List
       Variable "$B"
       Variable "$T"
 ```
 
 You may notice that the inference rule has already been instantiated,
-here referred as `<deduction-rule>` to keep the example shorter. Also
-the `Predicate "is-premise-of-rule"` should be expressed in terms of
-patterns mined by the pattern miner. And such pattern would be a
-subtree of A, the outermost deduction in A containing L as a leaf,
-which requires we have some function to check if a the subtree of some
-atom follows some pattern.
+here referred as `<conditional-instantiation>` to keep the example
+short. Also the `Predicate "first-letter-is-a"` should be expressed in
+terms of patterns mined by the pattern miner.
+
+The other option is to specialize the preproof and expansion clauses
+to capture that pattern.
+
+```
+ImplicationScope <TV>
+  VariableList
+    Variable "$T"  ;; Theorem/target to prove
+    TypedVariable  ;; and-BIT to expand
+      Variable "$A"
+      Type "BindLink"
+    Variable "$X"  ;; Second letter involved in the leaf to expand
+    TypedVariable  ;; Resulting and-BIT from the expansion of L from A with rule R
+      Variable "$B"
+      Type "BindLink"
+  And
+    Execution
+      GroundedSchema "expand-and-BIT"
+      List
+        Variable "$A"
+        Inheritance
+          Concept "a"
+          Variable "$X"
+        <conditional-instantiation>
+      Variable "$B"
+    Evaluation
+      Predicate "preproof-of"
+      List
+        Variable "$A"
+        Variable "$T"
+  Evaluation
+    Predicate "preproof-of"
+    List
+      Variable "$B"
+      Variable "$T"
+```
+
+As you may see, in the expansion clause
+
+```
+Variable "$L"
+```
+
+has been replaced by
+
+```
+Inheritance
+  Concept "a"
+  Variable "$X"
+```
+
+as a substitute for the pattern clause
+
+```
+    Evaluation
+      Predicate "first-letter-is-a"
+      Variable "$L"
+```
 
 Learn Inference Control Rules
 -----------------------------
@@ -389,7 +508,7 @@ searching for a proof
 2. A certain and-BIT proofs a certain target
 ```
    EvaluationLink <TV>
-     PredicateNode "URE:BC:proof"
+     PredicateNode "URE:BC:proof-of"
      List
        <andbit_fcs>
        <target_result> <TV>
@@ -403,7 +522,7 @@ that A is a preproof of T.
 
 ```
    EvaluationLink <1 1>
-     PredicateNode "URE:BC:preproof"
+     PredicateNode "URE:BC:preproof-of"
      List
        <A>
        <T>
@@ -415,7 +534,7 @@ to be a preproof of T.
 
 ```
    EvaluationLink <0.0001 0.01>
-     PredicateNode "URE:BC:preproof"
+     PredicateNode "URE:BC:preproof-of"
      List
        <A>
        <T>
@@ -462,34 +581,35 @@ Let's assume we have k active control rules for inference rule R (a
 control rule is active if its context is satisfied).
 
 ```
-ICR1 : C1 & R -> S <TV1>
+CR1 : C1 & R -> S <TV1>
 ...
-ICRk : Ck & R -> S <TVk>
+CRk : Ck & R -> S <TVk>
 ```
 
-where `->` compactly represent an `ImplicationScopeLink` as described
+where `->` compactly represents an `ImplicationScopeLink` as described
 above.
 
-`ICRi` expresses that in context `Ci` chosing `R` will produce a
+`CRi` expresses that in context `Ci` chosing `R` will produce a
 preproof of our final target with truth value `TVi`. `S` stands for
 Success. One way of doing that is to use a resource bound variation of
 Solomonoff's Universal Operator Induction which, reformulated to fit
 our problem, looks like
 
 ```
-P(S|R) = Sum_i=0^k P(ICRi) * ICRi(S|R) * Prod_j ICRi(Sj|Rj) / nt
+P(S|R) = Sum_i=0^k P(CRi) * CRi(S|R) * Prod_j CRi(Sj|Rj) / nt
 ```
 
-* `P(S|R)` is the probability that picking up `R` in this instance
-  will produce a preproof of our final target.
-* `P(ICRi)` is the prior of `ICRi`.
-* `ICRj(S|R)` is the probability of success upon choosing `R`
-  according to `ICRi`.
-* The last term `Prod_j ICRi(Sj|Rj)` is the probability that `ICRi`
-  explains our corpus of past inferences.
+* `P(S|R)` is the probability that picking up `R` will produce a
+  preproof of our final target.
+* `P(CRi)` is the prior of `CRi`.
+* `CRj(S|R)` is the probability of success upon choosing `R`
+  according to `CRi`.
+* The last term `Prod_j CRi(Sj|Rj)` is the probability that `CRi`
+  explains the corpus of past inferences, the likelihood of `CRi` also
+  noted `L(CRi)`.
 * `nt` is the normalizing term, defined as
 ```
-nt = Sum_i=0^n P(ICRi) * Prod_j ICRi(Sj|Rj)
+nt = Sum_i=0^k P(CRi) * Prod_j CRi(Sj|Rj)
 ```
 
 Since it is resource bound we cannot consider all computable rules.
@@ -498,91 +618,158 @@ such.
 
 On top of that, instead of returning a single probability we want to
 return a truth value, or more generally a pdf (probability density
-function). This is essential to balance exploitation vs exploration as
-explained in the next subsection.
+function) over probabilities. This is essential to balance
+exploitation vs exploration as explained in the next subsection.
 
 Generally, one can do that by building a cumulative distribution
 function instead of a probability expectation.
 
 ```
-CDF_P(S|R)(x) = Sum_i_in_{ICRi(S|R)<=x} P(ICRi) * Prod_j ICRi(Sj|Rj) / nt
+CDF_P(S|R)(x) = Sum_i_in_{CRi(S|R)<=x} P(CRi) * Prod_j CRi(Sj|Rj) / nt
 ```
 
-However our models `ICRi` calculate TVs (thus pdfs), not
-probabilities, making `ICRi(S|R)<=x` ill-defined. To remedy that we
-can split `ICRi` into a continuous ensemble of models, each of which
-with a probability from 0 to 1, not a TV, associated to it. We can
-then use this ensemble as extra models and use the same formula above
-to calculate the cdf. Luckily it turns out that the TV corresponding
-to `ICRi` is equal to the cdf of `Prod_j ICRi(Sj|Rj)` up to a
-multiplicative constant, so in fact the cdf of `P(S|R)` is merely a
-weighted sum of the cdfs of `ICRi`
+However our models `CRi` actually calculate TVs (pdfs), not
+probabilities, thus `CRi(S|R)<=x` is meaningless. To remedy that we
+can split `CRi` into a continuous ensemble of models, each of which
+has a probability `p` varying from 0 to 1, indicating the probability
+of `S` conditioned by `R`. We can then use this ensemble as extra
+models and use the same formula above to calculate the cdf.
 
 ```
-CDF_P(S|R) = Sum_i=0^n alpha_i * CDF_ICRi(S|R) * P(ICRi) / nt
+CDF_P(S|R)(x) = Sum_i P(CRi) Int_0^x Prod_j CRi(Sj|Rj) dp / nt
 ```
 
-where
+So `P(CRi)` becomes the probability of the ith class of continous
+models. Given a infinitesimal model in that class is a mere
+probabilty, `CRi(Sj|Rj)`, the probability that `CRi` explains the jth
+observation, is in fact `p` if `Rj` yielded success `Sj=1`, `1-p` if
+it yielded failure `Sj=0`. Thus `Prod_j CRi(Sj|Rj)` is the binomial
+distribution, assuming for now a flat prior (other priors, such as
+Jeffrey's are easy consider, as we'll see further below)
 
 ```
-alpha_i * CDF_ICRi(S|R)(x) = Int_0^x p^X*(1-p)^(N-X) dp
+CDF_P(S|R)(x) = Sum_i P(CRi) Int_0^x p^X*(1-p)^(N-X) dp / nt
 ```
 
-`N` is the number of observations and `X` the positive count. Which
-corresponds to, up to a multiplicative constant, the second order
-distribution representing a TV as defined in Section 4.5.1 of the PLN
-book. So up to a multiplicative constant `FCS_ICRi(S|R)` both
-corresponds to the TV of `ICRi(S|R)` and `Prod_j
-ICRi(Sj|Rj)`. According equation 2 in Section 4.5.1 of the PLN book
-this constant factor is
+where `N` is the number of observations and `X` the positive count.
+
+Let define `L` the likelihood of an infinitesimal model with parameter
+probability `p`
 
 ```
-(N+1)*(choose N X)
+L(p) = p^X*(1-p)^(N-X)
 ```
 
-so that `CDF_ICRi(S|R)(1) = 1`. To cancel this factor out we must
-choose `alpha_i` such that
+Let me recall that the pdf of a TV obtained purely by obversation is a
+beta distribution with 
 
 ```
-alpha_i = 1 / (N+1)*(choose N X)
+alpha = X+1
+beta = N-X+1
 ```
 
-Which gives us a normalizing factor of
+(Section 4.5.1 of the PLN book).
+
+At that stage one can introduce a different prior, like Jeffrey's
 
 ```
-nt = Sum_i=0^n P(ICRi) / ((Ni+1)*(choose Ni Xi))
+alpha = X+1/2
+beta = N-X+1/2
 ```
 
-So the final equation is
+Once `alpha` and `beta` are defined, with whichever prior one chooses,
+the following holds
 
 ```
-CDF_P(S|R) = Sum_i=0^n CDF_ICRi(S|R) * P(ICRi) / ((Ni+1)*(choose Ni Xi))
-           / Sum_i=0^n P(ICRi) / ((Ni+1)*(choose Ni Xi))
+L(p) = pdf_beta_distribution_alpha_beta(p) * Beta(alpha, beta)
+L(p) = pdf_CRi(p) * Beta(beta, alpha)
 ```
 
-This assumes that all observations are certain (based on perfect
-sensors). We actually do need to consider imperfect sensors because
-the negative observations of preproof have uncertainties, as explained
-in Subsection Record Inference Traces. It is expected that we'll have
-to resort to convolution products, because the pdf of a random
-variable equal to the sum of other random variables is determined by
-the convolution products of their pdfs. However it is suspected that
-the convolution products of 2 beta-distributions is a
-beta-distribution, which should simplify things a lot.
+* `pdf_beta_distribution_alpha_beta` is the pdf of the beta
+distribution with parameters `alpa` and `beta`.
+* `pdf_CRi` is the pdf of the TV of the ith model.
+* `Beta` is the beta function.
 
-There is also the problem that `ICRi(Sj|Rj)` is undefined for some
-observations. TODO: assume that the algorithmic complexity of the
-complete operator is
+We thus obtain the following, almost final, equation
 
 ```
-K(i)+a*sum_j_in_Ei (L(j)
+CDF_P(S|R)(x) = Sum_i P(CRi) Int_0^x pdf_CRi(p) * Beta(beta, alpha) dp / nt
 ```
 
-where `Ei` is the set of observations that are undefined by rule `i`
-and `L(j)` is the length, or entropy, of observation `j`.
+Almost final because, unlike in Universal Operator Induction, our
+models are partial, they only compute the probability of the answer,
+`Si`, for a subset of questions, all those that satisfy context
+`Ci`. Thus the number of positive and total observations for model `i`
+are generally not `X` and `N`, but rather
 
-Another option is to use distributional truth values to complete the
-operator.
+```
+X_i<=X
+N_i<=N
+```
+
+Thus the `alpha` and `beta` parameters must be accordingly
+parameterized according to model `i`
+
+```
+alpha_i = X_i+1/2
+beta_i = N_i-X_i+1/2
+```
+
+assuming Jeffrey's prior.
+
+There is no theory, to the best of my knowledge, of a variation of
+Universal Operator Induction considering partial operators. To address
+that we are going to artificially complete these operators. In
+principle, to do that well, one would need to consider all possible
+completions, but that is impractical. So instead will only consider
+the ones that perfectly explains the out-of-context data. This way the
+likelihood doesn't change as the contribution of each out-of-context
+datum has a factor of `1`.
+
+```
+CDF_P(S|R)(x) = Sum_i P(CRi) Int_0^x pdf_CRi(p) * Beta(alpha_i, beta_i) dp / nt
+```
+
+However this is assumption gives an unfair advantage to models with
+narrower contexts, and is expected to produce overfitting. So instead
+we move the extra complexity to the prior. If the fictive completed
+model of `CRi` is called `CRi+`, its prior `P(CRi+)<P(CRi)` has to
+account for that extra complexity. We unfortunately do not know it,
+but we can establish an upper bound. Indeed the extra complexity
+cannot be more than the length of the out-of-context data, because we
+can always complete `CRi` with a table mapping the out-of-context
+questions to their answers. For now we will use a simplistic heuristic
+and assume that the kolmogorov complexity of `CRi+` is
+
+`K(CRi+) = K(CRi) + |D|^(1-c)`
+
+where `c` is a compressability parameter. If `c=0` then `D`, the
+out-of-context data, is incompressible, if `c=1` then `D` can be
+compressed to a single bit. It is a very crude heuristic of course,
+and it requires us to tune a parameter `c`, but it has the advantages
+of being simple and computationally lightweight.
+
+The prior of `CRi+` is then
+
+`P(CRi+) = exp(-cpx*K(CRi+))`
+
+where `cpx` is another parameter we'll have to tune. The final
+equation of our mixture model is therefore
+
+```
+CDF_P(S|R)(x) = Sum_i P(CRi+) Int_0^x pdf_CRi(p) * Beta(alpha_i, beta_i) dp / nt
+```
+
+Last remark. This does assume that all observations are certain (based
+on perfect sensors). In practice we actually need to consider
+imperfect sensors because the negative observations of preproof have
+uncertainties, as explained in Subsection Record Inference Traces. It
+is expected that we'll have to resort to convolution products, because
+the pdf of a random variable equal to the sum of other random
+variables is determined by the convolution products of their
+pdfs. However it is suspected that the convolution products of 2
+beta-distributions is a beta-distribution, which should simplify
+things a lot. This is highly speculative of course.
 
 Once we have that we can calculate the TVi of success of each active
 inference rule Ri, either by turning its cdf into a TV or a pdf as it

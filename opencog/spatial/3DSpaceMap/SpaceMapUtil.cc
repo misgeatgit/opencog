@@ -49,32 +49,32 @@ namespace opencog
             Handle resultSetLink = satisfying_set(&atomSpace, getLink);
 
             if (numberOfPredicateValue == 1) {
-                HandleSeq resultNodeSet = (LinkCast(resultSetLink)->getOutgoingSet());
+                const HandleSeq& resultNodeSet = resultSetLink->getOutgoingSet();
                 if (resultNodeSet.empty()) {
                     return result;
                 }
-                result.push_back(NodeCast(resultNodeSet[0])->getName());
+                result.push_back(resultNodeSet[0]->get_name());
             } else {
                 //more than one predicate value, ex.size
-                HandleSeq resultListLinkSet = (LinkCast(resultSetLink)->getOutgoingSet());
+                const HandleSeq& resultListLinkSet = resultSetLink->getOutgoingSet();
                 if (resultListLinkSet.empty()) {
                     return result;
                 }
-                HandleSeq resultListLinkOutgoings = LinkCast(resultListLinkSet[0])->getOutgoingSet();
+                const HandleSeq& resultListLinkOutgoings = resultListLinkSet[0]->getOutgoingSet();
                 for (auto predicateValueNode : resultListLinkOutgoings) {
-                    result.push_back(NodeCast(predicateValueNode)->getName());
+                    result.push_back(predicateValueNode->get_name());
                 }
             }
             return result;
         }
 
 
-        bool checkStandable(AtomSpace& atomSpace, const OpencogOcTree& spaceMap, const BlockVector& pos)
+        bool checkStandable(AtomSpace& atomSpace, const AtomOcTree<Handle>& spaceMap, const BlockVector& pos)
         {
             return checkStandableWithProb(atomSpace, spaceMap, pos, spaceMap.getOccupancyThresLog());
         }
 
-        bool checkStandableWithProb(AtomSpace& atomSpace, const OpencogOcTree& spaceMap, const BlockVector& pos, float logOddsOccupancy)
+        bool checkStandableWithProb(AtomSpace& atomSpace, const AtomOcTree<Handle>& spaceMap, const BlockVector& pos, float logOddsOccupancy)
         {
             if (spaceMap.checkIsOutOfRange(pos)) {
                 logger().error("checkstandable: You want to check a pos which outside the limit of the map: at x = %f, y = %f, z= %f ! /n",
@@ -124,7 +124,7 @@ namespace opencog
 
 
         BlockVector getNearFreePointAtDistance(AtomSpace& atomSpace,
-                                               const OpencogOcTree& spaceMap,
+                                               const AtomOcTree<Handle>& spaceMap,
                                                const BlockVector& position,
                                                int distance,
                                                const BlockVector& startDirection,
@@ -182,20 +182,20 @@ namespace opencog
             return BlockVector::ZERO;
         }
 
-        double distanceBetween(const OpencogOcTree& spaceMap,
+        double distanceBetween(const AtomOcTree<Handle>& spaceMap,
                                const EntityRecorder& entityRecorder,
                                const Handle& objectA,
                                const Handle& objectB)
         {
             BlockVector posA, posB;
 
-            Type typeA = objectA->getType();
+            Type typeA = objectA->get_type();
             if (typeA == ENTITY_NODE) {
                 posA = entityRecorder.getLastAppearedLocation(objectA);
             } else if (typeA==STRUCTURE_NODE) {
                 posA = spaceMap.getBlockLocation(objectA);
             }
-            Type typeB = objectB->getType();
+            Type typeB = objectB->get_type();
             if (typeB == ENTITY_NODE) {
                 posB = entityRecorder.getLastAppearedLocation(objectB);
             } else if (typeB == STRUCTURE_NODE) {
@@ -209,20 +209,20 @@ namespace opencog
             }
         }
 
-        double distanceBetween(const OpencogOcTree& spaceMap,
+        double distanceBetween(const AtomOcTree<Handle>& spaceMap,
                                const BlockVector& posA,
                                const BlockVector& posB)
         {
             return (posA - posB);
         }
 
-        double distanceBetween(const OpencogOcTree& spaceMap,
+        double distanceBetween(const AtomOcTree<Handle>& spaceMap,
                                const EntityRecorder& entityRecorder,
                                const Handle& objectA,
                                const BlockVector& posB)
         {
             BlockVector posA;
-            Type typeA = objectA->getType();
+            Type typeA = objectA->get_type();
             if (typeA == STRUCTURE_NODE) {
                 posA = spaceMap.getBlockLocation(objectA);
             } else if (typeA==ENTITY_NODE) {

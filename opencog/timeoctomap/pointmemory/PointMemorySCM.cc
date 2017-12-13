@@ -94,8 +94,8 @@ public:
 	Handle get_first_location(Handle, Handle ato, Handle elapse);
 	Handle get_last_location(Handle, Handle ato, Handle elapse);
 	//AtTimeLink
-	//  TimeNode "Date Time millisec"
 	//  Atom
+	//  TimeNode "Date Time millisec"
 	// Get time points of atom occuring at a location
 	Handle get_elapse_list_at_loc_ato(Handle, Handle ato,
 	                                  Handle loc);//listlink atTimeLink
@@ -224,9 +224,9 @@ Handle PointMemorySCM::create_map(Handle map_name, Handle resolution)
 	const HandleSeq& hs = resolution->getOutgoingSet();
 
 	// XXX FIXME -- verify that these are NumberNodes.
-	double space_res_mtr = atof(hs[0]->getName().c_str());
-	int time_res_milli_sec = atoi(hs[1]->getName().c_str());
-	int time_units = atoi(hs[2]->getName().c_str());
+	double space_res_mtr = atof(hs[0]->get_name().c_str());
+	int time_res_milli_sec = atoi(hs[1]->get_name().c_str());
+	int time_units = atoi(hs[2]->get_name().c_str());
 
 	// Reject if time units < 1
 	if (time_units < 1)
@@ -335,7 +335,7 @@ static Handle timestamp_tag_atom(const time_pt& tp, Handle ato)
 	long d_mil = chrono::duration_cast<chrono::milliseconds>(tp.time_since_epoch()).count();
 	long mil_diff = d_mil-d_sec * 1000;
 	ts += to_string(mil_diff);
-	return Handle(createLink(AT_TIME_LINK, Handle(createNode(TIME_NODE, ts)), ato));
+	return Handle(createLink(AT_TIME_LINK, ato, Handle(createNode(TIME_NODE, ts))));
 }
 
 Handle PointMemorySCM::get_first_time(Handle map_name,
@@ -533,7 +533,7 @@ time_pt PointMemorySCM::get_map_time(const Handle& map_name,
                                      const Handle& helapse)
 {
 	have_map(map_name);
-	int elapse = atoi(helapse->getName().c_str());
+	int elapse = atoi(helapse->get_name().c_str());
 	return tsa[map_name]->get_current_time() - std::chrono::milliseconds(elapse);
 }
 

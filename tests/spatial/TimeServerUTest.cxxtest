@@ -276,7 +276,7 @@ public:
                     int numberOfReturnedEntries = ret.size();
                     if (numberOfReturnedEntries != expectedNumberOfEntries[h][t][c]) {
                         logger().debug("\nWrong number of entries returned for h=%s, t=%s, c=%s\nExpected %d, but got %d => %s",
-                                       handles[h]->toString().c_str(),
+                                       handles[h]->to_string().c_str(),
                                        search_intervals[t].toString().c_str(),
                                        TemporalTable::getTemporalRelationshipStr(criteria[c]),
                                        expectedNumberOfEntries[h][t][c], numberOfReturnedEntries, toString(ret).c_str());
@@ -287,7 +287,7 @@ public:
                             if (*(ret.front().getTemporal()) != expectedNextAfterStartOf[h][t]) {
                                 logger().debug("Next after start of t %s for h (%s) does not match\nExpected %s, but got %s",
                                                search_intervals[t].toString().c_str(),
-                                               handles[h]->toString().c_str(),
+                                               handles[h]->to_string().c_str(),
                                                expectedNextAfterStartOf[h][t].toString().c_str(),
                                                ret.front().getTemporal()->toString().c_str());
                             }
@@ -296,7 +296,7 @@ public:
                             if (*(ret.front().getTemporal()) != expectedNextAfterEndOf[h][t]) {
                                 logger().debug("Next after end of t %s for h (%s) does not match\nExpected %s, but got %s",
                                                search_intervals[t].toString().c_str(),
-                                               handles[h]->toString().c_str(),
+                                               handles[h]->to_string().c_str(),
                                                expectedNextAfterEndOf[h][t].toString().c_str(),
                                                ret.front().getTemporal()->toString().c_str());
                             }
@@ -305,7 +305,7 @@ public:
                             if (*(ret.front().getTemporal()) != expectedPreviousBeforeStartOf[h][t]) {
                                 logger().debug("Previous after start of t %s for h (%s) does not match\nExpected %s, but got %s",
                                                search_intervals[t].toString().c_str(),
-                                               handles[h]->toString().c_str(),
+                                               handles[h]->to_string().c_str(),
                                                expectedPreviousBeforeStartOf[h][t].toString().c_str(),
                                                ret.front().getTemporal()->toString().c_str());
                             }
@@ -314,7 +314,7 @@ public:
                             if (*(ret.front().getTemporal()) != expectedPreviousBeforeEndOf[h][t]) {
                                 logger().debug("Previous after end of t %s for h (%s) does not match\nExpected %s, but got %s",
                                                search_intervals[t].toString().c_str(),
-                                               handles[h]->toString().c_str(),
+                                               handles[h]->to_string().c_str(),
                                                expectedPreviousBeforeEndOf[h][t].toString().c_str(),
                                                ret.front().getTemporal()->toString().c_str());
                             }
@@ -1061,7 +1061,7 @@ public:
                     unsigned int numberOfReturnedEntries = ret.size();
                     if (numberOfReturnedEntries != (totalNumberOfEntries - expectedNumberOfEntries[h][t][c])) {
                         logger().debug("\nWrong number of entries returned for h=%s, t=%s, c=%s\nExpected %d, but got %d => %s",
-                                       handles[h]->toString().c_str(),
+                                       handles[h]->to_string().c_str(),
                                        search_intervals[t].toString().c_str(),
                                        TemporalTable::getTemporalRelationshipStr(criteria[c]),
                                        expectedNumberOfEntries[h][t][c], numberOfReturnedEntries, toString(ret).c_str());
@@ -1073,7 +1073,7 @@ public:
                             if (*(ret.front().getTemporal()) == expectedNextAfterStartOf[h][t]) {
                                 logger().debug("Next after start of t %s for h (%s), that should have been removed is still there: %s",
                                                search_intervals[t].toString().c_str(),
-                                               handles[h]->toString().c_str(),
+                                               handles[h]->to_string().c_str(),
                                                ret.front().getTemporal()->toString().c_str());
                             }
                             TS_ASSERT(*(ret.front().getTemporal()) != expectedNextAfterStartOf[h][t]);
@@ -1081,7 +1081,7 @@ public:
                             if (*(ret.front().getTemporal()) == expectedNextAfterEndOf[h][t]) {
                                 logger().debug("Next after end of t %s for h (%s), that should have been removed is still there: %s",
                                                search_intervals[t].toString().c_str(),
-                                               handles[h]->toString().c_str(),
+                                               handles[h]->to_string().c_str(),
                                                ret.front().getTemporal()->toString().c_str());
                             }
                             TS_ASSERT(*(ret.front().getTemporal()) != expectedNextAfterEndOf[h][t]);
@@ -1089,7 +1089,7 @@ public:
                             if (*(ret.front().getTemporal()) == expectedPreviousBeforeStartOf[h][t]) {
                                 logger().debug("Next after start of t %s for h (%s), that should have been removed is still there: %s",
                                                search_intervals[t].toString().c_str(),
-                                               handles[h]->toString().c_str(),
+                                               handles[h]->to_string().c_str(),
                                                ret.front().getTemporal()->toString().c_str());
                             }
                             TS_ASSERT(*(ret.front().getTemporal()) != expectedPreviousBeforeStartOf[h][t]);
@@ -1097,7 +1097,7 @@ public:
                             if (*(ret.front().getTemporal()) == expectedPreviousBeforeEndOf[h][t]) {
                                 logger().debug("Next after end of t %s for h (%s), that should have been removed is still there: %s",
                                                search_intervals[t].toString().c_str(),
-                                               handles[h]->toString().c_str(),
+                                               handles[h]->to_string().c_str(),
                                                ret.front().getTemporal()->toString().c_str());
                             }
                             TS_ASSERT(*(ret.front().getTemporal()) != expectedPreviousBeforeEndOf[h][t]);
@@ -1259,8 +1259,8 @@ public:
         Handle atTimeLink = timeServer().addTimeInfo(node1, 1000);
         TS_ASSERT(atTimeLink != Handle::UNDEFINED);
         Handle timeNode = atomSpace.get_handle(TIME_NODE, Temporal::getTimeNodeName(1000));
-        TS_ASSERT(atTimeLink->getOutgoingSet()[0] == timeNode);
-        TS_ASSERT(atTimeLink->getOutgoingSet()[1] == node1);
+        TS_ASSERT(atTimeLink->getOutgoingSet()[0] == node1);
+        TS_ASSERT(atTimeLink->getOutgoingSet()[1] == timeNode);
         vector<HandleTemporalPair> res;
         timeServer().getTimeInfo(back_inserter(res), node1);
         TS_ASSERT(res.size() == 1);
@@ -1272,8 +1272,8 @@ public:
         atTimeLink = timeServer().addTimeInfo(node1, t2);
         TS_ASSERT(atTimeLink != Handle::UNDEFINED);
         timeNode = atomSpace.get_handle(TIME_NODE, t2.getTimeNodeName());
-        TS_ASSERT(atTimeLink->getOutgoingSet()[0] == timeNode);
-        TS_ASSERT(atTimeLink->getOutgoingSet()[1] == node1);
+        TS_ASSERT(atTimeLink->getOutgoingSet()[0] == node1);
+        TS_ASSERT(atTimeLink->getOutgoingSet()[1] == timeNode);
         res.clear();
         timeServer().getTimeInfo(back_inserter(res), node1);
         TS_ASSERT(res.size() == 2);
@@ -1624,8 +1624,8 @@ public:
         TS_ASSERT((NULL != timeNode));
         // Check if the AtTimeLink was removed from AtomTable
         HandleSeq outgoing;
-        outgoing.push_back(timeNode);
         outgoing.push_back(node1);
+        outgoing.push_back(timeNode);
         TS_ASSERT(atomSpace.get_handle(AT_TIME_LINK, outgoing) == Handle::UNDEFINED);
         // Check if the pair(node1, T) was removed from TimeServer
         vector<HandleTemporalPair> res;
@@ -1662,8 +1662,8 @@ public:
         TS_ASSERT(timeNode != Handle::UNDEFINED);
         // Check if the AtTimeLink was removed from AtomTable
         outgoing.clear();
-        outgoing.push_back(timeNode);
         outgoing.push_back(node1);
+        outgoing.push_back(timeNode);
         TS_ASSERT(atomSpace.get_handle(AT_TIME_LINK, outgoing) == Handle::UNDEFINED);
         // Check if the pair(node1, T) was removed from TimeServer
         res.clear();

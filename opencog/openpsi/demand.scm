@@ -22,7 +22,7 @@
 (load "utilities.scm")
 
 ; --------------------------------------------------------------
-(define psi-demand-node (ConceptNode (string-append psi-prefix-str "Demand")))
+(define psi-demand-node (ConceptNode (string-append psi-prefix-str "demand")))
 
 ; --------------------------------------------------------------
 ; A cache of the demands, used to improve performance.
@@ -48,7 +48,7 @@
                     (MemberLink (VariableNode "demand") psi-label-skip)))
         ))
 
-    ; Compute the list of enabled deamnds, and cache it.
+    ; Compute the list of enabled demands, and cache it.
     (set! psi-demand-cache
         (lset-difference! equal? (psi-get-all-demands)
             (cog-outgoing-set skip-set))

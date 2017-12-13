@@ -83,11 +83,16 @@
     ; Chatscript rules
     ((has-match? "^[ ]*[s?u]:" str)
       (result:suffix 'RESPONDERS location
-        (substring (string-trim (match:substring current-match)) 0 1)))
+        (car (string->list (substring (string-trim
+          (match:substring current-match)) 0 1)))))
     ((has-match? "^[ \t]*[a-q]:" str)
       (result:suffix 'REJOINDERS location
-        (substring (string-trim (match:substring current-match)) 0 1)))
-    ((has-match? "^[ ]*[rt]:" str) (result:suffix 'GAMBIT location #f))
+        (car (string->list (substring (string-trim
+          (match:substring current-match)) 0 1)))))
+    ((has-match? "^[ ]*[rt]:" str)
+      (result:suffix 'GAMBIT location
+        (car (string->list (substring (string-trim
+          (match:substring current-match)) 0 1)))))
     ((has-match? "^[ ]*_[0-9]" str)
       (result:suffix 'MVAR location
         (substring (string-trim (match:substring current-match)) 1)))
@@ -100,18 +105,20 @@
     ((has-match? "^[ ]*_" str) (result:suffix 'VAR location #f))
     ; For dictionary keyword sets
     ((has-match? "^[ ]*[a-zA-Z]+~[a-zA-Z1-9]+" str)
-      (result:suffix 'LEMMA~COMMAND location (command-pair)))
+      (result:suffix 'DICTKEY location (command-pair)))
     ; Range-restricted Wildcards.
     ; TODO Maybe replace with dictionary keyword sets then process it on action?
     ((has-match? "^[ ]*\\*~[0-9]+" str)
       (result:suffix '*~n location
         (substring (string-trim (match:substring current-match)) 2)))
-    ((has-match? "^[ ]*~[a-zA-Z_]+" str)
+    ((has-match? "^[ ]*~[a-zA-Z0-9_]+" str)
       (result:suffix 'ID location
         (substring (string-trim (match:substring current-match)) 1)))
     ((has-match? "^[ ]*\\^" str) (result:suffix '^ location #f))
     ((has-match? "^[ ]*\\[" str) (result:suffix 'LSBRACKET location #f))
     ((has-match? "^[ ]*]" str) (result:suffix 'RSBRACKET location #f))
+    ((has-match? "^[ ]*\\{" str) (result:suffix 'LBRACE location #f))
+    ((has-match? "^[ ]*}" str) (result:suffix 'RBRACE location #f))
     ((has-match? "^[ ]*<<" str) (result:suffix '<< location #f))
     ((has-match? "^[ ]*>>" str) (result:suffix '>> location #f))
     ; For restarting matching position -- "< *"
@@ -140,11 +147,17 @@
         ; Literals, words in the pattern that are not in their canonical forms
         (result:suffix 'LITERAL location
           (string-trim (match:substring current-match)))))
-    ((has-match? "^[ ]*[0-9.]+" str)
+    ((has-match? "^[ ]*[0-9]+[0-9.]*" str)
       (result:suffix 'NUM location
         (string-trim (match:substring current-match))))
+    ((has-match? "^[ ]*[|]" str)
+     (result:suffix 'VLINE location
+        (string-trim (match:substring current-match))))
+    ((has-match? "^[ ]*," str)
+     (result:suffix 'COMMA location
+        (string-trim (match:substring current-match))))
     ; This should always be near the end, because it is broadest of all.
-    ((has-match? "^[ \t]*['.,_!?0-9a-zA-Z-]+" str)
+    ((has-match? "^[ \t]*[~'.,_!?0-9a-zA-Z-]+" str)
         (result:suffix 'STRING location
           (string-trim (match:substring current-match))))
     ; NotDefined token is used for errors only and there shouldn't be any rules.
@@ -200,18 +213,20 @@
     ; NOTE
     ; LSBRACKET RSBRACKET = Square Brackets []
     ; LPAREN RPAREN = parentheses ()
+    ; LBRACE RBRACE = Braces {}
     ; DQUOTE = Double quote "
     ; ID = Identifier or Marking
-    ; LEMMA~COMMAND = Dictionary Keyword Sets
+    ; DICTKEY = Dictionary Keyword Sets
     ; *~n = Range-restricted Wildcards
     ; MVAR = Match Variables
     ; MOVAR = Match Variables grounded in their original words
     ; ? = Comparison tests
+    ; VLINE = Vertical Line |
     (CONCEPT TOPIC RESPONDERS REJOINDERS GAMBIT GOAL RGOAL COMMENT SAMPLE_INPUT
      WHITESPACE
-      (right: LPAREN LSBRACKET << ID VAR * ^ < LEMMA LITERAL NUM LEMMA~COMMAND
-              STRING *~n *n UVAR MVAR MOVAR EQUAL NOT RESTART)
-      (left: RPAREN RSBRACKET >> > DQUOTE)
+      (right: LPAREN LSBRACKET << ID VAR * ^ < LEMMA LITERAL NUM DICTKEY
+              STRING *~n *n UVAR MVAR MOVAR EQUAL NOT RESTART LBRACE VLINE COMMA)
+      (left: RPAREN RSBRACKET RBRACE >> > DQUOTE)
       (right: ? CR NEWLINE)
     )
 
@@ -246,19 +261,25 @@
     ; Declaration/annotation(for ghost) grammar
     (declarations
       (CONCEPT ID declaration-sequence) :
-        (create-concept $2
-            ; Double-quotes are used to wrap the words/phrases,
-            ; remove them here before calling "create-concept"
-            (map (lambda (s)
-                (let ((ms (match:substring s)))
-                    (substring ms 1 (- (string-length ms) 1))))
-            (list-matches "\"[a-zA-Z0-9 ]+?\"" $3)))
+        (create-concept $2 (eval-string (string-append "(list " $3 ")")))
       (TOPIC ID declaration-sequence) :
-        (display-token (format #f "topic(~a = ~a)" $2 $3))
+        (create-topic $2 (list) (eval-string (string-append "(list " $3 ")")))
+      (TOPIC ID LPAREN RPAREN) : (create-topic $2 (list) (list))
+      (TOPIC ID LSBRACKET RSBRACKET) : (create-topic $2 (list) (list))
+      ; Note, "names" here are the topic-level features/functions that will
+      ; be applied to every single rules under this topic
+      (TOPIC ID names declaration-sequence) :
+        (create-topic $2 (string-split $3 #\sp)
+          (eval-string (string-append "(list " $4 ")")))
+      (TOPIC ID names LPAREN RPAREN) :
+        (create-topic $2 (string-split $3 #\sp) (list))
+      (TOPIC ID names LSBRACKET RSBRACKET) :
+        (create-topic $2 (string-split $3 #\sp) (list))
     )
 
     (declaration-sequence
       (LPAREN declaration-members RPAREN) : $2
+      (LSBRACKET declaration-members RSBRACKET) : $2
     )
 
     (declaration-members
@@ -267,13 +288,13 @@
     )
 
     (declaration-member
-      (LEMMA) :  (format #f "\"~a\"" $1)
-      (LITERAL) : (format #f "\"~a\"" $1)
-      (STRING) : (format #f "\"~a\"" $1)
-      (concept) : (format #f "\"~a\"" $1)
-      (DQUOTE phrase-terms DQUOTE) : (format #f "~a~a~a" $1 $2 $3)
-      (LEMMA~COMMAND) :
-        (display-token (format #f "command(~a -> ~a)" (car $1) (cdr $1)))
+      (lemma) : $1
+      (literal) : $1
+      (phrase) : $1
+      (concept) : $1
+      (sequence) : $1
+      (DICTKEY) :
+        (format #f "(cons 'dictkey (cons \"~a\" \"~a\"))" (car $1) (cdr $1))
     )
 
     ; Rule grammar
@@ -282,23 +303,87 @@
         (create-rule
           (eval-string (string-append "(list " $4 ")"))
           (eval-string (string-append "(list " $5 ")"))
-          (eval-string (string-append "(list " $1 ")")))
+          (eval-string (string-append "(list " $1 ")"))
+          $3 $2)
       (rule-goal RESPONDERS context action) :
         (create-rule
           (eval-string (string-append "(list " $3 ")"))
           (eval-string (string-append "(list " $4 ")"))
-          (eval-string (string-append "(list " $1 ")")))
+          (eval-string (string-append "(list " $1 ")"))
+          "" $2)
       (RESPONDERS name context action) :
         (create-rule
           (eval-string (string-append "(list " $3 ")"))
-          (eval-string (string-append "(list " $4 ")")))
+          (eval-string (string-append "(list " $4 ")"))
+          (list) $2 $1)
       (RESPONDERS context action) :
         (create-rule
           (eval-string (string-append "(list " $2 ")"))
-          (eval-string (string-append "(list " $3 ")")))
+          (eval-string (string-append "(list " $3 ")"))
+          (list) "" $1)
+      (rule-goal REJOINDERS name context action) :
+        (create-rule
+          (eval-string (string-append "(list " $4 ")"))
+          (eval-string (string-append "(list " $5 ")"))
+          (eval-string (string-append "(list " $1 ")"))
+          $3 $2)
+      (rule-goal REJOINDERS context action) :
+        (create-rule
+          (eval-string (string-append "(list " $3 ")"))
+          (eval-string (string-append "(list " $4 ")"))
+          (eval-string (string-append "(list " $1 ")"))
+          "" $2)
+      ; TODO: Make sure there is a parent rule before
+      ; accepting any rejoinders
+      (REJOINDERS name context action) :
+        (create-rule
+          (eval-string (string-append "(list " $3 ")"))
+          (eval-string (string-append "(list " $4 ")"))
+          (list) $2 $1)
       (REJOINDERS context action) :
-        (format #f "\nrejoinder: ~a\n~a\n~a" $1 $2 $3)
-      (GAMBIT action) : (format #f "gambit: ~a" $2)
+        (create-rule
+          (eval-string (string-append "(list " $2 ")"))
+          (eval-string (string-append "(list " $3 ")"))
+          (list) "" $1)
+      ; Note, do not support a gambit that has a "name"
+      ; but no context -- it's ambiguous to determine
+      ; whether it's really a "name" or just the first
+      ; word of the "action"
+      (rule-goal GAMBIT name context action) :
+        (create-rule
+          (eval-string (string-append "(list " $4 ")"))
+          (eval-string (string-append "(list " $5 ")"))
+          (eval-string (string-append "(list " $1 ")"))
+          $3 $2)
+      (rule-goal GAMBIT context action) :
+        (create-rule
+          (eval-string (string-append "(list " $3 ")"))
+          (eval-string (string-append "(list " $4 ")"))
+          (eval-string (string-append "(list " $1 ")"))
+          "" $2)
+      (rule-goal GAMBIT action) :
+        (create-rule
+          (list)
+          (eval-string (string-append "(list " $3 ")"))
+          (eval-string (string-append "(list " $1 ")"))
+          "" $2)
+      ; Same as the above, context is needed for a
+      ; named gambit
+      (GAMBIT name context action) :
+        (create-rule
+          (eval-string (string-append "(list " $3 ")"))
+          (eval-string (string-append "(list " $4 ")"))
+          (list) $2 $1)
+      (GAMBIT context action) :
+        (create-rule
+          (eval-string (string-append "(list " $2 ")"))
+          (eval-string (string-append "(list " $3 ")"))
+          (list) "" $1)
+      (GAMBIT action) :
+        (create-rule
+          (list)
+          (eval-string (string-append "(list " $2 ")"))
+          (list) "" $1)
     )
 
     (rule-goal
@@ -320,7 +405,12 @@
     )
 
     (context
+      (LPAREN RPAREN) : "(cons 'wildcard (cons 0 -1))"
+      (LPAREN negation RPAREN) : $2
       (LPAREN context-patterns RPAREN) : $2
+      (LPAREN negation context-patterns RPAREN) : (format #f "~a ~a" $2 $3)
+      (LPAREN unordered-matching RPAREN) : $2
+      (LPAREN negation unordered-matching RPAREN) : (format #f "~a ~a" $2 $3)
     )
 
     (context-patterns
@@ -341,8 +431,7 @@
       (user-variable) : $1
       (function) : $1
       (choice) : $1
-      (unordered-matching) : $1
-      (negation) : $1
+      (optional) : $1
       (variable ? concept) :
         (format #f "(cons 'is_member (list ~a ~a))" $1 $3)
       (sequence) : $1
@@ -361,9 +450,11 @@
     (action-pattern
       (?) : "(cons 'str \"?\")"
       (NOT) : "(cons 'str \"!\")"
+      (COMMA) : "(cons 'str \",\")"
       (DQUOTE) : "(cons 'str \"\\\"\")"
       (LEMMA) : (format #f "(cons 'str \"~a\")" $1)
       (LITERAL) : (format #f "(cons 'str \"~a\")" $1)
+      (NUM) : (format #f "(cons 'str \"~a\")" $1)
       (STRING) : (format #f "(cons 'str \"~a\")" $1)
       (variable) : $1
       ; e.g. $username
@@ -375,6 +466,7 @@
       (UVAR EQUAL variable-grounding) :
         (format #f "(cons 'assign_uvar (list \"~a\" ~a))" $1 $3)
       (function) : $1
+      (tts-feature) : $1
       (LSBRACKET action-patterns RSBRACKET) :
         (format #f "(cons 'action-choices (list ~a))" $2)
     )
@@ -385,6 +477,7 @@
 
     (literal
       (LITERAL) : (format #f "(cons 'word \"~a\")" $1)
+      (STRING) : (format #f "(cons 'word \"~a\")" $1)
     )
 
     (phrase
@@ -406,6 +499,11 @@
       (ID) : (format #f "(cons 'concept \"~a\")" $1)
     )
 
+    (optional
+      (LBRACE choice-terms RBRACE) :
+        (format #f "(cons 'optionals (list ~a))" $2)
+    )
+
     (choice
       (LSBRACKET choice-terms RSBRACKET) :
         (format #f "(cons 'choices (list ~a))" $2)
@@ -421,7 +519,6 @@
       (literal) : $1
       (phrase) : $1
       (concept) : $1
-      (negation) : $1
       (sequence) : $1
     )
 
@@ -479,13 +576,14 @@
 
     (names
       (name) : $1
-      (names) : $1
+      (names name) : (format #f "~a ~a" $1 $2)
     )
 
     (name
       (LEMMA) : $1
       (LITERAL) : $1
       (STRING) : $1
+      (NUM) : $1
     )
 
     (args
@@ -515,9 +613,6 @@
       (lemma) : $1
       (literal) : $1
       (phrase) : $1
-      (concept) : $1
-      (variable) : $1
-      (choice) : $1
     )
 
     ; TODO: This has a restart_matching effect. See chatscript documentation
@@ -552,6 +647,23 @@
       (concept) : $1
       (choice) : $1
       (negation) : $1
+    )
+
+    ; For things like: |pause|, |vocal,27|, and |worry,$med,3.0| etc
+    (tts-feature
+      (VLINE tts-members VLINE) :
+        (format #f "(cons 'tts-feature (list ~a))" $2)
+    )
+
+    (tts-members
+      (tts-member) : $1
+      (tts-members tts-member) : (format #f "~a ~a" $1 $2)
+    )
+
+    (tts-member
+      (COMMA) : ""
+      (name) : (format #f "(cons 'str \"~a\")" $1)
+      (UVAR) : (format #f "(cons 'get_uvar \"~a\")" $1)
     )
   )
 )

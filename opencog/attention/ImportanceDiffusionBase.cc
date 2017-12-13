@@ -206,8 +206,8 @@ void ImportanceDiffusionBase::diffuseAtom(Handle source)
 void ImportanceDiffusionBase::tradeSTI(DiffusionEventType event)
 {
     // Trade STI between the source and target atoms
-    _bank->set_sti(event.source, _bank->get_sti(event.source) - event.amount);
-    _bank->set_sti(event.target, _bank->get_sti(event.target) + event.amount);
+    _bank->set_sti(event.source, get_sti(event.source) - event.amount);
+    _bank->set_sti(event.target, get_sti(event.target) + event.amount);
 
 #ifdef DEBUG
     std::cout << "tradeSTI: " << event.amount << " from " << event.source
@@ -270,7 +270,7 @@ HandleSeq ImportanceDiffusionBase::incidentAtoms(Handle h)
     h->getIncomingSet(back_inserter(resultSet));
 
     // Calculate and append the outgoing set
-    if (h->isLink()) {
+    if (h->is_link()) {
         HandleSeq outgoing = h->getOutgoingSet();
         resultSet.insert(resultSet.end(), outgoing.begin(), outgoing.end());
     }
@@ -300,7 +300,7 @@ void ImportanceDiffusionBase::removeHebbianLinks(HandleSeq& sources)
         std::remove_if(sources.begin(), sources.end(),
                 [=](const Handle& h)
                 {
-                Type type = h->getType();
+                Type type = h->get_type();
 
                 if (type == ASYMMETRIC_HEBBIAN_LINK ||
                     type == HEBBIAN_LINK ||
@@ -489,8 +489,8 @@ ImportanceDiffusionBase::combineIncidentAdjacentVectors(
 double ImportanceDiffusionBase::calculateHebbianDiffusionPercentage(
         Handle h)
 {
-    strength_t strength = h->getTruthValue()->getMean();
-    confidence_t confidence = h->getTruthValue()->getConfidence();
+    strength_t strength = h->getTruthValue()->get_mean();
+    confidence_t confidence = h->getTruthValue()->get_confidence();
 
     return strength * confidence;
 }
