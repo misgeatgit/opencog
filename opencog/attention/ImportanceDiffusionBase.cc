@@ -130,6 +130,10 @@ void ImportanceDiffusionBase::diffuseAtom(Handle source)
     AttentionValue::sti_t totalDiffusionAmount =
             calculateDiffusionAmount(source);
 
+#ifndef LOG_AV_STAT
+#define LOG_AV_STAT
+#endif
+
 #ifdef LOG_AV_STAT
     // Log sti gain from spreading via  non-hebbian links
     for(const auto& kv : probabilityVectorIncident){
