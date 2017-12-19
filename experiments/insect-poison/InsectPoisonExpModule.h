@@ -19,6 +19,8 @@
 #include <iomanip>
 #include <sstream>
 
+#include <opencog/attentionbank/AttentionBank.h>
+
 namespace opencog {
 
 class AtomSpace;
@@ -41,6 +43,7 @@ private:
     AtomSpace * _as;
     CogServer& _cs;
 
+    std::map<Handle, AttentionValue::sti_t> _stimulus_rec;
 
     DECLARE_CMD_REQUEST(InsectPoisonExpModule, "dump-af-size-log",do_dump_af_size,
             "Dumps AF size stastics to a file",

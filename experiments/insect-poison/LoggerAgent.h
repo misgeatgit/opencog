@@ -47,6 +47,7 @@ namespace opencog {
             AttentionBank * _bank;
             time_point<system_clock> _start;
             boost::signals2::connection _atomAddedSignalConnection;
+            std::map<Handle, AttentionValue::sti_t> _stimulus_rec;
 
         public:
             virtual ~LoggerAgent();

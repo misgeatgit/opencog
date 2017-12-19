@@ -12,6 +12,7 @@
 #include <stdio.h>
 
 #include <opencog/atomspace/AtomSpace.h>
+#include <opencog/attentionbank/AttentionBank.h>
 #include <opencog/guile/SchemeEval.h>
 
 #include <opencog/attention/atom_types.h>
@@ -32,9 +33,11 @@ InsectPoisonExpModule::InsectPoisonExpModule(CogServer& cs) :
     Module(cs), _cs(cs)
 {
     _as = &_cs.getAtomSpace();
+    AttentionBank * _bank = &attentionbank(_as);
     // file_name = std::string(PROJECT_SOURCE_DIR)
     //             + "/experiments/attention/dump";
     registerAgentRequests();
+    _stimulus_rec = _bank->stimulusRec;
 }
 
 InsectPoisonExpModule::~InsectPoisonExpModule()
@@ -113,6 +116,14 @@ std::string InsectPoisonExpModule::do_dump_af_stat(Request *req,
          outf<< atom_avstat[ast.h].direct_sti_gain << ","
              << (atom_avstat[ast.h].heblink_sti_gain + atom_avstat[ast.h].link_sti_gain)
              << '\n';
+            //outf<< atom_avstat[ast.h].direct_sti_gain << ","
+            if(_stimulus_rec.find(ast.h) != _stimulus_rec.end()){
+                outf<< _stimulus_rec[ast.h] << ",";
+            } else{
+                outf << " - ,";
+            }
+            outf<< (atom_avstat[ast.h].heblink_sti_gain + atom_avstat[ast.h].link_sti_gain)
+                << '\n';
         }else{
           outf<< " - " << ","
              <<  " - "
