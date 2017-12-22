@@ -14,15 +14,15 @@
 **Experiment 1**
 
 step 1 - Load ecan module and libinsect-poison-exp module 
-``` opencog>load opencog/experiments/insect-poison/ibinsect-poison-exp.so```
+``` opencog>loadmodule opencog/experiments/insect-poison/libinsect-poison-exp.so```
 
-``` opencog>load opencog/attention/ibattention.so```
+``` opencog>loadmodule opencog/attention/libattention.so```
 
 step 2 - Load wordnet and conceptnet data
  Import the necessary opencog modules first.
 ```scm>  (use-modules (opencog nlp))  ```
 
-``` scm> (primitive-load "PATH_TO/wordnet.scm")  (primitive-load "PATH_TO/cocpetnet4.scm")```
+``` scm> (primitive-load "PATH_TO/wordnet.scm")  (primitive-load "PATH_TO/coceptnet4.scm")```
 
 NOTE: wordnet.scm and conceptnet4.scm are not included in the dir due to their large size. 
 
@@ -34,7 +34,7 @@ or
 
 ``` opencog> start-logger ```
 
-usually, we start all the ECAN agents together unless we want to try them one by one or with fewer sets of them. There is a handy command when we want to start all of them
+usually, we start all the ECAN agents together unless we want to try them one by one or with fewer sets of them. There is a handy command when we want to start all of them at once.
 
 ``` opencog> start-ecan ```
 
