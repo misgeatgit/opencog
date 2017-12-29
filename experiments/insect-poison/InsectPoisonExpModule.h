@@ -38,12 +38,14 @@ private:
     AgentPtr _logger_agentptr;
     LoggerAgent* _logger_agent;
 
+    AttentionBank * _bank;
+    
     Factory<LoggerAgent, Agent> loggerAgentFactory;
 
     AtomSpace * _as;
     CogServer& _cs;
 
-    std::map<Handle, AttentionValue::sti_t> _stimulus_rec;
+    std::map<Handle, AttentionValue::sti_t> * _stimulus_rec;
 
     DECLARE_CMD_REQUEST(InsectPoisonExpModule, "dump-af-size-log",do_dump_af_size,
             "Dumps AF size stastics to a file",

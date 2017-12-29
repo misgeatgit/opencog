@@ -26,7 +26,7 @@ LoggerAgent::LoggerAgent(CogServer& cs) : Agent(cs), _start(system_clock::now())
     _start = system_clock::now();
     _atomAddedSignalConnection = _as->addAtomSignal(
             boost::bind(&LoggerAgent::atomAddedListener, this, _1));
-
+    
     af_size_stat.reserve(MAX_SAMPLES); //allocate 50K sample holding space.
 
     try{
@@ -105,6 +105,7 @@ void LoggerAgent::run(void){
             ast.h = h;
             ast.last_active = time;
             ast.entered_at = time;
+
             ast.is_nlp_parse_output = is_nlp_parse_output;
             ast.dr = duration<double>(0);
             // ast.percentage_sti_gain_from_spreading =
