@@ -2,6 +2,7 @@
 
 using namespace opencog;
 using namespace std::chrono;
+using namespace std::placeholders;
 
 #define MAX_SAMPLES 30000
 bool LoggerAgent::topic_changed = false;
@@ -24,9 +25,7 @@ LoggerAgent::LoggerAgent(CogServer& cs) : Agent(cs), _start(system_clock::now())
     _as = &cs.getAtomSpace();
     _bank = &attentionbank(_as);
     _start = system_clock::now();
-    _atomAddedSignalConnection = _as->addAtomSignal(
-            boost::bind(&LoggerAgent::atomAddedListener, this, _1));
-    
+    _as->atomAddedSignal().connect(std::bind(&LoggerAgent::atomAddedListener, this, _1));
     af_size_stat.reserve(MAX_SAMPLES); //allocate 50K sample holding space.
 
     try{

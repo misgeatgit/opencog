@@ -33,6 +33,7 @@
 #include <opencog/cogserver/server/CogServer.h>
 #include <opencog/nlp/types/atom_types.h>
 #include <opencog/attentionbank/AttentionBank.h>
+
 #include <unordered_set>
 #include <chrono>
 
@@ -46,7 +47,6 @@ namespace opencog {
             AtomSpace * _as;
             AttentionBank * _bank;
             time_point<system_clock> _start;
-            boost::signals2::connection _atomAddedSignalConnection;
             std::map<Handle, AttentionValue::sti_t> _stimulus_rec;
 
         public:
