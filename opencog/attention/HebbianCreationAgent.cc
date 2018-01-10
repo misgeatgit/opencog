@@ -81,7 +81,7 @@ void HebbianCreationAgent::run()
 
     //  - Get handles with sti [ 0, MinSti(AF)]
     HandleSeq includesAFAtoms;
-    _bank->get_handles_by_AV(back_inserter(includesAFAtoms), 0, afSti);
+    _bank->get_handles_by_AV(back_inserter(includesAFAtoms), 0, afSti); // As Complement AF
     std::sort(includesAFAtoms.begin(), includesAFAtoms.end());
 
     HandleSeq notAttentionalFocus;
@@ -127,6 +127,7 @@ void HebbianCreationAgent::run()
         count++;
     }
 
+    /* XXX let Hebbian links be formed only within AF 
     std::default_random_engine generator;
     if(notAttentionalFocus.size() > 0 ){
         std::uniform_int_distribution<int> distribution(0,(int)notAttentionalFocus.size()-1);
@@ -142,7 +143,8 @@ void HebbianCreationAgent::run()
                 addHebbian(source,target);
         }
     }
-
+    */
+    /* XXX do remove_atoms causing segfaulting in other parts of Ecan.
     //Check the ammount of HebbianLinks the Atom has
     IncomingSet iset;
     classserver().foreachRecursive(
@@ -159,10 +161,11 @@ void HebbianCreationAgent::run()
         std::uniform_int_distribution<int> distribution2(0,iset.size()-1);
         size_t s = iset.size();
         do {
-            _as->remove_atom(iset[distribution2(generator)]->get_handle(), true);
+           // _as->remove_atom(iset[distribution2(generator)]->get_handle(), true);
             s--;
         } while (s >= maxLinkNum);
     }
+    */
 }
 
 void HebbianCreationAgent::addHebbian(Handle source,Handle target)
