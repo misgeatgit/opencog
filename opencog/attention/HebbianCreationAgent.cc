@@ -127,7 +127,7 @@ void HebbianCreationAgent::run()
         count++;
     }
 
-    /* XXX let Hebbian links be formed only within AF 
+    //* XXX let Hebbian links be formed only within AF 
     std::default_random_engine generator;
     if(notAttentionalFocus.size() > 0 ){
         std::uniform_int_distribution<int> distribution(0,(int)notAttentionalFocus.size()-1);
@@ -143,8 +143,8 @@ void HebbianCreationAgent::run()
                 addHebbian(source,target);
         }
     }
-    */
-    /* XXX do remove_atoms causing segfaulting in other parts of Ecan.
+    //*/
+    ///* XXX do remove_atoms causing segfaulting in other parts of Ecan.
     //Check the ammount of HebbianLinks the Atom has
     IncomingSet iset;
     classserver().foreachRecursive(
@@ -165,7 +165,7 @@ void HebbianCreationAgent::run()
             s--;
         } while (s >= maxLinkNum);
     }
-    */
+    //*/
 }
 
 void HebbianCreationAgent::addHebbian(Handle source,Handle target)
