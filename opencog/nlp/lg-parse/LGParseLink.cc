@@ -167,7 +167,7 @@ Handle LGParseLink::execute() const
 	Dictionary dict = ldn->get_dictionary();
 	if (nullptr == dict)
 		throw InvalidParamException(TRACE_INFO,
-			"LgParseLink requires valid dictionary! %s was given.",
+			"LgParseLink requires valid dictionary! \"%s\" was given.",
 			ldn->get_name().c_str());
 
 	// Set up the sentence
@@ -270,9 +270,16 @@ Handle LGParseLink::cvt_linkage(Linkage lkg, int i, const char* idstr,
 			wrd = linkage_get_word(lkg, w);
 		else
 		{
-			if (' ' == phrstr[eb]) eb--;
-			wrd = strndupa(phrstr + sb, eb-sb+1);
+			// eb points at the byte after the last char,
+			// its a great place to write a null byte.
+			wrd = strndupa(phrstr + sb, eb-sb);
 		}
+
+		// LEFT-WALL is not an ordinary word. Its special. Make it
+		// extra-special by adding "illegal" punctuation to it.
+		// FYI, this is compatible with Relex, relex2logic.
+		if (0 == w and 0 == strcmp(wrd, "LEFT-WALL")) wrd = "###LEFT-WALL###";
+		if (nwords-1 == w and 0 == strcmp(wrd, "RIGHT-WALL")) wrd = "###RIGHT-WALL###";
 
 		char buff[801] = "";
 		strncat(buff, wrd, 800);

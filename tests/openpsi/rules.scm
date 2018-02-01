@@ -1,11 +1,10 @@
 ; Copyright (C) 2016 OpenCog Foundation
 
 ; --------------------------------------------------------------
-; If you want to run this in guile wihout installing,
+; If you want to run this in guile without installing,
 ; 1. run cmake in the build directory
 ; 2. run  (add-to-load-path "/absolute/path/to/build/opencog/scm")
-; 3. (use-modules (opencog) (opencog openpsi))
-
+;
 ; NOTE:
 ; 1. The context of the rules are created so as to test possible generic
 ;    atomese patterns during application development, thus the semantics might
@@ -13,6 +12,8 @@
 ; 2. The numbering of the demands, context, action, and goals are used for
 ;    differentiating and are not necessarily related with the number of tests.
 ; --------------------------------------------------------------
+(use-modules (opencog) (opencog openpsi))
+
 (define context-1
     (list
        (ListLink
@@ -54,7 +55,7 @@
 (define (rule-1) (psi-rule context-1 action-1 goal-1 (stv 1 1) (demand-1)))
 (define (rule-1-cpp)
   (ImplicationLink (stv 1 1)
-     (SequentialAndLink
+     (AndLink
         (ListLink
            (VariableNode "x1")
            (VariableNode "y1")
@@ -126,7 +127,7 @@
 
 (define (rule-2-cpp)
   (ImplicationLink (stv 1 1)
-     (SequentialAndLink
+     (AndLink
         (ListLink
            (VariableNode "x2")
            (ConceptNode "Required constant for DualLink-2")

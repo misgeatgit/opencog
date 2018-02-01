@@ -38,11 +38,11 @@ OpenPsiRules::OpenPsiRules(AtomSpace* as): _as(as)
 Handle OpenPsiRules::add_rule(const HandleSeq& context, const Handle& action,
   const Handle& goal, const TruthValuePtr stv)
 {
-  // Add a SequentialAndLink of context and action which forms the
+  // Add an AndLink of context and action which forms the
   // implicant of the psi-rule.
   HandleSeq temp_c =  context;
   temp_c.push_back(action);
-  Handle hca = _as->add_link(SEQUENTIAL_AND_LINK, temp_c);
+  Handle hca = _as->add_link(AND_LINK, temp_c);
 
   // Add the psi-rule, set the truthvalue.
   Handle rule = _as->add_link(IMPLICATION_LINK, hca, goal);
@@ -146,6 +146,6 @@ PatternLinkPtr OpenPsiRules::get_query(const Handle rule)
   if(_psi_rules.count(rule)) {
     return std::get<3>(_psi_rules[rule]);
   } else {
-    return nullptr;
+    return PatternLinkCast(Handle::UNDEFINED);
   }
 }
