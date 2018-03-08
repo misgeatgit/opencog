@@ -33,9 +33,7 @@
   (let* (;; Variables
          (texts (Variable "$texts"))
          (ms (Variable "$ms"))
-         (X (Variable "$X"))
          ;; Constants
-         (top (Lambda X X))
          (minsup (Predicate "minsup"))
          ;; Types
          (NumberT (Type "NumberNode"))
