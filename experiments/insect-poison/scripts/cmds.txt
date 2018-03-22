@@ -1,4 +1,0 @@
-for word in $(cat insects.txt); do  wikit $word >> insect_paragraph.txt; done
-
-for f in {"insect_insecticide.txt","poison_insecticide.txt"}; do julia --depwarn=no insect_poison_db_from_adagram.jl ~/Desktop/ECAN/adagram-wiki-model1 $f >> kb.scm; done 
-
