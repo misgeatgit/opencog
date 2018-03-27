@@ -41,6 +41,9 @@ def load_experiment_module() :
 
 def start_ecan() :
   netcat("start-ecan")
+  netcat('agents-stop opencog::HebbianCreationAgent')
+  netcat('agents-stop opencog::HebbianUpdatingAgent')
+
 
 def start_logger() :
   netcat("start-logger")
@@ -85,23 +88,30 @@ def extract_log(column, starting_row, file_name):
     return col
 
 if __name__ == "__main__" :
-
+  # This is very critical. Load the auxilary data before launching the logging agent.
+  scm_load(load_files)
+  
   load_experiment_module()
   load_ecan_module()
-
-  scm_load(load_files)
   
   print "Starting ecan and logger agents."
   start_logger()
   start_ecan()
   
-  print "Starting parsing sentences."
-  start_word_stimulation(100)
+  start_word_stimulation(200)
+  
+  print "Parsing insect sentences."
   parse_sent_file(SENT_DIR+"/insects.sent")
-
-
   print "Dumping log data."
-  dump_af_stat("pydump")
+  dump_af_stat("pydump-after-insect")
+
+  topic_switched(True)
+  
+  print "Parsing poison sentences."
+  parse_sent_file(SENT_DIR+"/poisons.sent")
+  print "Dumping log data."
+  dump_af_stat("pydump-after-poison")
+  
 
 
 

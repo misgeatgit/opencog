@@ -130,11 +130,11 @@
 )
 (StateLink 
   MAX_AF_SIZE
-  (NumberNode "1000")
+  (NumberNode "500")
 )
 (StateLink 
   AF_RENT_FREQUENCY 
-  (NumberNode "5")
+  (NumberNode "0.5")
 )
 (StateLink 
   FORGET_THRESHOLD
@@ -154,7 +154,7 @@
 )
 (StateLink 
   MAX_SPREAD_PERCENTAGE
-  (NumberNode "0.4")
+  (NumberNode "0.8")
 )
 (StateLink 
   SPREAD_HEBBIAN_ONLY
