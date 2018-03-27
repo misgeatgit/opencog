@@ -110,7 +110,12 @@ std::string InsectPoisonExpModule::do_dump_af_stat(Request *req,
     for(auto p : (_logger_agent)->handle_atomstat_map)
     {
         LoggerAgent::AtomStat ast = p.second;
-        outf << ast.h.value() <<", "<< print_timept(ast.entered_at) 
+           if(ast.h->is_node())
+               outf << ast.h->get_name();
+           else
+               outf << ast.h.value();
+
+           outf <<", "<< print_timept(ast.entered_at) 
             << ", " << print_timept(ast.last_active)
             << ", " << get_sti(ast.h)
             << ", " << ast.dr.count()  << ", "
@@ -156,7 +161,7 @@ std::string InsectPoisonExpModule::do_set_topic_switched(Request *req,
 }
 
 std::string InsectPoisonExpModule::do_start_logger(Request* req, std::list<std::string> args){
-    _cs.startAgent(_logger_agentptr, true, "AFLogger");
+    _cs.startAgent(_logger_agentptr,false, "AFLogger");
     return "LoggerAgent started\n";
 }
 

@@ -1,4 +1,5 @@
 import socket
+import sys
 import time
 
 # This implements netcat in python.
@@ -72,6 +73,10 @@ load_files = ["/home/misgana/Desktop/ECAN/db/conceptnet4.scm",
 BASE_DIR = "/home/misgana/OPENCOG/opencog"
 
 SENT_DIR = BASE_DIR+"/experiments/insect-poison/data/sentences"
+WORD_DIR = BASE_DIR+"/experiments/insect-poison/data/words"
+
+def start_pipeline():
+  pass
 
 # Atom(uuid), EnteredAt, LastSeenAt, STI, DurationInAF, IsNLPParseOutput, DirectSTI, GainFromSpreading
 def extract_log(column, starting_row, file_name):
@@ -87,13 +92,7 @@ def extract_log(column, starting_row, file_name):
 
     return col
 
-if __name__ == "__main__" :
-  # This is very critical. Load the auxilary data before launching the logging agent.
-  scm_load(load_files)
-  
-  load_experiment_module()
-  load_ecan_module()
-  
+def experiment_1(): 
   print "Starting ecan and logger agents."
   start_logger()
   start_ecan()
@@ -111,8 +110,62 @@ if __name__ == "__main__" :
   parse_sent_file(SENT_DIR+"/poisons.sent")
   print "Dumping log data."
   dump_af_stat("pydump-after-poison")
+
+  insecticides = []
+
+  with open(WORD_DIR+"/insecticides.words") as w:
+    insecticides.puhs(w)
+ 
+  seen_in_af = []
+  with open(BASE_DIR+"/build/pydump-after-poison.data") as log:
+    #TODO
+    #get atom column
+    #push to seen_in_af
+    pass
+
+  si = set(insecticides)
+  saf = set(seen_in_af)
+
+  intersection = saf.intersection(si);
   
+  print "Found %d insecticide related words" % (len(intersection))
+  print intersection
+
+def experiment_2():
+  # Checking how fast attention switching is when a dissimilar topic is parsed
+  # as compared to similar topics like in experiment 1
+  pass
+
+def experiment_3():
+  # All about HebbianLinks how they could estabilish weak links which stabilize
+  # the dynamics.
+  pass
+
+if __name__ == "__main__" :
+  # This is very critical. Load the auxilary data before launching the logging agent.
+  scm_load(load_files)
+
+  load_experiment_module()
+  load_ecan_module()
+
+  expid = sys.argv[1]
+  if(not(expid and expid in ["1","2","3"])):
+    print "Please specify a valid experiment id \n"
+    print "   launch_exp.py <1|2|3>"
+    sys.exit(0)
+
+  if expid == "1":
+    experiment_1()
+
+  if expid == "2":
+    experiment_2()
+
+  if expid == "3":
+    experiment_3()
 
 
 
-  
+
+
+
+

@@ -4,7 +4,7 @@ using namespace opencog;
 using namespace std::chrono;
 using namespace std::placeholders;
 
-#define MAX_SAMPLES 30000
+#define MAX_SAMPLES 50000
 bool LoggerAgent::topic_changed = false;
 
 LoggerAgent::~LoggerAgent(){
@@ -38,6 +38,7 @@ LoggerAgent::LoggerAgent(CogServer& cs) : Agent(cs), _start(system_clock::now())
 
 
 void LoggerAgent::atomAddedListener(const Handle& h){
+    std::cout << "INFO: New atom added into the AS.\n";
     //if(h->getType() == WORD_NODE){
         corpus_wordnodes.push_back(h);
         if(topic_changed){
@@ -139,7 +140,4 @@ void LoggerAgent::run(void){
 
     last_run = system_clock::now();
 }
-
-
-
 
