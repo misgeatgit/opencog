@@ -113,7 +113,7 @@ std::string InsectPoisonExpModule::do_dump_af_stat(Request *req,
            if(ast.h->is_node())
                outf << ast.h->get_name();
            else
-               outf << ast.h.value();
+               outf << ast.h->get_type();
 
            outf <<", "<< print_timept(ast.entered_at) 
             << ", " << print_timept(ast.last_active)

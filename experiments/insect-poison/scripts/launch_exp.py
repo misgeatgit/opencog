@@ -88,7 +88,7 @@ def extract_log(column, starting_row, file_name):
         start = start + 1
       else:
         values = line.split(',')
-        col.push(values[column-1])
+        col.append(values[column-1])
 
     return col
 
@@ -113,23 +113,34 @@ def experiment_1():
 
   insecticides = []
 
-  with open(WORD_DIR+"/insecticides.words") as w:
-    insecticides.puhs(w)
+  with open(WORD_DIR+"/insecticide.words") as words:
+    for w in words:
+      insecticides.append(w)
  
   seen_in_af = []
-  with open(BASE_DIR+"/build/pydump-after-poison.data") as log:
-    #TODO
-    #get atom column
-    #push to seen_in_af
-    pass
+  non_nlp_words= []
+  line_no = 0
+  with open(BASE_DIR+"/build/pydump-after-poison.data", 'r') as logf:
+    for log in logf:
+      if line_no < 6:
+        line_no = line_no + 1
+        continue
+      
+      #print log
+      word = log.split(',')[0].strip()
+      seen_in_af.append(word)
+      if log.split(',')[5].strip() == '0':
+        non_nlp_words.append(word)
 
   si = set(insecticides)
   saf = set(seen_in_af)
 
   intersection = saf.intersection(si);
-  
+
   print "Found %d insecticide related words" % (len(intersection))
   print intersection
+  print "Non nlp atoms"
+  print non_nlp_words
 
 def experiment_2():
   # Checking how fast attention switching is when a dissimilar topic is parsed
