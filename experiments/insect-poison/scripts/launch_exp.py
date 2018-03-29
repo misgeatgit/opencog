@@ -66,14 +66,16 @@ def start_word_stimulation(stimulus) :
   netcat('(nlp-start-stimulation '+str(stimulus)+')')
 
 
+BASE_DIR = "/home/misgana/OPENCOG/opencog"
+DATA_DIR = BASE_DIR+"/experiments/insect-poison/data"
+
+SENT_DIR = DATA_DIR+"/sentences"
+WORD_DIR = DATA_DIR+"/words"
+
 load_files = ["/home/misgana/Desktop/ECAN/db/conceptnet4.scm",
               "/home/misgana/Desktop/ECAN/db/wordnet.scm",
-              "/home/misgana/Desktop/ECAN/db/adagram_sm_links.scm"]
+              DATA_DIR+"/Kb/adagram_sm_links.scm"]
 
-BASE_DIR = "/home/misgana/OPENCOG/opencog"
-
-SENT_DIR = BASE_DIR+"/experiments/insect-poison/data/sentences"
-WORD_DIR = BASE_DIR+"/experiments/insect-poison/data/words"
 
 def start_pipeline():
   pass
