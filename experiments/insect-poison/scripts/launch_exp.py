@@ -110,7 +110,7 @@ def experiment_1():
   
   start_word_stimulation(250)
   print "Parsing poison sentences."
-  parse_sent_file(SENT_DIR+"/poisons-100.sent")
+  parse_sent_file(SENT_DIR+"/poisons-50.sent")
   print "Dumping log data."
   dump_af_stat("pydump-after-poison")
 

@@ -41,9 +41,9 @@ function create_as_similarity_link(w1, w2)
                 if (strength < 0 || isnan (strength) )
                         strength = 0.0
                 end
-                link = string("(SimilarityLink (ConceptNode \"",w1, "\") (ConceptNode \"",w2,"\") (cog-new-stv ",strength," 1.0))")
+                link = string("(SimilarityLink (WordNode \"",w1, "\") (WordNode \"",w2,"\") (cog-new-stv ",1.0," 1.0))")
         catch LoadError
-                link = string("(SimilarityLink (ConceptNode \"",w1, "\") (ConceptNode \"",w2,"\") (cog-new-stv ",0," 1.0))")
+                link = string("(SimilarityLink (WordNode \"",w1, "\") (WordNode \"",w2,"\") (cog-new-stv ",0," 1.0))")
                 #println("LoadError")
         finally
                 return link      
@@ -68,7 +68,7 @@ for i= 1:length(insecticides)
         for j = 1:length(poisons)
                 #println(string (insecticides[i],",",insects[j]))
                 smlink = create_as_similarity_link(insecticides[i], poisons[j])
-                SCM *= string(smlink)
+                SCM *= string(smlink,'\n')
         end
 end
 
