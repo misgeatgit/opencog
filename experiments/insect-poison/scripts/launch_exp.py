@@ -35,9 +35,11 @@ def scm_load(files) :
     print "Finished loading in %d sec" % (time.time() - start_time)
 
 def load_ecan_module() :
+  print "Loading libattention module"
   netcat("loadmodule opencog/attention/libattention.so")
 
 def load_experiment_module() :
+  print "Loading libinsect-poison-exp module"
   netcat("loadmodule experiments/insect-poison/libinsect-poison-exp.so")
 
 def start_ecan() :
@@ -74,7 +76,7 @@ WORD_DIR = DATA_DIR+"/words"
 
 load_files = ["/home/misgana/Desktop/ECAN/db/conceptnet4.scm",
               "/home/misgana/Desktop/ECAN/db/wordnet.scm",
-              DATA_DIR+"/Kb/adagram_sm_links.scm"]
+              DATA_DIR+"/kb/adagram_sm_links.scm"]
 
 
 def start_pipeline():
@@ -98,36 +100,37 @@ def experiment_1():
   print "Starting ecan and logger agents."
   start_logger()
   start_ecan()
-  
-  start_word_stimulation(200)
-  
+ 
   print "Parsing insect sentences."
-  parse_sent_file(SENT_DIR+"/insects.sent")
+  parse_sent_file(SENT_DIR+"/insects-100.sent")
   print "Dumping log data."
   dump_af_stat("pydump-after-insect")
 
   topic_switched(True)
   
+  start_word_stimulation(250)
   print "Parsing poison sentences."
-  parse_sent_file(SENT_DIR+"/poisons.sent")
+  parse_sent_file(SENT_DIR+"/poisons-100.sent")
   print "Dumping log data."
   dump_af_stat("pydump-after-poison")
 
+  
   insecticides = []
 
   with open(WORD_DIR+"/insecticide.words") as words:
     for w in words:
       insecticides.append(w)
- 
+
   seen_in_af = []
   non_nlp_words= []
   line_no = 0
+  #with open(BASE_DIR+"/build/pydump-after-insect.data", 'r') as logf:
   with open(BASE_DIR+"/build/pydump-after-poison.data", 'r') as logf:
     for log in logf:
       if line_no < 6:
         line_no = line_no + 1
         continue
-      
+
       #print log
       word = log.split(',')[0].strip()
       seen_in_af.append(word)
