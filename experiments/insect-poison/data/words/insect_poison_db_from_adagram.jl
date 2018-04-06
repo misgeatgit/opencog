@@ -17,13 +17,14 @@ function populate_words ()
     
     open(string (BASE_DIR,"/insects.words")) do f
             for w in eachline (f)
-                    push! (insects, w)
+
+                    push! (insects, strip (w, '\n'))
             end
     end
     
     open(string (BASE_DIR,"/poison.words")) do f
             for w in eachline (f)
-                    push! (poisons, w)
+                    push! (poisons, strip (w, '\n'))
             end
     end
 end
@@ -31,6 +32,8 @@ end
 # Creates similariy link between words w1 and w2.
 function create_as_similarity_link(w1, w2)
         #println(string ( w1,",",w2))
+        w1 = strip (w1, '\n')
+        w2 = strip (w2, '\n')
         link = ""
         try
                 strength = similarity(vm, dict, w1, 1, w2, 1)
@@ -43,7 +46,7 @@ function create_as_similarity_link(w1, w2)
                 link = string("(SimilarityLink (ConceptNode \"",w1, "\") (ConceptNode \"",w2,"\") (cog-new-stv ",0," 1.0))")
                 #println("LoadError")
         finally
-                return link        
+                return link      
         end
 end  
 
@@ -65,7 +68,7 @@ for i= 1:length(insecticides)
         for j = 1:length(poisons)
                 #println(string (insecticides[i],",",insects[j]))
                 smlink = create_as_similarity_link(insecticides[i], poisons[j])
-                SCM *= string(smlink,"\n")
+                SCM *= string(smlink)
         end
 end
 
