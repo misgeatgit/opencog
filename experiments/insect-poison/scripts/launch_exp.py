@@ -1,3 +1,4 @@
+import os
 import socket
 import sys
 import time
@@ -42,14 +43,24 @@ def load_experiment_module() :
   print "Loading libinsect-poison-exp module"
   netcat("loadmodule experiments/insect-poison/libinsect-poison-exp.so")
 
+ecan_started = False
 def start_ecan() :
-  netcat("start-ecan")
-  netcat('agents-stop opencog::HebbianCreationAgent')
-  netcat('agents-stop opencog::HebbianUpdatingAgent')
+  global ecan_started
+  if not ecan_started :
+      print "Starting ECAN agents"
+      netcat("start-ecan")
+      #netcat('agents-stop opencog::HebbianCreationAgent')
+      #netcat('agents-stop opencog::HebbianUpdatingAgent')
+      ecan_started = True
 
 
+logger_started = False
 def start_logger() :
-  netcat("start-logger")
+  global logger_started
+  if not logger_started:
+     print "Starting experiment logger agent."
+     netcat("start-logger")
+     logger_Started = True
 
 def topic_switched(is_on) :
   netcat("topic-switched "+(is_on==True and '1' or '0'))
@@ -97,10 +108,11 @@ def extract_log(column, starting_row, file_name):
     return col
 
 def experiment_1(): 
-  print "Starting ecan and logger agents."
   start_logger()
   start_ecan()
  
+  start_word_stimulation(250)
+  
   print "Parsing insect sentences."
   parse_sent_file(SENT_DIR+"/insects-100.sent")
   print "Dumping log data."
@@ -108,7 +120,6 @@ def experiment_1():
 
   topic_switched(True)
   
-  start_word_stimulation(250)
   print "Parsing poison sentences."
   parse_sent_file(SENT_DIR+"/poisons-50.sent")
   print "Dumping log data."
@@ -155,7 +166,18 @@ def experiment_2():
 def experiment_3():
   # All about HebbianLinks how they could estabilish weak links which stabilize
   # the dynamics.
-  pass
+  start_logger()
+  start_ecan()
+ 
+  start_word_stimulation(250)
+  
+  print "Parsing the SEW(simple english wikipedia)."
+  #Start parsing the SEW
+  script_dir=BASE_DIR+'/opencog/nlp/learn/run'
+  os.system(script_dir+'/wiki-ss-en.sh'+' '+script_dir)
+
+  #Rerun experiment 1
+  experiment_1()
 
 if __name__ == "__main__" :
   # This is very critical. Load the auxilary data before launching the logging agent.
