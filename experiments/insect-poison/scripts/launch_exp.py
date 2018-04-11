@@ -79,7 +79,7 @@ def start_word_stimulation(stimulus) :
   netcat('(nlp-start-stimulation '+str(stimulus)+')')
 
 
-BASE_DIR = "/home/misgana/OPENCOG/opencog"
+BASE_DIR = sys.argv[2]
 DATA_DIR = BASE_DIR+"/experiments/insect-poison/data"
 
 SENT_DIR = DATA_DIR+"/sentences"
