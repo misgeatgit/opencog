@@ -4,4 +4,7 @@
 # Loop over all the files in 'beta-pages', sentence-split them
 # and submit them for word-pair couting.
 #
-time find beta-pages -type f -exec ./ss-one.sh en {} localhost 17005 \;
+basedir=$1
+execf=$basedir'/ss-one.sh'
+echo $execf
+time find ~/Desktop/sew-splitted -type f -exec $execf en {} localhost 17001 $basedir \;

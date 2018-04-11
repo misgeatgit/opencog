@@ -2,7 +2,7 @@
 #
 # ss-one.sh <lang> <filename> <cogserver-host> <cogserver-port>
 #
-# Support script for batch parsing of plain-text files.
+# Support script for batch parsing of wikipedia articles.
 # Sentence-split one file, submit it, via perl script, to the parser.
 # When done, move the file over to a 'finished' directory.
 #
@@ -17,28 +17,34 @@ filename="$2"
 # cogport=17002
 coghost="$3"
 cogport=$4
+basedir=$5
 
-# Not using relex any longer
-#splitter=/home/ubuntu/src/relex/src/split-sentences/split-sentences.pl
 splitter=/usr/local/bin/split-sentences.pl
 splitter=./split-sentences.pl
+splitter=$basedir'/split-sentences.pl'
 
 splitdir=split-articles
 subdir=submitted-articles
-observe="observe-text"
+#observe="observe-text"
+observe="nlp-parse"
 
-# Punt if the cogserver has crashed.  Use netcat to ping it.
+# Punt if the cogserver has crashed. The grep is looking for the
+# uniquely-named config file.
+# haveserver=`ps aux |grep cogserver |grep opencog-$lang`
+# if [[ -z "$haveserver" ]] ; then
+# 	exit 1
+# fi
+# Alternate cogserver test: use netcat to ping it.
 haveping=`echo foo | nc $coghost $cogport`
 if [[ $? -ne 0 ]] ; then
 	exit 1
 fi
 
 # Punt if relex or link-grammar have crashed.
-# Not using relex any longer.
-# haveserver=`ps aux |grep relex |grep linkgram`
-# if [[ -z "$haveserver" ]] ; then
-# 	exit 1
-# fi
+haveserver=`ps aux |grep relex |grep linkgram`
+if [[ -z "$haveserver" ]] ; then
+	exit 1
+fi
 
 
 # Split the filename into two parts
@@ -55,20 +61,22 @@ mkdir -p $(dirname "$subdir/$rest")
 cat "$filename" | $splitter -l $lang >  "$splitdir/$rest"
 
 # Submit the split article
-cat "$splitdir/$rest" | ./submit-one.pl $coghost $cogport $observe
+cat "$splitdir/$rest" | $basedir'/submit-one.pl' $coghost $cogport $observe
 
 # Punt if the cogserver has crashed (second test,
 # before doing the mv and rm below)
+# haveserver=`ps aux |grep cogserver |grep opencog-$lang`
+# if [[ -z "$haveserver" ]] ; then
+# 	exit 1
+# fi
 haveping=`echo foo | nc $coghost $cogport`
 if [[ $? -ne 0 ]] ; then
 	exit 1
 fi
-
-# Not using relex any longer.
-# haveserver=`ps aux |grep relex |grep linkgram`
-# if [[ -z "$haveserver" ]] ; then
-# 	exit 1
-# fi
+haveserver=`ps aux |grep relex |grep linkgram`
+if [[ -z "$haveserver" ]] ; then
+	exit 1
+fi
 
 # Move article to the done-queue
 mv "$splitdir/$rest" "$subdir/$rest"
