@@ -166,7 +166,7 @@ def experiment_2():
 def experiment_3():
   # All about HebbianLinks how they could estabilish weak links which stabilize
   # the dynamics.
-  start_logger()
+  #start_logger()
   start_ecan()
  
   start_word_stimulation(250)
