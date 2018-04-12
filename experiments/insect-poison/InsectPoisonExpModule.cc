@@ -110,12 +110,19 @@ std::string InsectPoisonExpModule::do_dump_af_stat(Request *req,
     for(auto p : (_logger_agent)->handle_atomstat_map)
     {
         LoggerAgent::AtomStat ast = p.second;
-           if(ast.h->is_node())
-               outf << ast.h->get_name();
-           else
-               outf << ast.h->get_type();
+        if(ast.h->is_node()){
+            outf << ast.h->get_name();
+        }else{
+            //convert the link to one line
+            std::string str = ast.h->to_short_string();
+            str.erase(std::remove(str.begin(), str.end(), '\n'), str.end());
+            outf <<  classserver().getTypeName(ast.h->get_type()) << "["
+                 << str << "]";
+            //outf <<  classserver().getTypeName(ast.h->get_type()) << "[" 
+            //     << ast.h.value() << "]";
+        }
 
-           outf <<", "<< print_timept(ast.entered_at) 
+        outf <<", "<< print_timept(ast.entered_at) 
             << ", " << print_timept(ast.last_active)
             << ", " << get_sti(ast.h)
             << ", " << ast.dr.count()  << ", "
