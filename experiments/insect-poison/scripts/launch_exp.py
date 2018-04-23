@@ -1,3 +1,4 @@
+import datetime
 import os
 import socket
 import sys
@@ -31,7 +32,7 @@ def scm_load(files) :
     start_time = time.time()
     tmp = f.split('/')
 
-    print "Loading %s" % (tmp[len(tmp)-1])
+    print "Loading %s [%s]" % (tmp[len(tmp)-1], f)
     netcat("(primitive-load \"" + f + "\")")
     print "Finished loading in %d sec" % (time.time() - start_time)
 
@@ -85,8 +86,8 @@ DATA_DIR = BASE_DIR+"/experiments/insect-poison/data"
 SENT_DIR = DATA_DIR+"/sentences"
 WORD_DIR = DATA_DIR+"/words"
 
-load_files = ["/home/misgana/Desktop/ECAN/db/conceptnet4.scm",
-              "/home/misgana/Desktop/ECAN/db/wordnet.scm",
+load_files = [DATA_DIR+"/kb/conceptnet4.scm",
+              DATA_DIR+"/Kb/wordnet.scm",
               DATA_DIR+"/kb/adagram_sm_links.scm"]
 
 
@@ -107,6 +108,11 @@ def extract_log(column, starting_row, file_name):
 
     return col
 
+def save(str, fpath):
+  f=open(fpath,'w')
+  f.write(str)
+  f.close()
+ 
 def experiment_1(): 
   start_logger()
   start_ecan()
@@ -157,6 +163,7 @@ def experiment_1():
   print intersection
   print "Non nlp atoms"
   print non_nlp_words
+  save(non_nlp_words, DATA_DIR+"/log/"+datetime.datetime.now().strftime("%Y-%m-%d-%H:%M:%S")+".log")
 
 def experiment_2():
   # Checking how fast attention switching is when a dissimilar topic is parsed

@@ -1,0 +1,139 @@
+Starting experiment logger agent.
+Parsing insect sentences.
+Dumping log data.
+Parsing poison sentences.
+Dumping log data.
+Found 0 insecticide related words
+set([])
+Non nlp atoms
+['aspirin', 'cocaine', 'caffeine', 'grasshopper', 'lead', 'venom', 'to', 'alcohol', 'weevil', 'beetles', 'cyanide', 'ants', 'water', 'organophosphate', 'pests', 'verb', 'be', 'possibly',
+ 'caterpillar', 'wasps', 'grasshoppers', 'earwig', 'spiders', 'strychnine', 'weevils', 'moth', '###LEFT-WALL###', 'moths', 'butterflies', 'nicotine', 'arsenic', 'chlorine', 'LemmaLink[(L
+emmaLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'AsymmetricHebbianLink[(AsymmetricHebbianLink (stv 0.304000 1.000000)  (WordNode "dilan")  (WordNode "ants"))]', 'ReferenceLink[(R
+eferenceLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'ReferenceLink[(ReferenceLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'LemmaLink[(LemmaLink (stv 1.000000 1.000000)  (W
+ordInstanceNode "', 'LemmaLink[(LemmaLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'LemmaLink[(LemmaLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'LemmaLink[(LemmaLink (stv 1
+.000000 1.000000)  (WordInstanceNode "', 'LemmaLink[(LemmaLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'LemmaLink[(LemmaLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'LemmaL
+ink[(LemmaLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'AsymmetricHebbianLink[(AsymmetricHebbianLink (stv 0.128000 1.000000)  (WordNode "aldicarb")  (WordNode "ants"))]', 'Asymmet
+ricHebbianLink[(AsymmetricHebbianLink (stv 0.105000 1.000000)  (WordNode "herbicide")  (WordNode "ants"))]', 'LemmaLink[(LemmaLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'Referen
+ceLink[(ReferenceLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'ReferenceLink[(ReferenceLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'LemmaLink[(LemmaLink (stv 1.000000 1.00
+0000)  (WordInstanceNode "', 'LemmaLink[(LemmaLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'LemmaLink[(LemmaLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'ReferenceLink[(Ref
+erenceLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'ReferenceLink[(ReferenceLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'ReferenceLink[(ReferenceLink (stv 1.000000 1.00000
+0)  (WordInstanceNode "', 'LemmaLink[(LemmaLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'LemmaLink[(LemmaLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'ReferenceLink[(Refere
+nceLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'ReferenceLink[(ReferenceLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'LemmaLink[(LemmaLink (stv 1.000000 1.000000)  (WordIn
+stanceNode "', 'ReferenceLink[(ReferenceLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'AsymmetricHebbianLink[(AsymmetricHebbianLink (stv 0.237000 1.000000)  (WordNode "hydramethyln
+on")  (WordNode "ants"))]', 'ReferenceLink[(ReferenceLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'ReferenceLink[(ReferenceLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'Lem
+maLink[(LemmaLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'ReferenceLink[(ReferenceLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'ReferenceLink[(ReferenceLink (stv 1.000000 
+1.000000)  (WordInstanceNode "', 'LemmaLink[(LemmaLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'ReferenceLink[(ReferenceLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'Refere
+nceLink[(ReferenceLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'ReferenceLink[(ReferenceLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'AsymmetricHebbianLink[(AsymmetricHebbi
+anLink (stv 0.293000 1.000000)  (WordNode "dichlorvos")  (WordNode "ants"))]', 'LemmaLink[(LemmaLink  (VariableNode "$to")  (WordNode "to"))]', 'LemmaLink[(LemmaLink (stv 1.000000 1.0000
+00)  (WordInstanceNode "', 'LemmaLink[(LemmaLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'PartOfSpeechLink[(PartOfSpeechLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'Refere
+
+nceLink[(ReferenceLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'LemmaLink[(LemmaLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'AsymmetricHebbianLink[(AsymmetricHebb[55/1931]
+stv 0.200000 1.000000)  (WordNode "lufenuron")  (WordNode "ants"))]', 'LemmaLink[(LemmaLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'AsymmetricHebbianLink[(AsymmetricHebbianLink (
+stv 0.245000 1.000000)  (WordNode "abamectin")  (WordNode "ants"))]', 'LemmaLink[(LemmaLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'LemmaLink[(LemmaLink (stv 1.000000 1.000000)  
+(WordInstanceNode "', 'ReferenceLink[(ReferenceLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'AsymmetricHebbianLink[(AsymmetricHebbianLink (stv 0.270000 1.000000)  (WordNode "aceta
+miprid")  (WordNode "butterflies"))]', 'LemmaLink[(LemmaLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'ReferenceLink[(ReferenceLink (stv 1.000000 1.000000)  (WordInstanceNode "', '
+LemmaLink[(LemmaLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'ReferenceLink[(ReferenceLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'ReferenceLink[(ReferenceLink (stv 1.0000
+00 1.000000)  (WordInstanceNode "', 'AsymmetricHebbianLink[(AsymmetricHebbianLink (stv 0.269000 1.000000)  (WordNode "carbaryl")  (WordNode "butterflies"))]', 'ReferenceLink[(ReferenceLi
+nk (stv 1.000000 1.000000)  (WordInstanceNode "', 'LemmaLink[(LemmaLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'LemmaLink[(LemmaLink (stv 1.000000 1.000000)  (WordInstanceNode "'
+, 'LemmaLink[(LemmaLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'ReferenceLink[(ReferenceLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'ReferenceLink[(ReferenceLink (stv 1.0
+00000 1.000000)  (WordInstanceNode "', 'LemmaLink[(LemmaLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'ReferenceLink[(ReferenceLink (stv 1.000000 1.000000)  (WordInstanceNode "', '
+AsymmetricHebbianLink[(AsymmetricHebbianLink (stv 0.076000 1.000000)  (WordNode "bulan")  (WordNode "butterflies"))]', 'AsymmetricHebbianLink[(AsymmetricHebbianLink (stv 0.185000 1.00000
+0)  (WordNode "ethiofencarb")  (WordNode "butterflies"))]', 'ReferenceLink[(ReferenceLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'AsymmetricHebbianLink[(AsymmetricHebbianLink (st
+v 0.077000 1.000000)  (WordNode "diazinon")  (WordNode "ants"))]', 'LemmaLink[(LemmaLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'LemmaLink[(LemmaLink (stv 1.000000 1.000000)  (Wo
+rdInstanceNode "', 'LemmaLink[(LemmaLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'ReferenceLink[(ReferenceLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'AsymmetricHebbianLin
+k[(AsymmetricHebbianLink (stv 0.172000 1.000000)  (WordNode "dicofol")  (WordNode "butterflies"))]', 'ReferenceLink[(ReferenceLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'Asymmet
+ricHebbianLink[(AsymmetricHebbianLink (stv 0.062000 1.000000)  (WordNode "aldrin")  (WordNode "butterflies"))]', 'ReferenceLink[(ReferenceLink (stv 1.000000 1.000000)  (WordInstanceNode 
+"', 'ReferenceLink[(ReferenceLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'ReferenceLink[(ReferenceLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'LemmaLink[(LemmaLink (stv 1
+.000000 1.000000)  (WordInstanceNode "', 'AsymmetricHebbianLink[(AsymmetricHebbianLink (stv 0.000000 1.000000)  (WordNode "fosmethilan")  (WordNode "ants"))]', 'ReferenceLink[(ReferenceL
+ink (stv 1.000000 1.000000)  (WordInstanceNode "', 'AsymmetricHebbianLink[(AsymmetricHebbianLink (stv 0.180000 1.000000)  (WordNode "insecticide")  (WordNode "butterflies"))]', 'Referenc
+eLink[(ReferenceLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'AsymmetricHebbianLink[(AsymmetricHebbianLink (stv 0.125000 1.000000)  (WordNode "alachlor")  (WordNode "butterflies")
+)]', 'LemmaLink[(LemmaLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'LemmaLink[(LemmaLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'LemmaLink[(LemmaLink (stv 1.000000 1.00000
+0)  (WordInstanceNode "', 'LemmaLink[(LemmaLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'ReferenceLink[(ReferenceLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'LemmaLink[(Le
+mmaLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'ReferenceLink[(ReferenceLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'AsymmetricHebbianLink[(AsymmetricHebbianLink (stv 0.2
+03000 1.000000)  (WordNode "bactericide")  (WordNode "ants"))]', 'AsymmetricHebbianLink[(AsymmetricHebbianLink (stv 0.292000 1.000000)  (WordNode "nematocide")  (WordNode "ants"))]', 'Le
+mmaLink[(LemmaLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'ReferenceLink[(ReferenceLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'LemmaLink[(LemmaLink (stv 1.000000 1.00000
+0)  (WordInstanceNode "', 'LemmaLink[(LemmaLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'LemmaLink[(LemmaLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'LemmaLink[(LemmaLink 
+(stv 1.000000 1.000000)  (WordInstanceNode "', 'AsymmetricHebbianLink[(AsymmetricHebbianLink (stv 0.451000 1.000000)  (WordNode "ethion")  (WordNode "ants"))]', 'ReferenceLink[(Reference
+Link (stv 1.000000 1.000000)  (WordInstanceNode "', 'AsymmetricHebbianLink[(AsymmetricHebbianLink (stv 0.076000 1.000000)  (WordNode "ethion")  (WordNode "water"))]', 'LemmaLink[(LemmaLi
+nk (stv 1.000000 1.000000)  (WordInstanceNode "', 'ReferenceLink[(ReferenceLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'LemmaLink[(LemmaLink (stv 1.000000 1.000000)  (WordInstanc
+eNode "', 'ReferenceLink[(ReferenceLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'ReferenceLink[(ReferenceLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'LemmaLink[(LemmaLink 
+(stv 1.000000 1.000000)  (WordInstanceNode "', 'ReferenceLink[(ReferenceLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'LemmaLink[(LemmaLink (stv 1.000000 1.000000)  (WordInstanceNo
+de "', 'LemmaLink[(LemmaLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'LemmaLink[(LemmaLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'ReferenceLink[(ReferenceLink (stv 1.0000
+00 1.000000)  (WordInstanceNode "', 'LemmaLink[(LemmaLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'AsymmetricHebbianLink[(AsymmetricHebbianLink (stv 0.044000 1.000000)  (WordNode 
+"dilan")  (WordNode "butterflies"))]', 'ReferenceLink[(ReferenceLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'LemmaLink[(LemmaLink (stv 1.000000 1.000000)  (WordInstanceNode "', '
+ReferenceLink[(ReferenceLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'ReferenceLink[(ReferenceLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'ReferenceLink[(ReferenceLink (st
+v 1.000000 1.000000)  (WordInstanceNode "', 'LemmaLink[(LemmaLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'AsymmetricHebbianLink[(AsymmetricHebbianLink (stv 0.227000 1.000000)  (W
+ordNode "aldicarb")  (WordNode "butterflies"))]', 'AsymmetricHebbianLink[(AsymmetricHebbianLink (stv 0.141000 1.000000)  (WordNode "herbicide")  (WordNode "butterflies"))]', 'LemmaLink[(
+LemmaLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'LemmaLink[(LemmaLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'ReferenceLink[(ReferenceLink (stv 1.000000 1.000000)  (Word
+InstanceNode "', 'LemmaLink[(LemmaLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'ReferenceLink[(ReferenceLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'ReferenceLink[(Referen
+ceLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'ReferenceLink[(ReferenceLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'LemmaLink[(LemmaLink (stv 1.000000 1.000000)  (WordIns
+tanceNode "', 'LemmaLink[(LemmaLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'LemmaLink[(LemmaLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'ReferenceLink[(ReferenceLink (stv
+ 1.000000 1.000000)  (WordInstanceNode "', 'ReferenceLink[(ReferenceLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'AsymmetricHebbianLink[(AsymmetricHebbianLink (stv 0.152000 1.0000
+00)  (WordNode "trichlorophenol")  (WordNode "ants"))]', 'LemmaLink[(LemmaLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'ReferenceLink[(ReferenceLink (stv 1.000000 1.000000)  (Word
+InstanceNode "', 'LemmaLink[(LemmaLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'LemmaLink[(LemmaLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'AsymmetricHebbianLink[(Asymmet
+ricHebbianLink (stv 0.123000 1.000000)  (WordNode "trichlorophenol")  (WordNode "water"))]', 'ReferenceLink[(ReferenceLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'ReferenceLink[(
+ReferenceLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'AsymmetricHebbianLink[(AsymmetricHebbianLink (stv 0.232000 1.000000)  (WordNode "hydramethylnon")  (WordNode "butterflies"))
+]', 'LemmaLink[(LemmaLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'ReferenceLink[(ReferenceLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'LemmaLink[(LemmaLink (stv 1.000000 
+1.000000)  (WordInstanceNode "', 'LemmaLink[(LemmaLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'ReferenceLink[(ReferenceLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'LemmaL
+ink[(LemmaLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'AsymmetricHebbianLink[(AsymmetricHebbianLink (stv 0.290000 1.000000)  (WordNode "dichlorvos")  (WordNode "butterflies"))]',
+ 'ReferenceLink[(ReferenceLink  (VariableNode "$wall-inst")  (WordNode "###LEFT-WALL###"))]', 'AsymmetricHebbianLink[(AsymmetricHebbianLink (stv 0.211000 1.000000)  (WordNode "lufenuron"
+)  (WordNode "butterflies"))]', 'AsymmetricHebbianLink[(AsymmetricHebbianLink (stv 0.293000 1.000000)  (WordNode "abamectin")  (WordNode "butterflies"))]', 'AsymmetricHebbianLink[(Asymme
+tricHebbianLink (stv 0.000000 1.000000)  (WordNode "methidathion")  (WordNode "ants"))]', 'AsymmetricHebbianLink[(AsymmetricHebbianLink (stv 0.167000 1.000000)  (WordNode "dinoseb")  (Wo
+rdNode "ants"))]', 'AsymmetricHebbianLink[(AsymmetricHebbianLink (stv 0.238000 1.000000)  (WordNode "bendiocarb")  (WordNode "ants"))]', 'AsymmetricHebbianLink[(AsymmetricHebbianLink (st
+v 0.000000 1.000000)  (WordNode "methidathion")  (WordNode "water"))]', 'AsymmetricHebbianLink[(AsymmetricHebbianLink (stv 0.231000 1.000000)  (WordNode "dinoseb")  (WordNode "water"))]'
+, 'AsymmetricHebbianLink[(AsymmetricHebbianLink (stv 0.217000 1.000000)  (WordNode "bendiocarb")  (WordNode "water"))]', 'AsymmetricHebbianLink[(AsymmetricHebbianLink (stv 0.000000 1.000
+000)  (WordNode "benazolin")  (WordNode "ants"))]', 'AsymmetricHebbianLink[(AsymmetricHebbianLink (stv 0.000000 1.000000)  (WordNode "benazolin")  (WordNode "water"))]', 'Referen[0/1931]
+ReferenceLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'ReferenceLink[(ReferenceLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'ReferenceLink[(ReferenceLink (stv 1.000000 1.00
+0000)  (WordInstanceNode "', 'LemmaLink[(LemmaLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'LemmaLink[(LemmaLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'AsymmetricHebbianL
+ink[(AsymmetricHebbianLink (stv 0.155000 1.000000)  (WordNode "lindane")  (WordNode "ants"))]', 'ReferenceLink[(ReferenceLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'LemmaLink[(L
+emmaLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'AsymmetricHebbianLink[(AsymmetricHebbianLink (stv 0.368000 1.000000)  (WordNode "lindane")  (WordNode "water"))]', 'LemmaLink[(Le
+mmaLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'LemmaLink[(LemmaLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'ReferenceLink[(ReferenceLink (stv 1.000000 1.000000)  (WordIn
+stanceNode "', 'AsymmetricHebbianLink[(AsymmetricHebbianLink (stv 0.242000 1.000000)  (WordNode "diazinon")  (WordNode "butterflies"))]', 'ReferenceLink[(ReferenceLink (stv 1.000000 1.00
+0000)  (WordInstanceNode "', 'ReferenceLink[(ReferenceLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'LemmaLink[(LemmaLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'LemmaLink[
+(LemmaLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'ReferenceLink[(ReferenceLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'ReferenceLink[(ReferenceLink (stv 1.000000 1.00000
+0)  (WordInstanceNode "', 'ReferenceLink[(ReferenceLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'LemmaLink[(LemmaLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'LemmaLink[(Le
+mmaLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'ReferenceLink[(ReferenceLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'LemmaLink[(LemmaLink (stv 1.000000 1.000000)  (WordIn
+stanceNode "', 'LemmaLink[(LemmaLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'ReferenceLink[(ReferenceLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'ReferenceLink[(Reference
+Link (stv 1.000000 1.000000)  (WordInstanceNode "', 'ReferenceLink[(ReferenceLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'AsymmetricHebbianLink[(AsymmetricHebbianLink (stv 0.2160
+00 1.000000)  (WordNode "fenson")  (WordNode "ants"))]', 'ReferenceLink[(ReferenceLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'LemmaLink[(LemmaLink (stv 1.000000 1.000000)  (Word
+InstanceNode "', 'ListLink[(ListLink  (WordInstanceNode "the@aa0bb6d4-8307-44bb-9861-7bb007d69bae")  (WordInstanceNode "Baja[!CAPITALIZED-WORDS]@8a954ed9-de33-43a4-acc2-c2408da630d7")  (
+WordInstanceNode "California@9e46368d-03b4-4a64-810e-ca4b64402d25")  (WordInstanceNode "Rattlesnake[!CAPITALIZED-WORDS]@e4a27168-a009-40d8-b009-b20ba26059c2")  (WordInstanceNode "(@ed3eb
+662-e24d-4718-a580-533b614869c2")  (WordInstanceNode "Crotalus[!CAPITALIZED-WORDS]@b6a87d96-becd-4c98-afb5-1f972b30552b")  (WordInstanceNode "enyo@ce876f2f-59f8-4dfe-aa88-a5ab0382d2bb") 
+ (WordInstanceNode ")@811a9252-1330-4275-a2a5-670cebfec2fd")  (WordInstanceNode "', 'ReferenceLink[(ReferenceLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'LemmaLink[(LemmaLink (st
+v 1.000000 1.000000)  (WordInstanceNode "', 'ReferenceLink[(ReferenceLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'ReferenceLink[(ReferenceLink (stv 1.000000 1.000000)  (WordInsta
+nceNode "', 'AsymmetricHebbianLink[(AsymmetricHebbianLink (stv 0.000000 1.000000)  (WordNode "fenson")  (WordNode "water"))]', 'LemmaLink[(LemmaLink (stv 1.000000 1.000000)  (WordInstanc
+eNode "', 'ReferenceLink[(ReferenceLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'AsymmetricHebbianLink[(AsymmetricHebbianLink (stv 0.000000 1.000000)  (WordNode "fosmethilan")  (W
+ordNode "butterflies"))]', 'LemmaLink[(LemmaLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'ReferenceLink[(ReferenceLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'ReferenceLin
+k[(ReferenceLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'ReferenceLink[(ReferenceLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'LemmaLink[(LemmaLink (stv 1.000000 1.000000)
+  (WordInstanceNode "', 'LemmaLink[(LemmaLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'AsymmetricHebbianLink[(AsymmetricHebbianLink (stv 0.215000 1.000000)  (WordNode "dichloropro
+pene")  (WordNode "ants"))]', 'LemmaLink[(LemmaLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'LemmaLink[(LemmaLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'LemmaLink[(LemmaL
+ink (stv 1.000000 1.000000)  (WordInstanceNode "', 'LemmaLink[(LemmaLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'LemmaLink[(LemmaLink (stv 1.000000 1.000000)  (WordInstanceNode "
+', 'LemmaLink[(LemmaLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'LemmaLink[(LemmaLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'LemmaLink[(LemmaLink (stv 1.000000 1.000000)
+  (WordInstanceNode "', 'LemmaLink[(LemmaLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'ReferenceLink[(ReferenceLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'AsymmetricHebbi
+anLink[(AsymmetricHebbianLink (stv 0.175000 1.000000)  (WordNode "dichloropropene")  (WordNode "water"))]', 'ReferenceLink[(ReferenceLink (stv 1.000000 1.000000)  (WordInstanceNode "', '
+ReferenceLink[(ReferenceLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'ReferenceLink[(ReferenceLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'ReferenceLink[(ReferenceLink (st
+v 1.000000 1.000000)  (WordInstanceNode "', 'ReferenceLink[(ReferenceLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'ReferenceLink[(ReferenceLink (stv 1.000000 1.000000)  (WordInsta
+nceNode "', 'LemmaLink[(LemmaLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'ReferenceLink[(ReferenceLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'ReferenceLink[(ReferenceLin
+k (stv 1.000000 1.000000)  (WordInstanceNode "', 'ReferenceLink[(ReferenceLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'LemmaLink[(LemmaLink (stv 1.000000 1.000000)  (WordInstance
+Node "', 'ReferenceLink[(ReferenceLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'LemmaLink[(LemmaLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'ReferenceLink[(ReferenceLink (
+stv 1.000000 1.000000)  (WordInstanceNode "', 'LemmaLink[(LemmaLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'ReferenceLink[(ReferenceLink (stv 1.000000 1.000000)  (WordInstanceNod
+e "', 'ReferenceLink[(ReferenceLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'LemmaLink[(LemmaLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'LemmaLink[(LemmaLink (stv 1.00000
+0 1.000000)  (WordInstanceNode "', 'AsymmetricHebbianLink[(AsymmetricHebbianLink (stv 0.193000 1.000000)  (WordNode "bactericide")  (WordNode "butterflies"))]', 'LemmaLink[(LemmaLink (st
+v 1.000000 1.000000)  (WordInstanceNode "', 'AsymmetricHebbianLink[(AsymmetricHebbianLink (stv 0.287000 1.000000)  (WordNode "nematocide")  (WordNode "butterflies"))]', 'AsymmetricHebbia
+nLink[(AsymmetricHebbianLink (stv 0.400000 1.000000)  (WordNode "ethion")  (WordNode "butterflies"))]', 'AsymmetricHebbianLink[(AsymmetricHebbianLink (stv 0.176000 1.000000)  (WordNode "
+fluvalinate")  (WordNode "ants"))]', 'AsymmetricHebbianLink[(AsymmetricHebbianLink (stv 0.147000 1.000000)  (WordNode "fluvalinate")  (WordNode "water"))]', 'AsymmetricHebbianLink[(Asymm
+etricHebbianLink (stv 0.136000 1.000000)  (WordNode "bromacil")  (WordNode "ants"))]', 'AsymmetricHebbianLink[(AsymmetricHebbianLink (stv 0.129000 1.000000)  (WordNode "bromacil")  (Word
+Node "water"))]', 'PartOfSpeechLink[(PartOfSpeechLink  (VariableNode "$verb")  (DefinedLinguisticConceptNode "verb"))]', 'AsymmetricHebbianLink[(AsymmetricHebbianLink (stv 0.253000 1.000
+000)  (WordNode "acetamiprid")  (WordNode "ants"))]', 'AsymmetricHebbianLink[(AsymmetricHebbianLink (stv 0.188000 1.000000)  (WordNode "carbaryl")  (WordNode "ants"))]', 'AsymmetricHebbi
+anLink[(AsymmetricHebbianLink (stv 0.163000 1.000000)  (WordNode "acetamiprid")  (WordNode "water"))]', 'AsymmetricHebbianLink[(AsymmetricHebbianLink (stv 0.353000 1.000000)  (WordNode "
+carbaryl")  (WordNode "water"))]', 'AsymmetricHebbianLink[(AsymmetricHebbianLink (stv 0.385000 1.000000)  (WordNode "bulan")  (WordNode "ants"))]', 'AsymmetricHebbianLink[(AsymmetricHebb
+ianLink (stv 0.181000 1.000000)  (WordNode "ethiofencarb")  (WordNode "ants"))]', 'AsymmetricHebbianLink[(AsymmetricHebbianLink (stv 0.050000 1.000000)  (WordNode "bulan")  (WordNode "wa
+ter"))]', 'AsymmetricHebbianLink[(AsymmetricHebbianLink (stv 0.236000 1.000000)  (WordNode "ethiofencarb")  (WordNode "water"))]', 'AsymmetricHebbianLink[(AsymmetricHebbianLink (stv 0.10
+7000 1.000000)  (WordNode "trichlorophenol")  (WordNode "butterflies"))]', 'ReferenceLink[(ReferenceLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'AsymmetricHebbianLink[(Asymmetric
+HebbianLink (stv 0.077000 1.000000)  (WordNode "dicofol")  (WordNode "ants"))]', 'AsymmetricHebbianLink[(AsymmetricHebbianLink (stv 0.154000 1.000000)  (WordNode "aldrin")  (WordNode "an
+ts"))]', 'AsymmetricHebbianLink[(AsymmetricHebbianLink (stv 0.308000 1.000000)  (WordNode "dicofol")  (WordNode "water"))]', 'AsymmetricHebbianLink[(AsymmetricHebbianLink (stv 0.000000 1
+.000000)  (WordNode "aldrin")  (WordNode "water"))]', 'ReferenceLink[(ReferenceLink (stv 1.000000 1.000000)  (WordInstanceNode "', 'AsymmetricHebbianLink[(AsymmetricHebbianLink (stv 0.14
+5000 1.000000)  (WordNode "insecticide")  (WordNode "ants"))]', 'AsymmetricHebbianLink[(AsymmetricHebbianLink (stv 0.200000 1.000000)  (WordNode "alachlor")  (WordNode "ants"))]', 'Asymm
+etricHebbianLink[(AsymmetricHebbianLink (stv 0.450000 1.000000)  (WordNode "insecticide")  (WordNode "water"))]', 'AsymmetricHebbianLink[(AsymmetricHebbianLink (stv 0.347000 1.000000)  (
+WordNode "alachlor")  (WordNode "water"))]']
+
