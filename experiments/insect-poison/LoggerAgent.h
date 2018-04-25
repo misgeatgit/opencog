@@ -91,10 +91,10 @@ namespace opencog {
             static bool topic_changed; 
 
             // This is guarenteed to function properly only when you load the
-            // agent right before starting nlp parse and you won't load any more
-            // from other sources right after starting it. i.e load external sources first,
-            // start this agent, do nlp-parsing and make sure not to add word nodes from
-            // other sources right after these steps.
+            // agent before starting nlp parse and you won't be loading any more
+            // from other sources after starting it. i.e, load external sources first,
+            // start this agent, do nlp-parsing and make sure not to add any more word nodes
+            // from other sources after these steps.
             void atomAddedListener(const Handle& h);
             void run(void);
     };
