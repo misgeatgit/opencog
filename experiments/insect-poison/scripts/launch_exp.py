@@ -4,6 +4,16 @@ import socket
 import sys
 import time
 
+BASE_DIR = sys.argv[2]
+DATA_DIR = BASE_DIR+"/experiments/insect-poison/data"
+
+SENT_DIR = DATA_DIR+"/sentences"
+WORD_DIR = DATA_DIR+"/words"
+
+load_files = [DATA_DIR+"/kb/conceptnet4.scm",
+              DATA_DIR+"/Kb/wordnet.scm",
+              DATA_DIR+"/kb/adagram_sm_links.scm"]
+
 # This implements netcat in python.
 def netcat(content, hostname = "localhost", port = 17001) :
   s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -80,19 +90,14 @@ def start_word_stimulation(stimulus) :
   netcat('(nlp-start-stimulation '+str(stimulus)+')')
 
 
-BASE_DIR = sys.argv[2]
-DATA_DIR = BASE_DIR+"/experiments/insect-poison/data"
-
-SENT_DIR = DATA_DIR+"/sentences"
-WORD_DIR = DATA_DIR+"/words"
-
-load_files = [DATA_DIR+"/kb/conceptnet4.scm",
-              DATA_DIR+"/Kb/wordnet.scm",
-              DATA_DIR+"/kb/adagram_sm_links.scm"]
-
-
 def start_pipeline():
-  pass
+  os.system('./'+BASE_DIR+'/build/opencog/cogserver/server/cogserver')
+  print "Started the cogserver"
+
+def stop_pipeline():
+  os.system('kill -9 $(pgrep cogserver)')
+  #netcat("shutdown")
+  print "Stopped the cogserver"
 
 # Atom(uuid), EnteredAt, LastSeenAt, STI, DurationInAF, IsNLPParseOutput, DirectSTI, GainFromSpreading
 def extract_log(column, starting_row, file_name):
@@ -166,18 +171,72 @@ def experiment_1():
   save(non_nlp_words, DATA_DIR+"/log/"+datetime.datetime.now().strftime("%Y-%m-%d-%H:%M:%S")+".log")
 
 def experiment_2():
-  # Checking how fast attention switching is when a dissimilar topic is parsed
-  # as compared to similar topics like in experiment 1
-  pass
+  def switch_back_to_insect():
+    start_logger()
+    start_ecan()
+    start_word_stimulation(250)
+
+    print "Parsing insect sentences."
+    parse_sent_file(SENT_DIR+"/insects-100.sent")
+    print "Dumping log data."
+    dump_af_stat("pydump-after-insect")
+
+    topic_switched(True)
+
+    print "Parsing poison sentences."
+    parse_sent_file(SENT_DIR+"/poisons-50.sent")
+
+    print "Parsing insect sentences once again."
+    parse_sent_file(SENT_DIR+"/insect-50.sent")
+
+    print "Dumping log data."
+    dump_af_stat("pydump-exp2_1")
+
+  def switch_to_cars():
+    start_logger()
+    start_ecan()
+    start_word_stimulation(250)
+
+    print "Parsing insect sentences."
+    parse_sent_file(SENT_DIR+"/insects-100.sent")
+    print "Dumping log data."
+    dump_af_stat("pydump-exp2_1")
+
+    topic_switched(True)
+
+    print "Parsing poison sentences."
+    parse_sent_file(SENT_DIR+"/poisons-50.sent")
+
+    print "Parsing car sentences."
+    parse_sent_file(SENT_DIR+"/cars-50.sent")
+    
+    print "Dumping log data."
+    dump_af_stat("pydump-exp2_2")
+
+  print "Experiment 2 running....................."
+  print "   Running case 1"
+  switch_back_to_insect()
+  print "   Finished case 1"
+
+  print "   Restarting the cogserver." 
+  stop_pipeline()
+  start_pipeline()
+  scm_load(load_files)
+  load_experiment_module()
+  load_ecan_module()
+  
+  print "   Running case 2"
+  switch_to_cars()
+  print "   Done case 2"
 
 def experiment_3():
   # All about HebbianLinks how they could estabilish weak links which stabilize
   # the dynamics.
   #start_logger()
   start_ecan()
- 
+
   start_word_stimulation(250)
-  
+
   print "Parsing the SEW(simple english wikipedia)."
   #Start parsing the SEW
   script_dir=BASE_DIR+'/opencog/nlp/learn/run'
