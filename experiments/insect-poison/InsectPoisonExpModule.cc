@@ -104,12 +104,13 @@ std::string InsectPoisonExpModule::do_dump_af_stat(Request *req,
             << (_logger_agent)->current_topic_percentage << "\n"; 
     }
 
-    outf  << "Atom(uuid)" << ", EnteredAt" << ", LastSeenAt" << ", STI" <<  ", DurationInAF" 
+    outf  << "Atom(uuid)" << ", Atom(name)" << ", EnteredAt" << ", LastSeenAt" << ", STI" <<  ", DurationInAF" 
         << ", IsNLPParseOutput" << ", DirectSTI"<< ", GainFromSpreading"<< "\n";
 
     for(auto p : (_logger_agent)->handle_atomstat_map)
     {
         LoggerAgent::AtomStat ast = p.second;
+        outf << ast.h.value() << " ";
         if(ast.h->is_node()){
             outf << ast.h->get_name();
         }else{
