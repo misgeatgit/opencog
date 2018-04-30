@@ -110,7 +110,7 @@ std::string InsectPoisonExpModule::do_dump_af_stat(Request *req,
     for(auto p : (_logger_agent)->handle_atomstat_map)
     {
         LoggerAgent::AtomStat ast = p.second;
-        outf << ast.h.value() << " ";
+        outf << ast.h.value() << ", ";
         if(ast.h->is_node()){
             outf << ast.h->get_name();
         }else{
