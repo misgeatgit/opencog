@@ -11,7 +11,7 @@ SENT_DIR = DATA_DIR+"/sentences"
 WORD_DIR = DATA_DIR+"/words"
 
 load_files = [DATA_DIR+"/kb/conceptnet4.scm",
-              DATA_DIR+"/Kb/wordnet.scm",
+              DATA_DIR+"/kb/wordnet.scm",
               DATA_DIR+"/kb/adagram_sm_links.scm"]
 
 # This implements netcat in python.
@@ -113,9 +113,9 @@ def extract_log(column, starting_row, file_name):
 
     return col
 
-def save(str, fpath):
+def save(string, fpath):
   f=open(fpath,'w')
-  f.write(str)
+  f.write(string)
   f.close()
  
 def experiment_1(): 
@@ -168,7 +168,7 @@ def experiment_1():
   print intersection
   print "Non nlp atoms"
   print non_nlp_words
-  save(non_nlp_words, DATA_DIR+"/log/"+datetime.datetime.now().strftime("%Y-%m-%d-%H:%M:%S")+".log")
+  save(str(non_nlp_words), DATA_DIR+"/log/"+datetime.datetime.now().strftime("%Y-%m-%d-%H:%M:%S")+".log")
 
 def experiment_2():
   def switch_back_to_insect():
