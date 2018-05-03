@@ -19,7 +19,13 @@ coghost="$3"
 cogport=$4
 basedir=$5
 
+<<<<<<< HEAD
 splitter=/usr/local/bin/split-sentences.pl
+=======
+# Not using relex any longer
+#splitter=/home/ubuntu/src/relex/src/split-sentences/split-sentences.pl
+#splitter=/usr/local/bin/split-sentences.pl
+>>>>>>> master
 splitter=./split-sentences.pl
 splitter=$basedir'/split-sentences.pl'
 
@@ -28,14 +34,8 @@ subdir=submitted-articles
 #observe="observe-text"
 observe="nlp-parse"
 
-# Punt if the cogserver has crashed. The grep is looking for the
-# uniquely-named config file.
-# haveserver=`ps aux |grep cogserver |grep opencog-$lang`
-# if [[ -z "$haveserver" ]] ; then
-# 	exit 1
-# fi
-# Alternate cogserver test: use netcat to ping it.
-haveping=`echo foo | nc $coghost $cogport`
+# Punt if the cogserver has crashed.  Use netcat to ping it.
+haveping=`echo foo | nc -N $coghost $cogport`
 if [[ $? -ne 0 ]] ; then
 	exit 1
 fi
@@ -65,11 +65,7 @@ cat "$splitdir/$rest" | $basedir'/submit-one.pl' $coghost $cogport $observe
 
 # Punt if the cogserver has crashed (second test,
 # before doing the mv and rm below)
-# haveserver=`ps aux |grep cogserver |grep opencog-$lang`
-# if [[ -z "$haveserver" ]] ; then
-# 	exit 1
-# fi
-haveping=`echo foo | nc $coghost $cogport`
+haveping=`echo foo | nc -N $coghost $cogport`
 if [[ $? -ne 0 ]] ; then
 	exit 1
 fi
