@@ -11,6 +11,7 @@
 (use-modules (ice-9 threads)  ; needed for par-map
              (srfi srfi-1)
              (opencog)
+             (opencog attention-bank)
              (opencog rule-engine)
              (opencog nlp)
              (opencog nlp fuzzy)
@@ -34,6 +35,16 @@
 		sent
 		(TimeNode (number->string (current-time)))
 		time-domain)
+)
+
+(define-public (sent-get-parse-time sent)
+"
+  sent-get-parse-time SENT
+
+  Returns the time, in seconds, at which the SentenceNode SENT was parsed.
+"
+  (string->number (cog-name (car
+    (cog-chase-link 'AtTimeLink 'TimeNode sent))))
 )
 
 (define-public (get-last-said-sent)
