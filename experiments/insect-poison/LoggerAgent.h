@@ -1,5 +1,5 @@
 /*
- * Requirements
+ (_logger_agent)-> Requirements
  * -------------
  * -1 Distribution of residence-duration of nlp-parse atoms
  * - Percentage of atoms in AF directly from nlp-parse //XXX From scheme or C++?
@@ -85,6 +85,7 @@ namespace opencog {
                 float nlp_parse_percentage;
             };
             std::vector<AFSizeStat> af_size_stat;
+            std::vector<std::vector<float>> insect_poison_percentage;
             time_point<system_clock> last_probing_time; //duration of stay in sec.
             HandleSeq switched_topic_words;
             HandleSeq corpus_wordnodes;

@@ -34,6 +34,13 @@ LoggerAgent::LoggerAgent(CogServer& cs) : Agent(cs), _start(system_clock::now())
         std::cout << "Allocation Error: " << e.what() << '\n';
     }
 
+    try{
+    insect_poison_percentage.reserve(1000);
+    }
+    catch (const std::length_error& le) {
+     std::cout << "ERROR WHILE TRYING TO RESERVE: " << le.what() << '\n';
+    }
+
 }
 
 
@@ -54,10 +61,11 @@ void LoggerAgent::run(void){
     if(afset.size() <= 0 ) return;
     
     static bool first_time = true;
+    auto prev_probing_time = last_probing_time;
     last_probing_time = system_clock::now(); //reference time to deduce whether atom is still in AF or not.
     static auto last_run = system_clock::now();
 
-    if(topic_changed && first_time){
+    //if(topic_changed && first_time){
         // task-4 calculate percentage of AF content from prev topic
         // and current topic 
         HandleSeq poison_wnodes_in_AF; 
@@ -84,8 +92,15 @@ void LoggerAgent::run(void){
 
         prev_topic_percentage = (static_cast<float>(insect_wnodes_in_AF.size())/ static_cast<float>(afset.size()))*100;
         current_topic_percentage = (static_cast<float>(poison_wnodes_in_AF.size())/static_cast<float>(afset.size()))*100;
+        if(first_time){
+            insect_poison_percentage.push_back(std::vector<float>{0.0 , prev_topic_percentage, current_topic_percentage});
+        } else{
+            duration<double> dr = system_clock::now() - prev_probing_time;
+            insect_poison_percentage.push_back(std::vector<float>{float(dr.count()), prev_topic_percentage, current_topic_percentage});
+        }
+
         first_time = false;
-    }
+    //}
 
     int count = 0;
     for(const Handle h : afset){
@@ -125,7 +140,7 @@ void LoggerAgent::run(void){
     // task 3 query afsize and store it in af_size_at_time_t ds
     // this a memory intensive operation so do it every half a second and also
     // clear memory when it reaches 50K
-    duration<double> dr = system_clock::now() - last_run;
+    /*duration<double> dr = system_clock::now() - last_run;
     if(dr.count() >= 0.1 ){
         if(af_size_stat.size() > MAX_SAMPLES){
          std::cout << "MAX sample reached. Removing the fist 1K samples \n";
@@ -136,7 +151,7 @@ void LoggerAgent::run(void){
         afs.af_size = afset.size();
         afs.nlp_parse_percentage = nlp_parse_percentage_in_af;
         af_size_stat.push_back(afs);
-    }
+    }*/
 
     last_run = system_clock::now();
 }
