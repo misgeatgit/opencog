@@ -157,7 +157,7 @@ std::string InsectPoisonExpModule::do_dump_af_size(Request *req,
     outf << "at_time(sec)" <<", insect_percentage" << ", poison_percentage" << "\n";
     //for (const auto afs : (_logger_agent)->af_size_stat){
     for (const auto afs : (_logger_agent)->insect_poison_percentage){
-        outf << afs[0] << "     "  <<  afs[1]<<"     " << afs[1] << "\n";
+        outf << afs[0] << ", "  <<  afs[1]<<", " << afs[2] << "\n";
     }
     outf.flush();
     outf.close();
