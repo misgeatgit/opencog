@@ -153,9 +153,11 @@ std::string InsectPoisonExpModule::do_dump_af_size(Request *req,
 {
     std::string file_name = args.front();
     std::ofstream outf(file_name + "-af.data", std::ofstream::trunc);
-    outf << "AF_szie" <<"     at_time(sec)" <<"     nlp_parse_percentage" << "\n";
-    for (const auto afs : (_logger_agent)->af_size_stat){
-        outf << afs.af_size << "     "  << print_timept(afs.at_time) <<"     " << afs.nlp_parse_percentage << "\n";
+    //outf << "AF_szie" <<"     at_time(sec)" <<"     nlp_parse_percentage" << "\n";
+    outf << "at_time(sec)" <<", nonNLP_percentage"<<", insect_percentage" << ", poison_percentage" <<", insecticide_percentage" << "\n";
+    //for (const auto afs : (_logger_agent)->af_size_stat){
+    for (const auto afs : (_logger_agent)->insect_poison_percentage){
+        outf << afs[0] << ", "  <<  afs[1]<<", " << afs[2] << ", " << afs[3] << ", "<< afs[4] << "\n";
     }
     outf.flush();
     outf.close();

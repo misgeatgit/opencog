@@ -1,5 +1,5 @@
 /*
- * Requirements
+ (_logger_agent)-> Requirements
  * -------------
  * -1 Distribution of residence-duration of nlp-parse atoms
  * - Percentage of atoms in AF directly from nlp-parse //XXX From scheme or C++?
@@ -48,6 +48,40 @@ namespace opencog {
             AttentionBank * _bank;
             time_point<system_clock> _start;
             std::map<Handle, AttentionValue::sti_t> _stimulus_rec;
+            // FIXME This should be read from a file. But for now we should do
+            // it asap.
+            const std::vector<std::string> insecticides = {
+                "abamectin",
+                "acetamiprid",
+                "alachlor",
+                "aldicarb",
+                "aldrin",
+                "bactericide",
+                "benazolin",
+                "bendiocarb",
+                "bromacil",
+                "bulan",
+                "carbaryl",
+                "diazinon",
+                "dichloropropene",
+                "dichlorvos",
+                "dicofol",
+                "dilan",
+                "dinoseb",
+                "ethiofencarb",
+                "ethion",
+                "fenson",
+                "fluvalinate",
+                "fosmethilan",
+                "herbicide",
+                "hydramethylnon",
+                "insecticide",
+                "lindane",
+                "lufenuron",
+                "methidathion",
+                "nematocide",
+                "trichlorophenol"
+            };
 
         public:
             virtual ~LoggerAgent();
@@ -85,9 +119,12 @@ namespace opencog {
                 float nlp_parse_percentage;
             };
             std::vector<AFSizeStat> af_size_stat;
+            std::vector<std::vector<float>> insect_poison_percentage;
             time_point<system_clock> last_probing_time; //duration of stay in sec.
-            HandleSeq switched_topic_words;
-            HandleSeq corpus_wordnodes;
+            
+            HandleSeq insect_atoms;
+            HandleSeq poison_atoms;
+            HandleSeq insecticide_atoms;
             static bool topic_changed; 
 
             // This is guarenteed to function properly only when you load the
@@ -98,7 +135,7 @@ namespace opencog {
             void atomAddedListener(const Handle& h);
             void run(void);
     };
-        
+
 }
 
 #endif /* _SENTENCEGENAGENT_H_ */
