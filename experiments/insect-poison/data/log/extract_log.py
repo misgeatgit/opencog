@@ -8,6 +8,7 @@ line_no = 0
 BEGIN=6
 af_stat = {}
 duration=[]
+'''
 #with open('pydump-after-poison.data') as f:
 with open('insecticide-only.data') as f:
   for line in f:
@@ -40,9 +41,34 @@ for i in af_stat:
 #   if(len(af_stat[i]) > 1):
    print"%s : %s" % (i, af_stat[i])
 #     x = x + 1
+'''
 
-plt.plot(duration)
-plt.show()
+time = []
+non_nlp = []
+insect = []
+poison = []
+insecticide = []
+line_no = 0
+with open('pydump-percentage-af.data') as f:
+  for line in f:
+    if line_no == 0:
+      line_no = line_no + 1
+      continue
+    line = [x.strip() for x in line.split(',') ]
+    time.append(float(line[0]))
+    non_nlp.append(float(line[1]))
+    insect.append(float(line[2]))
+    poison.append(float(line[3]))
+    insecticide.append(float(line[4]))
+
+
+plt.plot(time, insect)
+plt.plot(time, poison)
+plt.plot(time, insecticide)
+plt.plot(time, non_nlp)
+plt.legend(['Insect', 'Poison', 'Insecticide', 'Non-nlp'], loc='upper left') 
+plt.ylabel('Percentage in AF')
+plt.show('Time in AF(sec)')
 
 
 
