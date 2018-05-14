@@ -73,6 +73,7 @@ void HebbianCreationAgent::run()
     HandleSet attentionalFocus;
     _bank->get_handle_set_in_attentional_focus(std::inserter(attentionalFocus,attentionalFocus.begin()));
   
+    
     // Exclude the source atom
     attentionalFocus.erase(source);
 
@@ -119,6 +120,8 @@ void HebbianCreationAgent::run()
                     addHebbian(source,target);
             }
         }
+    
+    ///* XXX do remove_atoms causing segfaulting in other parts of Ecan.
     //Check the ammount of HebbianLinks the Atom has
     IncomingSet iset;
     classserver().foreachRecursive(
