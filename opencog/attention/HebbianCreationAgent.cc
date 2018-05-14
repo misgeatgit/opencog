@@ -73,7 +73,6 @@ void HebbianCreationAgent::run()
     HandleSet attentionalFocus;
     _bank->get_handle_set_in_attentional_focus(std::inserter(attentionalFocus,attentionalFocus.begin()));
   
-    
     // Exclude the source atom
     attentionalFocus.erase(source);
 
@@ -120,8 +119,6 @@ void HebbianCreationAgent::run()
                     addHebbian(source,target);
             }
         }
-    
-    ///* XXX do remove_atoms causing segfaulting in other parts of Ecan.
     //Check the ammount of HebbianLinks the Atom has
     IncomingSet iset;
     classserver().foreachRecursive(
@@ -143,11 +140,11 @@ void HebbianCreationAgent::run()
             s--;
         } while (s >= maxLinkNum);
     }
-    //*/
 }
 
 void HebbianCreationAgent::addHebbian(Handle source,Handle target)
 {
+    std::cout << "ASYMMETRIC_HEBBIAN_LINK CREATED BETWEEN " << source->to_string() << " and " << target->to_string() << '\n';
     Handle link = _as->add_link(ASYMMETRIC_HEBBIAN_LINK, source, target);
     link->setTruthValue(SimpleTruthValue::createTV(0.5, 0.1));
     _bank->inc_vlti(link);
