@@ -61,7 +61,7 @@ protected:
     // These types of atoms will not have STI value but
     // atoms linked via them will receive STI via
     // spreading.
-    HandleSeq hsfilter_out;
+    HandleSeq hsFilterOut;
 
     typedef struct DiffusionEventType
     {
