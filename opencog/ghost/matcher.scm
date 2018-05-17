@@ -63,8 +63,16 @@
         (* context-weight
           (assoc-ref context-alist (psi-get-context R))) 1))
     (define sti (if SKIP-STI
-      ; Weight higher if the rule is in the current topic
-      (if (is-rule-in-topic? R (ghost-get-curr-topic)) 1 0.5)
+      ; Weight higher if the rule is in the current topic, and/or
+      ; it's a rejoinder
+      (let ((topic-weight
+              (if (is-rule-in-topic? R (ghost-get-curr-topic)) 1 0.5))
+            (rejoinder-weight
+             ; A crude way to see if R is a rejoinder
+             (if (any (lambda (x) (equal? x ghost-last-executed))
+                      (cog-get-all-nodes R))
+                 1 0.1)))
+        (* topic-weight rejoinder-weight))
       (if (> sti-weight 0)
         (* sti-weight (cog-av-sti R)) 1)))
     (define urge
@@ -199,17 +207,6 @@
         (cog-logger-debug ghost-logger "To-be-evaluated:\n~a" rules-candidates)
         (cog-logger-debug ghost-logger "Selected:\n~a" selected)
 
-        ; Keep a record of which rule got executed, just for rejoinders
-        ; TODO: Move this part to OpenPsi?
-        ; TODO: This should be created after actually executing the action
-        (if (not (null? selected))
-          ; There are psi-rules with no alias, e.g. rules that are not
-          ; defined in GHOST, ignore them, as they are not using 'rejoinders'
-          ; which applies to GHOST rules only
-          (let ((alias (psi-rule-alias selected)))
-            (if (not (null? alias))
-              (State ghost-last-executed alias))))
-
         (List selected)))
 
 ; ----------
@@ -226,7 +223,7 @@
     (catch #t
       (lambda () (psi-rule? x))
       (lambda (key . args)
-        (format #t "Catched Error at ~a\nError details =\"~a ~a\"\n"
+        (format #f "Catched Error at ~a\nError details =\"~a ~a\"\n"
           (current-source-location) key args) #f)))
 
   (define candidate-rules
@@ -242,18 +239,10 @@
   (cog-logger-debug ghost-logger "Selected:\n~a" rule-selected)
 
   ; Keep a record of which rule got executed, just for rejoinders
-  ; TODO: Move this part to OpenPsi?
-  ; TODO: This should be created after actually executing the action
   (if (not (null? rule-selected))
-    (let ((alias (psi-rule-alias rule-selected))
-          (next-responder (cog-value rule-selected ghost-next-responder))
+    (let ((next-responder (cog-value rule-selected ghost-next-responder))
           (next-rejoinder (cog-value rule-selected ghost-next-rejoinder))
           (av-alist (cog-av->alist (cog-av rule-selected))))
-      ; There are psi-rules with no alias, e.g. rules that are not
-      ; defined in GHOST, ignore them, as they are not using 'rejoinders'
-      ; which applies to GHOST rules only
-      (if (not (null? alias))
-        (State ghost-last-executed alias))
       ; Stimulate the next rules in the sequence and lower the STI of
       ; the current one
       ; Rejoinders has a bigger boost than responder

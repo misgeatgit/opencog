@@ -1,6 +1,5 @@
 (define-module (opencog ghost)
   #:use-module (opencog)
-  #:use-module (opencog attention-bank)
   #:use-module (opencog nlp)
   #:use-module (opencog nlp relex2logic)
   #:use-module (opencog nlp chatbot)
@@ -18,6 +17,11 @@
   #:use-module (ice-9 eval-string)
   #:use-module (ice-9 receive)
   #:use-module (system base lalr))
+
+; Temporarily used during transitioning. The aim is to make life easier for
+; developers who work with atomspace before opencog/atomspace/pull/1664 while
+; waiting for opencog/opencog/issues/3107 to resolve.
+(resolve-module '(opencog attention-bank) #:ensure #f)
 
 ;; --------------------
 ;; Shared things being used in the module
@@ -68,6 +72,7 @@
 (define ghost-curr-topic (Anchor (ghost-prefix "Current Topic")))
 (define ghost-last-executed (Anchor (ghost-prefix "Last Executed")))
 (define ghost-no-constant (Anchor (ghost-prefix "No constant terms")))
+(define ghost-rule-executed (Predicate (ghost-prefix "Rule Executed")))
 (define ghost-word-seq (Predicate (ghost-prefix "Word Sequence")))
 (define ghost-lemma-seq (Predicate (ghost-prefix "Lemma Sequence")))
 (define ghost-topic (Concept (ghost-prefix "Topic")))
@@ -79,6 +84,13 @@
 (define strval-responder (StringValue "responder"))
 (define strval-random-gambit (StringValue "random gambit"))
 (define strval-gambit (StringValue "gambit"))
+
+;; --------------------
+(define-public (ghost-word-seq-pred)
+"
+  Returns the Predicate that represent word sequences.
+"
+  ghost-word-seq)
 
 ;; --------------------
 ;; For rule parsing
