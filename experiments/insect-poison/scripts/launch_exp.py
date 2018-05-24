@@ -1,4 +1,7 @@
+#!/usr/bin/bash
 import datetime
+import numpy as np
+import matplotlib.pyplot as plt
 import os
 import socket
 import sys
@@ -59,7 +62,18 @@ def start_ecan() :
   global ecan_started
   if not ecan_started :
       print "Starting ECAN agents"
+      # Multithreaded mode
       netcat("start-ecan")
+      # Single threaded mode
+      '''
+      netcat('agents-start opencog::AFImportanceDiffusionAgent')
+      netcat('agents-start opencog::WAImportanceDiffusionAgent')
+      netcat('agents-start opencog::AFRenctCollectionAgent')
+      netcat('agents-start opencog::WARentCollectionAgent')
+      netcat('agents-start opencog::HebbianUpdatingAgent')
+      netcat('agents-start opencog::HebbianCreationAgent')
+      '''
+      # Disable Hebbian agents
       #netcat('agents-stop opencog::HebbianCreationAgent')
       #netcat('agents-stop opencog::HebbianUpdatingAgent')
       ecan_started = True
@@ -75,6 +89,9 @@ def start_logger() :
 
 def topic_switched(is_on) :
   netcat("topic-switched "+(is_on==True and '1' or '0'))
+
+def dump_percentage_af(zfile) :
+  netcat("dump-af-size-log "+zfile)
 
 def dump_af_stat(zfile) :
   netcat("dump-af-stat "+zfile)
@@ -122,11 +139,12 @@ def experiment_1():
   start_logger()
   start_ecan()
  
-  start_word_stimulation(250)
+  start_word_stimulation(400)
   
   print "Parsing insect sentences."
   parse_sent_file(SENT_DIR+"/insects-100.sent")
   print "Dumping log data."
+  
   dump_af_stat("pydump-after-insect")
 
   topic_switched(True)
@@ -179,6 +197,7 @@ def experiment_2():
     print "Parsing insect sentences."
     parse_sent_file(SENT_DIR+"/insects-100.sent")
     print "Dumping log data."
+    time.sleep(10)
     dump_af_stat("pydump-after-insect")
 
     topic_switched(True)
@@ -190,7 +209,7 @@ def experiment_2():
     parse_sent_file(SENT_DIR+"/insect-50.sent")
 
     print "Dumping log data."
-    dump_af_stat("pydump-exp2_1")
+    dump_af_stat("pydump-percentage-af")
 
   def switch_to_cars():
     start_logger()
@@ -245,31 +264,63 @@ def experiment_3():
   #Rerun experiment 1
   experiment_1()
 
+def plot_save(af_stat_file, plot_path):
+    #at_time(sec), nonNLP_percentage, insect_percentage, poison_percentage, insecticide_percentage
+    time = []
+    non_nlp = []
+    insect = []
+    poison = []
+    insecticide = []
+    line_no = 0
+    #Expected CSV format
+    with open(af_stat_file) as f:
+      for line in f:
+        if line_no == 0:
+          line_no = line_no + 1
+          continue
+        line = [x.strip() for x in line.split(',') ]
+        time.append(float(line[0]))
+        non_nlp.append(float(line[1]))
+        insect.append(float(line[2]))
+        poison.append(float(line[3]))
+        insecticide.append(float(line[4]))
+    
+    plt.plot(time, insect)
+    plt.plot(time, poison)
+    plt.plot(time, insecticide)
+    plt.plot(time, non_nlp)
+    plt.legend(['Insect', 'Poison', 'Insecticide', 'Non-nlp'], loc='best') 
+    plt.ylabel('Percentage in AF')
+    #plt.show('Time in AF(sec)')
+    plt.savefig(plot_path+"/plot.png")
+ 
 if __name__ == "__main__" :
   # This is very critical. Load the auxilary data before launching the logging agent.
-  scm_load(load_files)
-
-  load_experiment_module()
-  load_ecan_module()
-
+  experiments = {1:experiment_1, 2:experiment_2, 3:experiment_3}
+  conf_str = []
+  #TODO load conf file.
   expid = sys.argv[1]
   if(not(expid and expid in ["1","2","3"])):
     print "Please specify a valid experiment id \n"
     print "   launch_exp.py <1|2|3>"
     sys.exit(0)
+   
+  # Load KB and modules. 
+  scm_load(load_files)
+  load_experiment_module()
+  load_ecan_module()
 
-  if expid == "1":
-    experiment_1()
-
-  if expid == "2":
-    experiment_2()
-
-  if expid == "3":
-    experiment_3()
-
-
-
-
-
-
-
+  experiment = experiments[int(expid)]
+  for conf in conf_str:
+     netcat(conf) #load ecan conf param
+     expeirment()
+     print "Dumping af stat pecentage\n"
+     time.sleep(5)
+     dump_percentage_af("pydump-percentage")
+     #TODO create a sensible dir name.
+     dir_name = ""
+     path = DATA_DIR+"/log/"+dir_name
+     os.system("mkdir "+path)
+     os.system("cp "+BUILD_DIR+"/*.data  "+path)
+     plot_save(path+"/pydump-percentage-af.data", path)
+     #TODO shutdown and restart
