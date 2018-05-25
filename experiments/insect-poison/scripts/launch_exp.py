@@ -312,13 +312,19 @@ pid_relex
 if __name__ == "__main__" :
   experiments = {1:experiment_1, 2:experiment_2, 3:experiment_3}
   conf_str = []
-  #TODO Read and load load conf file.
+  # Read and load load conf file.
+  with open('experiment.ini') as conf_file:
+    for line in conf_file:
+      if line.rstrip():
+        conf_str.append(line)
+
   #TODO Sanity check.
   expid = sys.argv[1]
   if(not(expid and expid in ["1","2","3"])):
     print "Please specify a valid experiment id \n"
     print "   launch_exp.py <1|2|3>"
     sys.exit(0)
+
   # start cogserver
   global pid_cog
   global pid_relex
@@ -334,13 +340,15 @@ if __name__ == "__main__" :
      scm_load(LOAD_FILES)
      load_experiment_module()
      load_ecan_module()
-     netcat(conf) #load ecan conf param
+     # Load Params. XXX MAX_AF_SIZE won't work since it is only
+     # set once.
+     netcat(conf_str[i])
      expeirment()
      print "Dumping af stat pecentage\n"
      time.sleep(5)
      dump_percentage_af("pydump-percentage")
-     #TODO create a sensible dir name.
-     dir_name = ""
+     # Create a sensible dir name.
+     dir_name = "setting_"+str(i)
      path = DATA_DIR+"/log/"+dir_name
      os.system("mkdir "+path)
      os.system("cp "+BUILD_DIR+"/*.data  "+path)
