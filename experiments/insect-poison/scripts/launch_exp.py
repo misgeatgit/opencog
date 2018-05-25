@@ -1,4 +1,4 @@
-#!/usr/bin/bash
+#!/usr/bin/python
 import datetime
 import numpy as np
 import matplotlib.pyplot as plt
@@ -7,36 +7,22 @@ import socket
 import sys
 import time
 
-BASE_DIR = sys.argv[2]
-DATA_DIR = BASE_DIR+"/experiments/insect-poison/data"
-
-SENT_DIR = DATA_DIR+"/sentences"
-WORD_DIR = DATA_DIR+"/words"
-
-load_files = [DATA_DIR+"/kb/conceptnet4.scm",
-              DATA_DIR+"/kb/wordnet.scm",
-              DATA_DIR+"/kb/adagram_sm_links.scm"]
 
 # This implements netcat in python.
 def netcat(content, hostname = "localhost", port = 17001) :
   s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
-  # If the cogserver is down, the connection will fail.
   try:
     s.connect((hostname, port))
   except socket.error as msg:
     print "Connect failed: ", msg
     s.close()
     return 1  # non-zero means failure
-
   s.sendall(content)
   s.shutdown(socket.SHUT_WR)
   while True:
     data = s.recv(1024)
     if not data or data == "":
       break
-  # print "Received:", repr(data)
-  # print "Connection closed."
   s.close()
   return 0  # zero means success
 
@@ -57,22 +43,41 @@ def load_experiment_module() :
   print "Loading libinsect-poison-exp module"
   netcat("loadmodule experiments/insect-poison/libinsect-poison-exp.so")
 
+def start_server(exec_path, exec_name) :
+  DEVNULL = open(os.devnull, 'wb')
+  pid = subprocess.Popen(exec_path, stdin=DEVNULL, stdout=DEVNULL,
+                         stderr=DEVNULL, close_fds=True).pid
+  print "     started %s \n" % (exec_name)
+  return pid
+
+def restart_server(pid, exec_path, exec_name) :
+  print "     restarting %s \n" % (exec_name)
+  kill_process(pid)
+  pid = start_server(exec_path, exec_name)
+  print "     restarting completed."
+  return pid
+    
+def kill_process(pid) :
+  os.kill(int(pid), signal.SIGKILL)
+
+
 ecan_started = False
-def start_ecan() :
+def start_ecan(multithreaded_mode) :
   global ecan_started
   if not ecan_started :
-      print "Starting ECAN agents"
-      # Multithreaded mode
-      netcat("start-ecan")
-      # Single threaded mode
-      '''
-      netcat('agents-start opencog::AFImportanceDiffusionAgent')
-      netcat('agents-start opencog::WAImportanceDiffusionAgent')
-      netcat('agents-start opencog::AFRenctCollectionAgent')
-      netcat('agents-start opencog::WARentCollectionAgent')
-      netcat('agents-start opencog::HebbianUpdatingAgent')
-      netcat('agents-start opencog::HebbianCreationAgent')
-      '''
+      print "Starting ECAN agents in "
+      if  multithreaded_mode :
+         print " multithreaded mode.\n"
+         netcat("start-ecan")
+      else:
+          print " single threaed mode.\n"
+          netcat('agents-start opencog::AFImportanceDiffusionAgent')
+          netcat('agents-start opencog::WAImportanceDiffusionAgent')
+          netcat('agents-start opencog::AFRenctCollectionAgent')
+          netcat('agents-start opencog::WARentCollectionAgent')
+          netcat('agents-start opencog::HebbianUpdatingAgent')
+          netcat('agents-start opencog::HebbianCreationAgent')
+      
       # Disable Hebbian agents
       #netcat('agents-stop opencog::HebbianCreationAgent')
       #netcat('agents-stop opencog::HebbianUpdatingAgent')
@@ -105,16 +110,6 @@ def parse_sent(sent) :
 
 def start_word_stimulation(stimulus) :
   netcat('(nlp-start-stimulation '+str(stimulus)+')')
-
-
-def start_pipeline():
-  os.system('./'+BASE_DIR+'/build/opencog/cogserver/server/cogserver')
-  print "Started the cogserver"
-
-def stop_pipeline():
-  os.system('kill -9 $(pgrep cogserver)')
-  #netcat("shutdown")
-  print "Stopped the cogserver"
 
 # Atom(uuid), EnteredAt, LastSeenAt, STI, DurationInAF, IsNLPParseOutput, DirectSTI, GainFromSpreading
 def extract_log(column, starting_row, file_name):
@@ -238,9 +233,12 @@ def experiment_2():
   print "   Finished case 1"
 
   print "   Restarting the cogserver." 
-  stop_pipeline()
-  start_pipeline()
-  scm_load(load_files)
+  # Restart cogserver
+  global pid_cog
+  global pid_relex
+  pid_cog = restart_server(pid_cog, COGSERVER, 'cogserver')
+  pid_relex = restart_server(pid_relex, RELEX, 'relex')
+  scm_load(LOAD_FILES)
   load_experiment_module()
   load_ecan_module()
   
@@ -293,25 +291,49 @@ def plot_save(af_stat_file, plot_path):
     plt.ylabel('Percentage in AF')
     #plt.show('Time in AF(sec)')
     plt.savefig(plot_path+"/plot.png")
- 
+
+def sanity_check():
+  pass
+
+BASE_DIR = sys.argv[2]
+DATA_DIR = BASE_DIR+"/experiments/insect-poison/data"
+SENT_DIR = DATA_DIR+"/sentences"
+WORD_DIR = DATA_DIR+"/words"
+LOAD_FILES = [DATA_DIR+"/kb/conceptnet4.scm",
+              DATA_DIR+"/kb/wordnet.scm",
+              DATA_DIR+"/kb/adagram_sm_links.scm"]
+
+COGSERVER = BASE_DIR+"opencog/build/opencog/cogserver/server/cogserver"
+RELEX     = BASE_DIR+"relex/opencog-server.sh"
+
+pid_cog
+pid_relex
+
 if __name__ == "__main__" :
-  # This is very critical. Load the auxilary data before launching the logging agent.
   experiments = {1:experiment_1, 2:experiment_2, 3:experiment_3}
   conf_str = []
-  #TODO load conf file.
+  #TODO Read and load load conf file.
+  #TODO Sanity check.
   expid = sys.argv[1]
   if(not(expid and expid in ["1","2","3"])):
     print "Please specify a valid experiment id \n"
     print "   launch_exp.py <1|2|3>"
     sys.exit(0)
-   
-  # Load KB and modules. 
-  scm_load(load_files)
-  load_experiment_module()
-  load_ecan_module()
-
+  # start cogserver
+  global pid_cog
+  global pid_relex
+  pid_cog = start_server(COGSERVER, 'cogserver')
+  # start relex  
+  pid_relex = start_server(RELEX, 'relex')
+  
   experiment = experiments[int(expid)]
-  for conf in conf_str:
+  for i in range(0, len(conf_str)) :
+     print "Experiment %d started. \n" %(i+1)
+     # Load KB and modules. It is necessary to load 
+     # the knowledge base before starting logging agent.
+     scm_load(LOAD_FILES)
+     load_experiment_module()
+     load_ecan_module()
      netcat(conf) #load ecan conf param
      expeirment()
      print "Dumping af stat pecentage\n"
@@ -323,4 +345,6 @@ if __name__ == "__main__" :
      os.system("mkdir "+path)
      os.system("cp "+BUILD_DIR+"/*.data  "+path)
      plot_save(path+"/pydump-percentage-af.data", path)
-     #TODO shutdown and restart
+     # restart cogserver and relex
+     pid_cog = restart_server(pid_cog, COGSERVER, 'cogserver')
+     pid_relex = restart_server(pid_relex, RELEX, 'relex')
