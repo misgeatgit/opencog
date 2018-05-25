@@ -62,7 +62,7 @@ def kill_process(pid) :
 
 
 ecan_started = False
-def start_ecan(multithreaded_mode) :
+def start_ecan(multithreaded_mode=True) :
   global ecan_started
   if not ecan_started :
       print "Starting ECAN agents in "
