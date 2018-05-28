@@ -1,4 +1,5 @@
 #!/usr/bin/python
+import commands
 import datetime
 import numpy as np
 import matplotlib as mpl
@@ -63,7 +64,7 @@ def start_server(exec_path, exec_name) :
   DEVNULL = open(os.devnull, 'wb')
   subprocess.Popen(exec_path, stdin=DEVNULL, stdout=DEVNULL, stderr=DEVNULL)
   time.sleep(3)
-  output = subprocess.check_output("lsof -ti :17001", shell=True)
+  output = commands.getstatusoutput('lsof -ti :17001')[1]
   print "OUTPUT %s" % (output)
   if not output:
 	print "Unable to start cogserer. Exiting"
@@ -84,6 +85,12 @@ def start_relex():
         cmd = cmd + line 
   subprocess.Popen(['/bin/bash', '-c', cmd], stderr=DEVNULL, stdout=DEVNULL)
   time.sleep(3)
+  output = commands.getstatusoutput('lsof -ti :4444')[1]
+  print "OUTPUT %s" % (output)
+  if not output:
+	print "Unable to start relex. Exiting"
+        sys.exit()
+
   print "    started relex"
 
 def restart_relex():
