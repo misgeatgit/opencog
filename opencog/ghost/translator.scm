@@ -23,7 +23,8 @@
          (unordered? (any (lambda (t) (equal? 'unordered-matching (car t))) TERMS))
          ; It's possible that the sequence does not having any word or concept etc,
          ; e.g. a rule may just be something like not-having-either-one-of-these-words
-         (empty-seq? (every (lambda (t) (equal? 'negation (car t))) TERMS))
+         (negation-only? (every (lambda (t) (equal? 'negation (car t))) TERMS))
+         (empty-seq? (and (= 1 (length TERMS)) (equal? 'empty-context (caar TERMS))))
          (func-only? (and (> (length TERMS) 0)
            (every (lambda (t) (equal? 'function (car t))) TERMS)))
          (start-anchor? (any (lambda (t) (equal? as t)) TERMS))
@@ -67,7 +68,9 @@
                      ; get it and add an extra wildcard
                      (append start after-anchor-end (list wc) end))))
              ; Just having one wildcard is enough for an empty sequence
-             (empty-seq? (append TERMS (list wc)))
+             (negation-only? (append TERMS (list wc)))
+             ; If the context is empty, not even a wildcard is needed
+             (empty-seq? TERMS)
              ; If there is no anchor, the main-seq should start and
              ; end with a wildcard
              (else (append (list wc) TERMS (list wc))))))
@@ -189,6 +192,11 @@
                   (list-set! pt 2 (list (List (list-ref pt 2))))
                   (list-set! pt 3 (list (List (list-ref pt 3))))
                   (update-lists pt)))
+            ; If it's an empty context, e.g. "u: ()"
+            ; it's always true and should be triggered
+            ; even if there is no perception input
+            ((equal? 'empty-context (car t))
+              (set! c (list (TrueLink))))
             (else (begin
               (cog-logger-warn ghost-logger
                 "Feature not supported: \"(~a ~a)\"" (car t) (cdr t))
@@ -444,9 +452,9 @@
                   (Number 0)))
           (list))
       ; Keep a record of which rules have been executed
-      (Put
-        (Evaluation ghost-rule-executed (List (Variable "$x")))
-        (Concept RULENAME))
+      (ExecutionOutput
+        (GroundedSchema "scm: ghost-record-executed-rule")
+        (List (Concept RULENAME)))
       ; Set the current topic, for backward compatibility
       (if ghost-with-ecan
         (list)
@@ -552,6 +560,7 @@
   ; Clear the states
   (set! rule-label-list '())
   (set! rule-alist '())
+  (set! rule-hierarchy '())
 )
 
 ; ----------
@@ -577,11 +586,12 @@
   (set! rule-label-list (append rule-label-list (list rule-name)))
 
   (set! rule-alist
-    (assq-set! rule-alist rule-name (list PATTERN ACTION GOAL rule-name TYPE)))
+    (assq-set! rule-alist rule-name
+      (list PATTERN ACTION (process-goal GOAL) GOAL rule-name TYPE)))
 )
 
 ; ----------
-(define (instantiate-rule PATTERN ACTION GOAL NAME TYPE)
+(define (instantiate-rule PATTERN ACTION ALL-GOALS RULE-LV-GOALS NAME TYPE)
 "
   To process and create the rule in the AtomSpace.
 "
@@ -618,13 +628,12 @@
                         (list-ref proc-type 1)))
          (type (list-ref proc-type 2))
          (action (process-action ACTION NAME))
-         (goals (process-goal GOAL))
          (is-rejoinder? (equal? type strval-rejoinder))
          (rule-lv (if is-rejoinder? (get-rejoinder-level TYPE) 0)))
 
     (cog-logger-debug ghost-logger "Context: ~a" ordered-terms)
     (cog-logger-debug ghost-logger "Procedure: ~a" ACTION)
-    (cog-logger-debug ghost-logger "Goal: ~a" goals)
+    (cog-logger-debug ghost-logger "Goal: ~a" ALL-GOALS)
 
     ; Update the count -- how many rules we've seen under this top level goal
     ; Do it only if the rules are ordered and it's not a rejoinder
@@ -665,7 +674,7 @@
             ; Check if the goal is defined at the rule level
             ; If the rule is ordered, the weight should change
             ; accordingly as well
-            (if (or (member goal GOAL) (not is-rule-seq))
+            (if (or (member goal RULE-LV-GOALS) (not is-rule-seq))
               (stv (cdr goal) .9)
               (stv (/ (cdr goal) (expt 2 (+ rule-lv goal-rule-cnt))) .9))
             ghost-component))
@@ -700,7 +709,13 @@
                   (1- (get-rejoinder-level TYPE)))))
               a-rule ghost-next-rejoinder)
             (add-to-rule-hierarchy
-              (get-rejoinder-level TYPE) NAME))
+              (get-rejoinder-level TYPE) NAME)
+            ; Record the sequence number of the rejoinder
+            ; This is used during matching, basically rejoinders is treated
+            ; as a sequence, and the one defined first will be matched first
+            ; if it satisfies the context
+            (cog-set-value! a-rule ghost-rej-seq-num (FloatValue
+              (length (list-ref rule-hierarchy (get-rejoinder-level TYPE))))))
           (begin
             ; If it's not a rejoinder, its parent rules should
             ; be the rules at every level that are still in
@@ -733,7 +748,7 @@
 
         ; Return
         a-rule)
-      goals)))
+      ALL-GOALS)))
 
 ; ----------
 (define (create-concept NAME MEMBERS)
@@ -761,6 +776,11 @@
 "
   Create a top level goal that will be shared among the rules under it.
 "
+  ; Instantiate the rules in the stack when we see a new top level goal
+  ; It's cleaner to do it this way in case there are multiple goals
+  ; defined in the same file
+  (process-rule-stack)
+
   (set! top-lv-goals GOALS)
   (set! is-rule-seq ORDERED)
 

@@ -12,6 +12,20 @@
 ; --------------------------------------------------------------
 (define fini (Node "finished-action"))
 
+(DefineLink
+  (DefinedSchema "say")
+  (LambdaLink
+    (VariableList
+      (Variable "sentence")
+      (Variable "fallback-id"))
+    (ExecutionOutput
+      (GroundedSchema "scm: print-by-action-logger")
+      (List
+        (Concept "say")
+        (Variable "sentence")))
+  )
+)
+
 (define (animation emotion gesture)
   ;TODO: Remove this hack.
   (let* ((e (cog-name emotion))
@@ -40,6 +54,16 @@
   )
 )
 
+(define (fallback_on fallback-id)
+"
+  fallback_on  FALLBACK-ID
+
+  Use the fallback system identified by FALLBACK-ID
+"
+  (cog-execute! (Put (DefinedSchema "say") (List (Concept "") fallback-id)))
+  fini
+)
+
 (define* (start_timer #:optional (timer-id (Concept "Default-Timer")))
 "
   start_timer TIMER-ID (optional)
@@ -47,7 +71,7 @@
   Record the current time for TIMER-ID.
   If TIMER-ID is not given, a default timer will be used.
 "
-  (set-time-perceived! timer-id)
+  (set-time-perceived! (Concept (cog-name timer-id)))
   fini
 )
 
@@ -68,8 +92,19 @@
 
   Increase the urge of GOAL by VALUE.
 "
-  (psi-increase-urge (Concept (cog-name goal))
+  (define goal-node (Concept (cog-name goal)))
+  (define related-psi-rules
+    (filter psi-rule? (cog-incoming-set goal-node)))
+
+  (psi-increase-urge goal-node
     (string->number (cog-name value)))
+
+  ; Stimulate the rules associate with this goal
+  (for-each
+    (lambda (r)
+      (cog-stimulate r default-stimulus))
+    related-psi-rules)
+
   fini
 )
 
