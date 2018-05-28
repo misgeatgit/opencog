@@ -303,8 +303,8 @@ LOAD_FILES = [DATA_DIR+"/kb/conceptnet4.scm",
               DATA_DIR+"/kb/wordnet.scm",
               DATA_DIR+"/kb/adagram_sm_links.scm"]
 
-COGSERVER = BASE_DIR+"opencog/build/opencog/cogserver/server/cogserver"
-RELEX     = BASE_DIR+"relex/opencog-server.sh"
+COGSERVER = BASE_DIR+"/opencog/build/opencog/cogserver/server/cogserver"
+RELEX     = BASE_DIR+"/relex/opencog-server.sh"
 
 pid_cog
 pid_relex
