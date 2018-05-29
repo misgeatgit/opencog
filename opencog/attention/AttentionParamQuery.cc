@@ -35,9 +35,12 @@ const std::string AttentionParamQuery::spreading_filter = "SPREADING_FILTER";
 // Rent Params
 const std::string AttentionParamQuery::rent_starting_sti_rent = "STARTING_ATOM_STI_RENT";
 const std::string AttentionParamQuery::rent_starting_lti_rent = "STARTING_ATOM_LTI_RENT";
+
 const std::string AttentionParamQuery::rent_target_sti_funds = "TARGET_STI_FUNDS";
-const std::string AttentionParamQuery::rent_sti_funds_buffer = "STI_FUNDS_BUFFER";
 const std::string AttentionParamQuery::rent_target_lti_funds = "TARGET_LTI_FUNDS";
+const std::string AttentionParamQuery::rent_starting_sti_funds = "STARTING_STI_FUNDS";
+const std::string AttentionParamQuery::rent_starting_lti_funds = "STARTING_LTI_FUNDS";
+const std::string AttentionParamQuery::rent_sti_funds_buffer = "STI_FUNDS_BUFFER";
 const std::string AttentionParamQuery::rent_lti_funds_buffer = "LTI_FUNDS_BUFFER";
 const std::string AttentionParamQuery::rent_tournament_size = "RENT_TOURNAMENT_SIZE";
 

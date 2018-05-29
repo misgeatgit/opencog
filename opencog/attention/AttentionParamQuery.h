@@ -65,10 +65,13 @@ namespace opencog
             // Rent Params
             static const std::string rent_starting_sti_rent;
             static const std::string rent_starting_lti_rent;
+
             static const std::string rent_target_sti_funds;
-            static const std::string rent_sti_funds_buffer;
             static const std::string rent_target_lti_funds;
+            static const std::string rent_sti_funds_buffer;
             static const std::string rent_lti_funds_buffer;
+            static const std::string rent_starting_sti_funds;
+            static const std::string rent_starting_lti_funds;
             static const std::string rent_tournament_size;
 
             AttentionParamQuery(AtomSpace* as);

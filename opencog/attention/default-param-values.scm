@@ -19,9 +19,10 @@
 (define STARTING_ATOM_LTI_RENT (ConceptNode "STARTING_ATOM_LTI_RENT"))
 (define TARGET_STI_FUNDS (ConceptNode "TARGET_STI_FUNDS"))
 (define TARGET_LTI_FUNDS (ConceptNode "TARGET_LTI_FUNDS"))
+(define STARTING_STI_FUNDS (ConceptNode "STARTING_STI_FUNDS"))
+(define STARTING_LTI_FUNDS (ConceptNode "STARTING_LTI_FUNDS"))
 (define STI_FUNDS_BUFFER (ConceptNode "STI_FUNDS_BUFFER"))
 (define LTI_FUNDS_BUFFER (ConceptNode "LTI_FUNDS_BUFFER"))
-(define TARGET_LTI_FUNDS_BUFFER (ConceptNode "TARGET_LTI_FUNDS_BUFFER"))
 (define RENT_TOURNAMENT_SIZE (ConceptNode "RENT_TOURNAMENT_SIZE"))
 (define SPREADING_FILTER (ConceptNode "SPREADING_FILTER"))
 
@@ -102,15 +103,19 @@
   ECAN_PARAM
 )
 (MemberLink 
+  STARTING_STI_FUNDS
+  ECAN_PARAM
+)
+(MemberLink
+  STARTING_LTI_FUNDS
+  ECAN_PARAM
+)
+(MemberLink 
   STI_FUNDS_BUFFER
   ECAN_PARAM
 )
 (MemberLink 
   LTI_FUNDS_BUFFER
-  ECAN_PARAM
-)
-(MemberLink 
-  TARGET_LTI_FUNDS_BUFFER
   ECAN_PARAM
 )
 (MemberLink 
@@ -185,12 +190,21 @@
 )
 (StateLink 
   TARGET_STI_FUNDS
-  (NumberNode "10000")
+  (NumberNode "100000")
 )
 
 (StateLink 
   TARGET_LTI_FUNDS
-  (NumberNode "10000")
+  (NumberNode "100000")
+)
+
+(StateLink
+  STARTING_STI_FUNDS
+  (NumberNode "100000")
+)
+(StateLink
+  STARTING_LTI_FUNDS
+  (NumberNode "100000")
 )
 
 (StateLink
@@ -202,10 +216,7 @@
   LTI_FUNDS_BUFFER
   (NumberNode "10000")
 )
-(StateLink 
-  TARGET_LTI_FUNDS_BUFFER
-  (NumberNode "10000")
-)
+
 (StateLink
   RENT_TOURNAMENT_SIZE
   (NumberNode "5")
