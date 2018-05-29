@@ -24,6 +24,9 @@ LOAD_FILES = [DATA_DIR+"/kb/conceptnet4.scm",
 
 COGSERVER = OC_DIR+"/opencog/build/opencog/cogserver/server/cogserver"
 RELEX     = OC_DIR+"/relex/opencog-server.sh"
+COGSERVER_PORT = '17001'
+RELEX_PORT = '4444'
+RUNNING_DIR = os.path.abspath(os.path.dirname(sys.argv[0])) 
 
 # This implements netcat in python.
 def netcat(content, hostname = "localhost", port = 17001) :
@@ -54,11 +57,11 @@ def scm_load(files) :
 
 def load_ecan_module() :
   print "Loading libattention module"
-  netcat("loadmodule opencog/attention/libattention.so")
+  netcat("loadmodule "+BUILD_DIR+"/opencog/attention/libattention.so")
 
 def load_experiment_module() :
   print "Loading libinsect-poison-exp module"
-  netcat("loadmodule experiments/insect-poison/libinsect-poison-exp.so")
+  netcat("loadmodule "+BUILD_DIR+"/experiments/insect-poison/libinsect-poison-exp.so")
 
 def start_server(exec_path, exec_name) :
   DEVNULL = open(os.devnull, 'wb')
@@ -69,13 +72,13 @@ def start_server(exec_path, exec_name) :
   if not output:
 	print "Unable to start cogserer. Exiting"
         sys.exit()
-  print "     started %s \n" % (exec_name)
+  print "started %s \n" % (exec_name)
 
 def restart_server(exec_path, exec_name) :
-  print "     restarting %s \n" % (exec_name)
-  kill_process('17001')
+  print "restarting %s \n" % (exec_name)
+  kill_process(COGSERVER_PORT)
   start_server(exec_path, exec_name)
-  print "     restarting completed."
+  print "restarting completed."
    
 def start_relex():
   DEVNULL = open(os.devnull, 'wb')
@@ -91,19 +94,23 @@ def start_relex():
 	print "Unable to start relex. Exiting"
         sys.exit()
 
-  print "    started relex"
+  print "started relex"
 
 def restart_relex():
-  print "     restarting %s \n" % ('relex')
-  kill_process('4444')
+  print "restarting %s \n" % ('relex')
+  kill_process(RELEX_PORT)
   start_relex()
-  print "     restarting completed."
+  print "restarting completed."
   
 def kill_process(port) :
   os.system('kill -9 $(lsof -ti :'+port+')')
   time.sleep(2)
   #os.kill(int(pid), signal.SIGKILL)
 
+def load_experiment_resources():
+     scm_load(LOAD_FILES)
+     load_experiment_module()
+     load_ecan_module()
 
 ecan_started = False
 def start_ecan(multithreaded_mode=True) :
@@ -204,7 +211,7 @@ def experiment_1():
   non_nlp_words= []
   line_no = 0
   #with open(BASE_DIR+"/build/pydump-after-insect.data", 'r') as logf:
-  with open(BASE_DIR+"/build/pydump-after-poison.data", 'r') as logf:
+  with open(RUNNING_DIR+"/pydump-after-poison.data", 'r') as logf:
     for log in logf:
       if line_no < 6:
         line_no = line_no + 1
@@ -272,11 +279,11 @@ def experiment_2():
     dump_af_stat("pydump-exp2_2")
 
   print "Experiment 2 running....................."
-  print "   Running case 1"
+  print "Running case 1"
   switch_back_to_insect()
-  print "   Finished case 1"
+  print "Finished case 1"
 
-  print "   Restarting the cogserver." 
+  print "Restarting the cogserver." 
   # Restart cogserver
   restart_server(COGSERVER, 'cogserver')
   restart_relex()
@@ -284,9 +291,9 @@ def experiment_2():
   load_experiment_module()
   load_ecan_module()
   
-  print "   Running case 2"
+  print "Running case 2"
   switch_to_cars()
-  print "   Done case 2"
+  print "Done case 2"
 
 def experiment_3():
   # All about HebbianLinks how they could estabilish weak links which stabilize
@@ -362,14 +369,12 @@ if __name__ == "__main__" :
   experiment = experiments[int(expid)]
   for i in range(0, len(conf_str)) :
      print "Experiment %d started. \n" %(i+1)
-     print "      Settings %s" % (conf_str[i])
+     print "Settings %s" % (conf_str[i])
      # Load KB and modules. It is necessary to load 
      # the knowledge base before starting logging agent.
-     scm_load(LOAD_FILES)
-     load_experiment_module()
-     load_ecan_module()
+     load_experiment_resources()
      # Load Params. XXX MAX_AF_SIZE won't work since it is only
-     # set once.
+     # set once. And should be done after load_experiment_resources().
      netcat(conf_str[i])
      experiment()
      print "Dumping af stat pecentage\n"
@@ -379,8 +384,12 @@ if __name__ == "__main__" :
      dir_name = "setting_"+str(i)
      path = DATA_DIR+"/log/"+dir_name
      os.system("mkdir "+path)
-     os.system("cp "+BUILD_DIR+"/*.data  "+path)
+     os.system("cp "+RUNNING_DIR+"/*.data  "+path)
      plot_save(path+"/pydump-percentage-af.data", path)
      # restart cogserver and relex
-     restart_server(COGSERVER, 'cogserver')
-     restart_relex()
+     if i == len(conf_str)-1:
+         kill_process(COGSERVER_PORT)
+         kill_process(RELEX_PORT)
+     else:
+         restart_server(COGSERVER, 'cogserver')
+         restart_relex()
