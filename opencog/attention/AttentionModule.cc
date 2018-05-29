@@ -152,7 +152,11 @@ std::string AttentionModule::do_list_ecan_param(Request *req, std::list<std::str
     AttentionParamQuery _atq(&_cogserver.getAtomSpace());
     HandleSeq hseq = _atq.get_params();
     for(const Handle& h : hseq){
-        std::string param = h->get_name();
+        std::string param;
+        if(h->is_link())
+            param = h->get_name();
+        else
+            param = h->to_short_string();
         response += param + "= " + _atq.get_param_value(param) + "\n"; 
     }
     return response;
