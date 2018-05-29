@@ -63,25 +63,19 @@ void RentCollectionBaseAgent::run()
 
 void RentCollectionBaseAgent::load_params(void)
 {
-    // init starting wages/rents. these should quickly change and reach
-    // stable values, which adapt to the system dynamics
     STIAtomRent = std::stod(_atq.get_param_value(AttentionParamQuery::rent_starting_sti_rent));
     LTIAtomRent = std::stod(_atq.get_param_value(AttentionParamQuery::rent_starting_lti_rent));
-    targetSTI = std::stod(_atq.get_param_value(AttentionParamQuery::rent_target_sti_funds));
-    stiFundsBuffer = std::stod(_atq.get_param_value(AttentionParamQuery::rent_sti_funds_buffer));
-    targetLTI = std::stod(_atq.get_param_value(AttentionParamQuery::rent_target_lti_funds));
-    ltiFundsBuffer = std::stod(_atq.get_param_value(AttentionParamQuery::rent_lti_funds_buffer));
 }
 
 AttentionValue::sti_t RentCollectionBaseAgent::calculate_STI_Rent()
 {
     double funds = _bank->getSTIFunds();
-    double diff  = targetSTI - funds;
+    double diff  = _bank->getTargetSTI() - funds;
 
     if(diff <= 0)
         return 0;
 
-    double ndiff = diff / stiFundsBuffer;
+    double ndiff = diff / funds;
     ndiff = std::min(ndiff, 1.0);
     ndiff = std::max(ndiff, -0.99);
     AttentionValue::sti_t res = STIAtomRent + (STIAtomRent * ndiff);
@@ -92,8 +86,8 @@ AttentionValue::sti_t RentCollectionBaseAgent::calculate_STI_Rent()
 AttentionValue::sti_t RentCollectionBaseAgent::calculate_LTI_Rent()
 {
     double funds = _bank->getLTIFunds();
-    double diff  = targetLTI - funds;
-    double ndiff = diff / ltiFundsBuffer;
+    double diff  = _bank->getTargetLTI() - funds;
+    double ndiff = diff / funds;
     ndiff = std::min(ndiff, 1.0);
     ndiff = std::max(ndiff, -1.0);
 

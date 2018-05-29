@@ -73,10 +73,26 @@ void AttentionModule::init()
     AttentionParamQuery _atq(&_cogserver.getAtomSpace());
     _atq.load_default_values(); // Load default ECAN param values into AS
 
-    // Set params
+    // Set attention bank params.
+    AttentionBank * bank = &attentionbank(&_cogserver.getAtomSpace());
+
     int af_size = std::stoi(_atq.get_param_value(AttentionParamQuery::af_max_size));
-    attentionbank(&_cogserver.getAtomSpace()).set_af_size(af_size);
+    auto target_sti  = std::stod(_atq.get_param_value(AttentionParamQuery::rent_target_sti_funds));
+    auto target_lti  = std::stod(_atq.get_param_value(AttentionParamQuery::rent_target_lti_funds));
+    auto sti_fbuffer = std::stod(_atq.get_param_value(AttentionParamQuery::rent_sti_funds_buffer));
+    auto lti_fbuffer = std::stod(_atq.get_param_value(AttentionParamQuery::rent_lti_funds_buffer));
+    auto starting_sti_funds = std::stod(_atq.get_param_value(AttentionParamQuery::rent_starting_lti_funds));
+    auto starting_lti_funds = std::stod(_atq.get_param_value(AttentionParamQuery::rent_starting_lti_funds));
+
+    bank->set_af_size(af_size);
+    bank->startingFundsSTI = bank->fundsSTI = starting_sti_funds;
+    bank->startingFundsLTI = bank->fundsLTI = starting_lti_funds;
     
+    bank->stiFundsBuffer = sti_fbuffer;
+    bank->ltiFundsBuffer = lti_fbuffer;
+    bank->targetLTI = target_lti;
+    bank->targetSTI = target_sti;
+
     // New Thread based ECAN agents.
     _cogserver.registerAgent(AFImportanceDiffusionAgent::info().id, &afImportanceFactory);
     _cogserver.registerAgent(WAImportanceDiffusionAgent::info().id, &waImportanceFactory);
