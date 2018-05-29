@@ -338,7 +338,7 @@ def plot_save(af_stat_file, plot_path):
     plt.plot(time, non_nlp)
     plt.legend(['Insect', 'Poison', 'Insecticide', 'Non-nlp'], loc='best') 
     plt.ylabel('Percentage in AF')
-    #plt.show('Time in AF(sec)')
+    plt.xlabel('Time in AF(sec)')
     plt.savefig(plot_path+"/plot.png")
 
 def sanity_check():
