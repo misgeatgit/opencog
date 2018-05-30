@@ -117,9 +117,9 @@ std::string InsectPoisonExpModule::do_dump_af_stat(Request *req,
             //convert the link to one line
             std::string str = ast.h->to_short_string();
             str.erase(std::remove(str.begin(), str.end(), '\n'), str.end());
-            outf <<  classserver().getTypeName(ast.h->get_type()) << "["
+            outf <<  nameserver().getTypeName(ast.h->get_type()) << "["
                  << str << "]";
-            //outf <<  classserver().getTypeName(ast.h->get_type()) << "[" 
+            //outf <<  nameserver().getTypeName(ast.h->get_type()) << "["
             //     << ast.h.value() << "]";
         }
 
