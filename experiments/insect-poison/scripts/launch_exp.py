@@ -2,8 +2,8 @@
 import commands
 import datetime
 import numpy as np
-import matplotlib as mpl
-mpl.use('Agg')
+#import matplotlib as mpl
+#mpl.use('Agg')
 import matplotlib.pyplot as plt
 import os
 import socket
@@ -68,11 +68,10 @@ def start_server(exec_path, exec_name) :
   subprocess.Popen(exec_path, stdin=DEVNULL, stdout=DEVNULL, stderr=DEVNULL)
   time.sleep(3)
   output = commands.getstatusoutput('lsof -ti :17001')[1]
-  print "OUTPUT %s" % (output)
   if not output:
 	print "Unable to start cogserer. Exiting"
         sys.exit()
-  print "started %s \n" % (exec_name)
+  print "started %s [pid: %s] \n" % (exec_name, output)
 
 def restart_server(exec_path, exec_name) :
   print "restarting %s \n" % (exec_name)
@@ -86,15 +85,15 @@ def start_relex():
   with open(RELEX, 'r') as f:
     for line in f:
         cmd = cmd + line 
-  subprocess.Popen(['/bin/bash', '-c', cmd], stderr=DEVNULL, stdout=DEVNULL)
+  tmpf = open("/tmp/relex.stdout", 'w')
+  subprocess.Popen(['/bin/bash', '-c', cmd], stderr=DEVNULL, stdout=tmpf)
   time.sleep(3)
   output = commands.getstatusoutput('lsof -ti :4444')[1]
-  print "OUTPUT %s" % (output)
   if not output:
 	print "Unable to start relex. Exiting"
         sys.exit()
 
-  print "started relex"
+  print "started %s [pid: %s] \n" % ('relex', output)
 
 def restart_relex():
   print "restarting %s \n" % ('relex')
@@ -185,7 +184,7 @@ def experiment_1():
   start_logger()
   start_ecan()
  
-  start_word_stimulation(400)
+  #start_word_stimulation(400)
   
   print "Parsing insect sentences."
   parse_sent_file(SENT_DIR+"/insects-100.sent")
@@ -196,7 +195,7 @@ def experiment_1():
   topic_switched(True)
   
   print "Parsing poison sentences."
-  parse_sent_file(SENT_DIR+"/poisons-50.sent")
+  parse_sent_file(SENT_DIR+"/poisons-100.sent")
   print "Dumping log data."
   dump_af_stat("pydump-after-poison")
 
@@ -238,7 +237,6 @@ def experiment_2():
   def switch_back_to_insect():
     start_logger()
     start_ecan()
-    start_word_stimulation(250)
 
     print "Parsing insect sentences."
     parse_sent_file(SENT_DIR+"/insects-100.sent")
@@ -260,7 +258,6 @@ def experiment_2():
   def switch_to_cars():
     start_logger()
     start_ecan()
-    start_word_stimulation(250)
 
     print "Parsing insect sentences."
     parse_sent_file(SENT_DIR+"/insects-100.sent")
@@ -300,8 +297,6 @@ def experiment_3():
   # the dynamics.
   #start_logger()
   start_ecan()
-
-  start_word_stimulation(250)
 
   print "Parsing the SEW(simple english wikipedia)."
   #Start parsing the SEW
@@ -351,7 +346,7 @@ if __name__ == "__main__" :
   # Read and load load conf file.
   with open(SCRIPT_DIR+'/experiment.ini') as conf_file:
     for line in conf_file:
-      if line.rstrip():
+      if line.strip() and line.strip()[0] != ';':
         conf_str.append(line)
 
   #TODO Sanity check.
@@ -368,7 +363,7 @@ if __name__ == "__main__" :
   
   experiment = experiments[int(expid)]
   for i in range(0, len(conf_str)) :
-     print "Experiment %d started. \n" %(i+1)
+     print "--------------------Experiment %d started.------------------------- \n" %(i+1)
      print "Settings %s" % (conf_str[i])
      # Load KB and modules. It is necessary to load 
      # the knowledge base before starting logging agent.
@@ -376,8 +371,9 @@ if __name__ == "__main__" :
      # Load Params. XXX MAX_AF_SIZE won't work since it is only
      # set once. And should be done after load_experiment_resources().
      netcat(conf_str[i])
+     print "Settings are now in effect."
      experiment()
-     print "Dumping af stat pecentage\n"
+     print "Dumping af stat pecentage"
      time.sleep(5)
      dump_percentage_af("pydump-percentage")
      # Create a sensible dir name.
