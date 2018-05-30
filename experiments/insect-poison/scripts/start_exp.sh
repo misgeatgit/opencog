@@ -1,6 +1,6 @@
 #!/bin/bash
 
-read -p "All the results from the previous experiment is about to be deleted.
+read -p "All the results from the previous experiment are about to be deleted.
          Are you sure? [yes/no] " answer
 if [ $answer = "no" ]; then exit; fi
 
