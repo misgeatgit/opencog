@@ -2,8 +2,8 @@
 import commands
 import datetime
 import numpy as np
-#import matplotlib as mpl
-#mpl.use('Agg')
+import matplotlib as mpl
+mpl.use('Agg') # For running it without xwindows system
 import matplotlib.pyplot as plt
 import os
 import socket
@@ -187,7 +187,9 @@ def experiment_1():
   #start_word_stimulation(400)
   
   print "Parsing insect sentences."
+  start_time = time.time()
   parse_sent_file(SENT_DIR+"/insects-100.sent")
+  print "Took %d sec." % (time.time() - start_time)
   print "Dumping log data."
   
   dump_af_stat("pydump-after-insect")
@@ -195,7 +197,9 @@ def experiment_1():
   topic_switched(True)
   
   print "Parsing poison sentences."
+  start_time = time.time()
   parse_sent_file(SENT_DIR+"/poisons-100.sent")
+  print "Took %d sec." % (time.time() - start_time)
   print "Dumping log data."
   dump_af_stat("pydump-after-poison")
 
