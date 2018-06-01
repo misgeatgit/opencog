@@ -141,7 +141,7 @@ void HebbianCreationAgent::run()
     //If it is more then the allowed max delete some randomly.
     //TODO: find a simple rule to decide which atoms to forget
     //      that will keep some of the weak links intact
-    if (iset.size() >= maxLinkNum) {
+    /*if (iset.size() >= maxLinkNum) {
         std::uniform_int_distribution<int> distribution2(0,iset.size()-1);
         std::default_random_engine generator;
         size_t s = iset.size();
@@ -149,7 +149,7 @@ void HebbianCreationAgent::run()
             _as->remove_atom(iset[distribution2(generator)]->get_handle(), true);
             s--;
         } while (s >= maxLinkNum);
-    }
+    }*/
 }
 
 void HebbianCreationAgent::addHebbian(Handle source,Handle target)
