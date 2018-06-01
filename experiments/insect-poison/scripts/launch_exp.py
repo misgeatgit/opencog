@@ -117,8 +117,11 @@ def start_ecan(multithreaded_mode=True) :
   if not ecan_started :
       print "Starting ECAN agents in "
       if  multithreaded_mode :
-         print " multithreaded mode.\n"
-         netcat("start-ecan")
+          print " multithreaded mode.\n"
+          netcat("start-ecan")
+          # Disable Hebbian agents
+          #netcat('agents-stop opencog::HebbianCreationAgent')
+          #netcat('agents-stop opencog::HebbianUpdatingAgent')
       else:
           print " single threaed mode.\n"
           netcat('agents-start opencog::AFImportanceDiffusionAgent')
@@ -128,9 +131,6 @@ def start_ecan(multithreaded_mode=True) :
           netcat('agents-start opencog::HebbianUpdatingAgent')
           netcat('agents-start opencog::HebbianCreationAgent')
       
-      # Disable Hebbian agents
-      #netcat('agents-stop opencog::HebbianCreationAgent')
-      #netcat('agents-stop opencog::HebbianUpdatingAgent')
       ecan_started = True
 
 
