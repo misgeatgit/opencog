@@ -198,7 +198,7 @@ def experiment_1():
   
   print "Parsing poison sentences."
   start_time = time.time()
-  parse_sent_file(SENT_DIR+"/poisons-100.sent")
+  parse_sent_file(SENT_DIR+"/poisons-50.sent")
   print "Took %d sec." % (time.time() - start_time)
   print "Dumping log data."
   dump_af_stat("pydump-after-poison")
@@ -387,6 +387,8 @@ if __name__ == "__main__" :
      os.system("mkdir "+path)
      os.system("cp "+RUNNING_DIR+"/*.data  "+path)
      plot_save(path+"/pydump-percentage-af.data", path)
+     with open(path+"/settings.txt", 'w') as f:
+       f.write(conf_str[i])
      # restart cogserver and relex
      if i == len(conf_str)-1:
          kill_process(COGSERVER_PORT)
