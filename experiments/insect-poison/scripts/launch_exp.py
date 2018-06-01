@@ -339,6 +339,7 @@ def plot_save(af_stat_file, plot_path):
     plt.ylabel('Percentage in AF')
     plt.xlabel('Time in AF(sec)')
     plt.savefig(plot_path+"/plot.png")
+    plt.clf()
 
 def sanity_check():
   pass
