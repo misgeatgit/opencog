@@ -36,4 +36,15 @@ pid_relex=$(lsof -ti :4444)
 if [ $pid_cogserver ]; then echo "Cogserver is already running.Kill cogserser."; kill -9 $pid_cogserver;  fi
 if [ $pid_relex ]; then echo "Relex server is already running.Kill relex."; kill -9 $pid_relex;  fi
 
-python $exp_dir/scripts/launch_exp.py 1 $oc_dir
+count=1
+cat experiments.conf  | while read setting
+do
+	if [ ${setting:0:1} = ";" ] || [ -z "$setting" ]
+	then
+		echo $setting" This line is either empty or a comment. Skipping it."
+		continue
+	fi
+       	echo $setting > experiment.ini
+	python $exp_dir/scripts/launch_exp.py 1 $oc_dir $count
+	((++count))
+done

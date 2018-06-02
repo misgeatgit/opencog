@@ -19,7 +19,7 @@ SCRIPT_DIR = BASE_DIR+"/experiments/insect-poison/scripts"
 SENT_DIR = DATA_DIR+"/sentences"
 WORD_DIR = DATA_DIR+"/words"
 LOAD_FILES = [DATA_DIR+"/kb/conceptnet4.scm",
-              DATA_DIR+"/kb/wordnet.scm",
+              #DATA_DIR+"/kb/wordnet.scm",
               DATA_DIR+"/kb/adagram_sm_links.scm"]
 
 COGSERVER = OC_DIR+"/opencog/build/opencog/cogserver/server/cogserver"
@@ -69,8 +69,8 @@ def start_server(exec_path, exec_name) :
   time.sleep(3)
   output = commands.getstatusoutput('lsof -ti :17001')[1]
   if not output:
-	print "Unable to start cogserer. Exiting"
-        sys.exit()
+    print "Unable to start cogserer. Exiting"
+    sys.exit()
   print "started %s [pid: %s] \n" % (exec_name, output)
 
 def restart_server(exec_path, exec_name) :
@@ -90,8 +90,8 @@ def start_relex():
   time.sleep(3)
   output = commands.getstatusoutput('lsof -ti :4444')[1]
   if not output:
-	print "Unable to start relex. Exiting"
-        sys.exit()
+    print "Unable to start relex. Exiting"
+    sys.exit()
 
   print "started %s [pid: %s] \n" % ('relex', output)
 
@@ -368,7 +368,7 @@ if __name__ == "__main__" :
   
   experiment = experiments[int(expid)]
   for i in range(0, len(conf_str)) :
-     print "--------------------Experiment %d started.------------------------- \n" %(i+1)
+     print "--------------------Experiment %s started.------------------------- \n" %(sys.argv[3])
      print "Settings %s" % (conf_str[i])
      # Load KB and modules. It is necessary to load 
      # the knowledge base before starting logging agent.
@@ -382,7 +382,7 @@ if __name__ == "__main__" :
      time.sleep(5)
      dump_percentage_af("pydump-percentage")
      # Create a sensible dir name.
-     dir_name = "setting_"+str(i)
+     dir_name = "setting_"+str(sys.argv[3])
      path = DATA_DIR+"/log/"+dir_name
      os.system("mkdir "+path)
      os.system("cp "+RUNNING_DIR+"/*.data  "+path)
