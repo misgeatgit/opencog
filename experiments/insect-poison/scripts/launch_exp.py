@@ -19,7 +19,7 @@ SCRIPT_DIR = BASE_DIR+"/experiments/insect-poison/scripts"
 SENT_DIR = DATA_DIR+"/sentences"
 WORD_DIR = DATA_DIR+"/words"
 LOAD_FILES = [DATA_DIR+"/kb/conceptnet4.scm",
-              #DATA_DIR+"/kb/wordnet.scm",
+              DATA_DIR+"/kb/wordnet.scm",
               DATA_DIR+"/kb/adagram_sm_links.scm"]
 
 COGSERVER = OC_DIR+"/opencog/build/opencog/cogserver/server/cogserver"
