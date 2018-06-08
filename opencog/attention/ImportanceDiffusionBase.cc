@@ -153,30 +153,49 @@ void ImportanceDiffusionBase::diffuseAtom(Handle source)
 
     // Redistribute sti values that should not go to types in hsFilterOut.
     std::map<Handle, double> refund;
-    double remaining_sti = 0;
+    double remaining_sti = 0.0;
+    double total = 0.0;
     for(auto it = probabilityVector.begin() ; it !=probabilityVector.end() ; ++it){
         std::vector<std::pair<Handle, double>> tempRefund;
-        auto r = redistribute(it->first, it->second, tempRefund);
-        if( r != 0){
-            remaining_sti += r;
-            continue;
-        }
-        // Now lets append the tempRefund map to refund map
+        auto sti = it->second*totalDiffusionAmount;
+        total += sti;
+        auto r = redistribute(it->first, sti , tempRefund);
+        remaining_sti += r;
+        // Now lets merge the tempRefund map to refund map
         for(const auto& p : tempRefund){
            if(refund.find(p.first) == refund.end())
                refund[p.first] = p.second;
            else
-               refund[p.first] += (refund[p.first] + p.second);
+               refund[p.first] += p.second;
         }
     }
-
     // Divide STIs not distributed.
     double per_atom = remaining_sti/ refund.size();
     for(auto& p : refund)
         p.second += per_atom;
 
-    // Finishe the redistribution by assigning new values to probabilityVector.
-    probabilityVector = refund;
+    // Perform diffusion from the source to each atom target
+    for( const auto& p : refund)
+    {
+        DiffusionEventType diffusionEvent;
+
+        diffusionEvent.amount = p.second;
+        diffusionEvent.source = source;
+        diffusionEvent.target = p.first;
+
+        // Add the diffusion event to a stack. The diffusion is stored in a
+        // stack, so that all the diffusion events can be processed after the
+        // diffusion calculations are complete. Otherwise, the diffusion
+        // amounts will be calculated in a different way than expected.
+        diffusionStack.push(diffusionEvent);
+    }
+
+    /* ===================================================================== */
+
+    // TODO: What if the STI values of the atoms change during these updates?
+    // This could go wrong if there were simultaneous updates in other threads.
+
+    // TODO: Support inverse hebbian links
 
 #ifdef LOG_AV_STAT
     // Log sti gain from spreading via  non-hebbian links
@@ -208,33 +227,7 @@ void ImportanceDiffusionBase::diffuseAtom(Handle source)
     atom_avstat[source].spreading += totalDiffusionAmount;
 #endif
 
-    // Perform diffusion from the source to each atom target
-    for( const auto& p : probabilityVector)
-    {
-        DiffusionEventType diffusionEvent;
-
-        // Calculate the diffusion amount using the entry in the probability
-        // vector for this particular target (stored in iterator->second)
-        diffusionEvent.amount = (AttentionValue::sti_t)
-            (totalDiffusionAmount * p.second);
-
-        diffusionEvent.source = source;
-        diffusionEvent.target = p.first;
-
-        // Add the diffusion event to a stack. The diffusion is stored in a
-        // stack, so that all the diffusion events can be processed after the
-        // diffusion calculations are complete. Otherwise, the diffusion
-        // amounts will be calculated in a different way than expected.
-        diffusionStack.push(diffusionEvent);
     }
-
-    /* ===================================================================== */
-
-    // TODO: What if the STI values of the atoms change during these updates?
-    // This could go wrong if there were simultaneous updates in other threads.
-
-    // TODO: Support inverse hebbian links
-}
 
 
 
@@ -564,44 +557,49 @@ void ImportanceDiffusionBase::processDiffusionStack()
 #endif
 
 }
+
 /**
- * Redistributed amount of sti that should have gone to target atom if
- * the atom type is in the Fitler set. The sti will be equally distributed
- * to the incoming or outgoing set of target atom.
+ * Redistribute amount of sti that should have gone to target atom if
+ * the atom type wasn't in the FitlerOut list. The sti will be equally distributed
+ * to the all neighboring atoms. if any of the atoms are invalid types, the
+ * amount they were supposed to receive will be recursively redistributed untill
+ * it reaches the maximum allowed traversal depth.
  *
  * @param target the atom whose to type is to be checked against the filter set.
- *
- * @sti   the sti that should be redistribited if the target's type is in Filter
+ * @param sti   the sti that should be redistribited if the target's type is in Filter
  * set.
+ * @param refund a list of pairs of atoms and redistributed sti.
+ * @param depth the current depth of the traversing.
  *
- * @refund a list of pairs of atoms and redistributed sti.
- *
- * @return 0 on successfull redistribution or @param sti on failure to do so.
+ * @return 0 on successfull redistribution or @param sti on failure to do so
+ * before depth reaches maximum allowable value.
  *
  */
 double ImportanceDiffusionBase::redistribute(const Handle& target, const double& sti,
-                                           std::vector<std::pair<Handle, double>>& refund){
-    static unsigned int NRECURSION = 1; // Prevent stack-overflowing. XXX how to determing maxdepth?
-    auto ij = std::find_if(hsFilterOut.begin(), hsFilterOut.end(),
+                                           std::vector<std::pair<Handle, double>>& refund
+                                           ,unsigned int depth/*=0*/){
+    auto it = std::find_if(hsFilterOut.begin(), hsFilterOut.end(),
             [target](const Handle& h){
             return (target->get_type() == classserver().getType(h->get_name()));
             });
-    double not_redistributed = 0;
-    if(ij != hsFilterOut.end()){
-        // If STI to be distributed is smaller that the af boundary or the
+    double not_redistributed = 0.0;
+    // If target is a type in the hsFilterOut list, redistribute sti to
+    // neighbors.
+    if(hsFilterOut.end() != it){
+        // If STI to be distributed is smaller than the af boundary or the
         // recursion has reached maximum depth allowed, assign the sti to
-        // the valid atom type in refund vector or if the refund is empty,
-        // return the STI itself.
+        // the last atom in refund vector and return 0 balance. If the refund 
+        // vector is empty, return the sti itself.
         auto min_spreading_value = _bank->get_af_min_sti();
-        if(sti < min_spreading_value or NRECURSION > 100){
+        // TODO define a parameter for the maximum depth?
+        if(depth > 5){
             if(not refund.empty()){
                 refund[refund.size()-1].second += sti;
-                return 0;
+                return 0.0;
             } else{
                 return sti;
             }
         }
-
         // Redistribute to all neighbors.
         HandleSeq seq;
         if(target->is_link())
@@ -609,21 +607,21 @@ double ImportanceDiffusionBase::redistribute(const Handle& target, const double&
 
         target->getIncomingSet(std::back_inserter(seq));
 
-        size_t spreaded_to = 0;
-        double r = sti/(double)seq.size();
+        unsigned int spreaded_to = 0; // Number of atoms visited.
+        // Equally divide sti to neighbors.
+        double dividened = sti/(double)seq.size(); 
+        //outf << "DIVIDENED: " << dividened << "\n";
         for(const Handle& h : seq)
         {
-            ++NRECURSION;
             ++spreaded_to;
-            double rsti = redistribute(h, r, refund);
-            // Adjust sti per atom if sti isn't spread.
-            if( rsti > 0){
-                // If the last one failed. return amount.
-                if( spreaded_to == seq.size()){
-                    not_redistributed = rsti;
-                    break;
-                }
-                r += (rsti / ( seq.size() - spreaded_to));
+            double balance = redistribute(h, dividened, refund, depth+1);
+
+            // Adjust dividened if sti isn't spread to this atom.
+            // If the last one failed. return amount not distributed.
+            if( spreaded_to == seq.size()){
+                not_redistributed = balance;
+                break;
+                dividened += (balance / (double)(seq.size() - spreaded_to));
             }
         }
     }
@@ -633,3 +631,4 @@ double ImportanceDiffusionBase::redistribute(const Handle& target, const double&
 
     return not_redistributed;
 }
+

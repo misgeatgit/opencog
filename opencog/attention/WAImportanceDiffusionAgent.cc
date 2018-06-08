@@ -102,5 +102,5 @@ AttentionValue::sti_t WAImportanceDiffusionAgent::calculateDiffusionAmount(Handl
     static ecan::StochasticDiffusionAmountCalculator sdac(&_bank->getImportance());
     float current_estimate = sdac.diffused_value(h, maxSpreadPercentage);
 
-    return get_sti(h) - current_estimate;
+    return (get_sti(h) > current_estimate ? current_estimate : get_sti(h));
 }
