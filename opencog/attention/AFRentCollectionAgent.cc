@@ -78,9 +78,7 @@ void AFRentCollectionAgent::collectRent(HandleSeq& targetSet)
     for (const Handle& h : targetSet) {
         AttentionValue::sti_t sti = get_sti(h);
         AttentionValue::lti_t lti = get_lti(h);
-        std::cout << "[1]Calling calculate_STI_Rent \n";
         AttentionValue::sti_t stiRent =  calculate_STI_Rent();
-        std::cout << "[4]STI RENT FOR " << h->to_short_string() << " \n" <<"w=" << w <<" stiRent=" << stiRent << " " << stiRent*w << "\n";
         stiRent *= w;
         AttentionValue::lti_t ltiRent =  calculate_LTI_Rent();
         ltiRent *= w;

@@ -34,9 +34,7 @@
 #include <opencog/cogserver/server/Agent.h>
 #include <opencog/util/Logger.h>
 #include <opencog/util/RandGen.h>
-
 #include "AttentionParamQuery.h"
-
 namespace opencog
 {
 /** \addtogroup grp_attention
@@ -94,8 +92,10 @@ protected:
 
     // Recursively try to redistribute STI which was supposed to be delivered to
     // certain atom types which should not receive STI.
-    double redistribute(const Handle& target, const double& sti, std::vector<std::pair<Handle,
-                      double>>& refund, unsigned int depth = 0);
+    double redistribute(const Handle& source, const Handle& target, 
+                      const double& sti, std::vector<std::pair<Handle,
+                      double>>& refund, unsigned int& nrecursion);
+
 public:
     ImportanceDiffusionBase(CogServer&);
     virtual ~ImportanceDiffusionBase();
