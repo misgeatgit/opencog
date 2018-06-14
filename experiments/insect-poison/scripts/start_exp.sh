@@ -41,7 +41,7 @@ cat experiments.conf  | while read setting
 do
 	if [ ${setting:0:1} = ";" ] || [ -z "$setting" ]
 	then
-		echo $setting" This line is either empty or a comment. Skipping it."
+		echo " This line is either empty or a comment. Skipping it."
 		continue
 	fi
        	echo $setting > experiment.ini

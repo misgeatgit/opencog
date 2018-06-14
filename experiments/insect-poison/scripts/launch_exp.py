@@ -120,8 +120,8 @@ def start_ecan(multithreaded_mode=True) :
           print " multithreaded mode.\n"
           netcat("start-ecan")
           # Disable Hebbian agents
-          #netcat('agents-stop opencog::HebbianCreationAgent')
-          #netcat('agents-stop opencog::HebbianUpdatingAgent')
+          netcat('agents-stop opencog::HebbianCreationAgent')
+          netcat('agents-stop opencog::HebbianUpdatingAgent')
       else:
           print " single threaed mode.\n"
           netcat('agents-start opencog::AFImportanceDiffusionAgent')
@@ -379,8 +379,8 @@ if __name__ == "__main__" :
      print "Settings are now in effect."
      experiment()
      print "Dumping af stat pecentage"
-     time.sleep(5)
      dump_percentage_af("pydump-percentage")
+     time.sleep(1)
      # Create a sensible dir name.
      dir_name = "setting_"+str(sys.argv[3])
      path = DATA_DIR+"/log/"+dir_name
