@@ -120,8 +120,8 @@ def start_ecan(multithreaded_mode=True) :
           print " multithreaded mode.\n"
           netcat("start-ecan")
           # Disable Hebbian agents
-          netcat('agents-stop opencog::HebbianCreationAgent')
-          netcat('agents-stop opencog::HebbianUpdatingAgent')
+          #netcat('agents-stop opencog::HebbianCreationAgent')
+          #netcat('agents-stop opencog::HebbianUpdatingAgent')
       else:
           print " single threaed mode.\n"
           netcat('agents-start opencog::AFImportanceDiffusionAgent')
@@ -337,7 +337,7 @@ def plot_save(af_stat_file, plot_path):
     plt.plot(time, non_nlp)
     plt.legend(['Insect', 'Poison', 'Insecticide', 'Non-nlp'], loc='best') 
     plt.ylabel('Percentage in AF')
-    plt.xlabel('Time in AF(sec)')
+    plt.xlabel('Time(sec)')
     plt.savefig(plot_path+"/plot.png")
     plt.clf()
 
