@@ -137,20 +137,20 @@ void ImportanceDiffusionBase::diffuseAtom(Handle source)
 
 #ifdef LOG_AV_STAT
     // Log sti gain from spreading via  non-hebbian links
-    for(const auto& kv : probabilityVectorIncident){
+    for(auto& kv : probabilityVectorIncident){
         if(atom_avstat.find(kv.first) == atom_avstat.end()){
             AVStat avstat;
-            avstat.link_sti_gain = kv.second;
+            avstat.link_sti_gain = kv.second*totalDiffusionAmount;
             atom_avstat[kv.first] = avstat;
         }
         atom_avstat[kv.first].link_sti_gain += kv.second;
     }
 
     // Log sti gain from spreading via hebbian links
-    for(const auto& kv : probabilityVectorHebbianAdjacent){
+    for(auto& kv : probabilityVectorHebbianAdjacent){
         if(atom_avstat.find(kv.first) == atom_avstat.end()){
             AVStat avstat;
-            avstat.heblink_sti_gain = kv.second;
+            avstat.heblink_sti_gain = kv.second*totalDiffusionAmount;
             atom_avstat[kv.first] = avstat;
         }
         atom_avstat[kv.first].heblink_sti_gain += kv.second;

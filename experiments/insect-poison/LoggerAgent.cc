@@ -101,7 +101,7 @@ void LoggerAgent::run(void){
     if(not topic_changed){
         std::sort(insect_atoms.begin(), insect_atoms.end());
         std::sort(afset.begin(), afset.end());
-        // Get poison atoms in AF.
+        // Get insect atoms in AF.
         std::set_intersection(insect_atoms.begin(), insect_atoms.end(),
                 afset.begin(), afset.end(),
                 std::back_inserter(insect_atoms_AF));
@@ -137,7 +137,7 @@ void LoggerAgent::run(void){
         std::sort(insect_atoms.begin(), insect_atoms.end());
         std::set_intersection(
                 nonNLP_atoms_AF.begin(), nonNLP_atoms_AF.end(),
-                afset.begin(), afset.end(),
+                insect_atoms.begin(), insect_atoms.end(),
                 std::back_inserter(insect_atoms_AF));
 
         // Populate insecticde_atoms_AF
