@@ -378,6 +378,7 @@ if __name__ == "__main__" :
      netcat(conf_str[i])
      print "Settings are now in effect."
      experiment()
+     time.sleep(10)
      print "Dumping af stat pecentage"
      dump_percentage_af("pydump-percentage")
      time.sleep(1)
