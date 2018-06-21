@@ -365,7 +365,9 @@ if __name__ == "__main__" :
   start_server(COGSERVER, 'cogserver')
   # start relex  
   start_relex()
-  
+
+  netcat('(use-modules (opencog nlp))(use-modules (opencog nlp relex2logic))(use-modules (opencog nlp chatbot))')
+
   experiment = experiments[int(expid)]
   for i in range(0, len(conf_str)) :
      print "--------------------Experiment %s started.------------------------- \n" %(sys.argv[3])
