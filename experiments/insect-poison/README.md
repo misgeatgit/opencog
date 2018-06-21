@@ -13,26 +13,29 @@
 **Running the experiment**
 **Experiment 1**
 
-step 1 - Checkout to this branch by cloning this repo first or if you have already gotten opencog cloned from opencog main repo, do the following:   
+**Step 1** - Checkout to this branch by cloning this repo first or if you have already gotten opencog cloned from opencog main repo, do the following
 ``` git remote add misgana  https://github.com/misgeatgit/opencog ```
-``` git fetch misgana && git checkout misgana/experiment ```
 
-step 2 - clone atomspace ( ``` git clone  https://github.com/opencog/atomspace ``` ) and do the following:
+    git fetch misgana && git checkout misgana/experiment ```
+
+**Step 2** - clone atomspace ( ``` git clone  https://github.com/opencog/atomspace ``` ) and do the following:
+
 ``` git remote add misgana  https://github.com/misgeatgit/atomspace ```
+
 ``` git fetch misgana && git checkout misgana/ecan-experiment ```
 
-step 3 - Build opencog ( The build directory should be inside opencog directory i.e opencog/build)
+**Step 3** - Build opencog ( The build directory should be inside opencog directory i.e opencog/build)
 
-step 4 - with in the build director also build the experiment by typing ```make experiments```
+**Step 4** - with in the build director also build the experiment by typing ```make experiments```
 
-step 5 - Clone [Relex](https://github.com/opencog/relex) in the same directory you have cloned opencog since the launch script assumes Relex and opencog are installed side by side. Make sure relex is built properly and runs.
+**Step 5** - Clone [Relex](https://github.com/opencog/relex) in the same directory you have cloned opencog since the launch script assumes Relex and opencog are installed side by side. Make sure relex is built properly and runs.
 
-step 6 - In the script director of this directory, modify the ```oc_dir``` in start_exp.sh to point to the directory where relex and opencog and are cloned.
+**Step 6** - In the script director of this directory, modify the ```oc_dir``` in start_exp.sh to point to the directory where relex and opencog and are cloned.
 
-step 7 - in the scripts folder modify the experiments.conf by adding new ecan paramenter values as or removing the existing ones. The best way would be copying one of the lines and changing the values. Each line indicated a different experiment. So, if you have 10 new line separated parameter values, there will be 10 experiment ran by the launch script.
+**Step 7** - in the scripts folder modify the experiments.conf by adding new ecan paramenter values as or removing the existing ones. The best way would be copying one of the lines and changing the values. Each line indicated a different experiment. So, if you have 10 new line separated parameter values, there will be 10 experiment ran by the launch script.
 
-step 8. Download wordnet and conceptnet4.scm and add it in ```opencog/experiments/insect-poison/data/kb``` directory. The files could be downloaded from (here)[https://drive.google.com/open?id=1Br5PIfHt3pCIP7pZ9X6EoyaeqQ_c6b7I]
+**Step 8** - Download wordnet and conceptnet4.scm and add it in ```opencog/experiments/insect-poison/data/kb``` directory. The files could be downloaded from [here](https://drive.google.com/open?id=1Br5PIfHt3pCIP7pZ9X6EoyaeqQ_c6b7I)
 
-step 9. Run the start_exp.sh file and wait for the experiments to finish.
+**Step 9** - Run the start_exp.sh file and wait for the experiments to finish.
 
 step 10. Get your result which will be stored in ```opencog/experiments/insect-poison/data/kb```.
