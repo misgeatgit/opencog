@@ -13,74 +13,22 @@
 **Running the experiment**
 **Experiment 1**
 
-step 1 - Load ecan module and libinsect-poison-exp module 
-``` opencog>loadmodule opencog/experiments/insect-poison/libinsect-poison-exp.so```
+step 1 - Checkout to this branch by cloning this repo first or if you have already gotten opencog cloned from opencog main repo, do the following:   
+``` git remote add misgana  https://github.com/misgeatgit/opencog ```
+``` git fetch misgana && git checkout misgana/experiment```
 
-``` opencog>loadmodule opencog/attention/libattention.so```
+step 2 - Build opencog ( The build directory should be inside opencog directory i.e opencog/build)
 
-step 2 - Load wordnet and conceptnet data
- Import the necessary opencog modules first.
-```scm>  (use-modules (opencog nlp))  ```
+step 3 - with in the build director also build the experiment by typing ```make experiments```
 
-``` scm> (primitive-load "PATH_TO/wordnet.scm")  (primitive-load "PATH_TO/coceptnet4.scm")```
+step 4 - Clone [Relex](https://github.com/opencog/relex) in the same directory you have cloned opencog since the launch script assumes Relex and opencog are installed side by side. Make sure relex is built properly and runs.
 
-NOTE: wordnet.scm and conceptnet4.scm are not included in the dir due to their large size. 
+step 5 - In the script director of this directory, modify the ```oc_dir``` in start_exp.sh to point to the directory where relex and opencog and are cloned.
 
-step 3 - Start the logger agent and all or some of the ecan agents
+step 6 - in the scripts folder modify the experiments.conf by adding new ecan paramenter values as or removing the existing ones. The best way would be copying one of the lines and changing the values. Each line indicated a different experiment. So, if you have 10 new line separated parameter values, there will be 10 experiment ran by the launch script.
 
-``` opencog> agents-start opencog::LoggerAgent ```
+step 7. Download wordnet and conceptnet4.scm and add it in ```opencog/experiments/insect-poison/data/kb``` directory.
 
-or
+step 8. Run the start_exp.sh file and wait for the experiments to finish.
 
-``` opencog> start-logger ```
-
-usually, we start all the ECAN agents together unless we want to try them one by one or with fewer sets of them. There is a handy command when we want to start all of them at once.
-
-``` opencog> start-ecan ```
-
-step 4 - Set stimulation amount for wordnodes and the start parsing the insect sentence
-
- ``` scm> (nlp-start-stimulation 70)  (parse-all nlp-parse PATH_TO/insect-poison/exp1_insects_sent.txt") ```   
- 
-step 5 - While sentence is being parsed or after finishes parsing you could dump ECAN related statistics by typing
-
-``` opencog> dump-af-stat $A_FILE_NAME ``` 
-
-File $A_FILE_NAME will be created under inside the dir where cogserver was lauched.
-
-** Swithcing topic to poison**
-
-For topic switched related statistics to work properly, the logger agent should be informed that topic is going to be changed. The steps to follow are:
-
-- Set topic switched to true by typic ```opencog> topic-switched 1 ```
-
-The start parsing poison senenteces
-```scm> (use-modules (opencog nlp relex2logic)) (use-modules (opencog nlp chatbot)) ```
-
- ```scm> (parse-all nlp-parse PATH_TO/insect-poison/exp1_poison_sent.txt") ```
-
-Now You may dump statistical information using the ***dump-af-stat** command with a different filename so that it won't overrwrithe the previous one.
-
-**TODO***
-1. ~~Write a script which automates all the above steps so that we could run the whole thing in one go.~~
-2. Extend the logger so that we will have information regarding :
-   * ~~How much STI has been diffused via Hebbian links~~
-   * How much STI gained from direct stimulation
-3. Visualize the statistical data dumped by dump-af-stat (i.e plot graphs showin various relationships) extract-items.cc tries to do this although it is incomplete and its scope is not well defined.
-
-**Helpful opencog commands**
-
-- *start-ecan*  - Starts all the ecan agents
-- *stop-ecan*  - Stops all ECAN agents
-- *list-ecan-param* - Lists ECAN paraemter-name, value pairs
-- *set-ecan-param \<param_name\> \<value\>* - Sets a value for a given ECAN parameter name 
-- *agents-active* - Lists currently running agents
-- *agents-start <agent-name>* - Starts an agent
-- *agents-stop \<agent-name\>* - Stops an agent
-
-**Helpful scheme functions**
-
-- *cog-af* 
-- *cog-af-boundary* deprecated. 
-
-
+step 9. Get your result which will be stored in ```opencog/experiments/insect-poison/data/kb```.
