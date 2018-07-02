@@ -1,8 +1,17 @@
 (define inference-results-key (Predicate "inference-results"))
 
+<<<<<<< 516188d0a4da41c3c9198180fbd62e8cc09cb843:opencog/ghost/procedures/pln-utils.scm
 (define (get-inferred-atoms trail)
     (define result (cog-value trail inference-results-key))
     (if (null? result) (LinkValue) result)
+=======
+(define (get-inferred-atoms)
+    (let ((inferences (cog-execute!
+            (Get (Member pln-inferred-atoms (Variable "$x"))))))
+
+        (cog-outgoing-set inferences)
+    )
+>>>>>>> move pln-reasoner code from chatbot-psi to ghost procedures:opencog/ghost/procedures/pln-utils.scm
 )
 
 (define (get-names atom-list)

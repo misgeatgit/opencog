@@ -1,10 +1,15 @@
 ;; PLN actions
 (use-modules (srfi srfi-1))
 (use-modules (opencog))
+<<<<<<< 516188d0a4da41c3c9198180fbd62e8cc09cb843:opencog/ghost/procedures/pln-actions.scm
 (use-modules (opencog ghost))
 (use-modules (opencog nlp))
 (use-modules (opencog nlp chatbot-psi))
 (use-modules (opencog nlp sureal))
+=======
+(use-modules (opencog nlp))
+(use-modules (opencog nlp chatbot-psi))
+>>>>>>> move pln-reasoner code from chatbot-psi to ghost procedures:opencog/ghost/procedures/pln-actions.scm
 (use-modules (opencog logger))
 (use-modules (opencog pln))
 
