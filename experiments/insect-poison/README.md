@@ -6,17 +6,19 @@
  with ECAN, you should read the [ECAN wiki page first](http://wiki.opencog.org/w/Economic_attention_allocation).
 
 **Objective**
- The major goals of these experiments are:
-  - Analyse attention spreading as topics are changed from insect to poison and vice versa.
+
+ The major objectives of these experiments are:
+  - Analyse the shifting and drifting nature of attention as topics are changed from insect to poison and vice versa.
   - Analyse the contribution of HebbianLinks in the formation of weak links which stabilize the dynamics.
 
 **Running the experiment**
 **Experiment 1**
 
-**Step 1** - Checkout to this branch by cloning this repo first or if you have already gotten opencog cloned from opencog main repo, do the following
+**Step 1** - Checkout to this branch by cloning this repo first or if you have already gotten opencog cloned from opencog main repo, do the following:
+
 ``` git remote add misgana  https://github.com/misgeatgit/opencog ```
 
-    git fetch misgana && git checkout misgana/experiment
+``` git fetch misgana && git checkout misgana/experiment ```
 
 **Step 2** - clone atomspace ( ``` git clone  https://github.com/opencog/atomspace ``` ) and do the following:
 
