@@ -16,7 +16,7 @@
 **Step 1** - Checkout to this branch by cloning this repo first or if you have already gotten opencog cloned from opencog main repo, do the following
 ``` git remote add misgana  https://github.com/misgeatgit/opencog ```
 
-    git fetch misgana && git checkout misgana/experiment ```
+    git fetch misgana && git checkout misgana/experiment
 
 **Step 2** - clone atomspace ( ``` git clone  https://github.com/opencog/atomspace ``` ) and do the following:
 
