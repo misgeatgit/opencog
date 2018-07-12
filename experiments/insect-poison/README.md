@@ -35,7 +35,7 @@ Currently, only experiment 1 is fully implemented. The following steps need to b
 
 **Step 6** - In the script director of this directory, modify the ```oc_dir``` in start_exp.sh to point to the directory where relex and opencog and are cloned.
 
-**Step 7** - in the scripts folder modify the experiments.conf by adding new ecan paramenter values as or removing the existing ones. The best way would be copying one of the lines and changing the values. Each line indicated a different experiment. So, if you have 10 new line separated parameter values, there will be 10 experiment ran by the launch script.
+**Step 7** - in the scripts folder modify the experiments.conf by adding new ecan paramenter values or removing the existing ones. The best way would be copying one of the lines and changing the values as desired. Each line implies a different experiment. So, if you have 10 new line separated parameter values, there will be 10 experiment ran by the launch script.
 
 **Step 8** - Download wordnet and conceptnet4.scm and add it in ```opencog/experiments/insect-poison/data/kb``` directory. The files could be downloaded from [here](https://drive.google.com/open?id=1Br5PIfHt3pCIP7pZ9X6EoyaeqQ_c6b7I)
 
