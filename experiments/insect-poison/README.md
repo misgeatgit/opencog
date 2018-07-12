@@ -8,7 +8,7 @@
 **Objective**
  The major goals of these experiments are:
   - Analyse attention spreading as topics are changed from insect to poison and vice versa.
-  - Analyse how Hebbian links change the spreading dynamics and the overall attentional focus.
+  - Analyse the contribution of HebbianLinks in the formation of weak links which stabilize the dynamics.
 
 **Running the experiment**
 **Experiment 1**
