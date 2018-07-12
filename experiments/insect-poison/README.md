@@ -1,18 +1,19 @@
-**Overview**
+## Overview
 
  This directory contains scripts and datasets used for setting up the experiment 
  elaborated in this [mailing list](https://groups.google.com/forum/#!searchin/opencog/insect%7Csort:relevance/opencog/qpDwVAPkKb8/CkkzsZF_EgAJ).
  These scripts and datasets are meant to be used together with the ECAN system. If you are nto familiar
  with ECAN, you should read the [ECAN wiki page first](http://wiki.opencog.org/w/Economic_attention_allocation).
 
-**Objective**
+## Objective
 
  The major objectives of these experiments are:
   - Analyse the shifting and drifting nature of attention as topics are changed from insect to poison and vice versa.
   - Analyse the contribution of HebbianLinks in the formation of weak links which stabilize the dynamics.
 
-**Running the experiment**
-**Experiment 1**
+## Running the experiments
+
+Currently, only experiment 1 is fully implemented. The following steps need to be carried out inorder to set up the experiment environment and run experiment 1:
 
 **Step 1** - Checkout to this branch by cloning this repo first or if you have already gotten opencog cloned from opencog main repo, do the following:
 
@@ -38,6 +39,7 @@
 
 **Step 8** - Download wordnet and conceptnet4.scm and add it in ```opencog/experiments/insect-poison/data/kb``` directory. The files could be downloaded from [here](https://drive.google.com/open?id=1Br5PIfHt3pCIP7pZ9X6EoyaeqQ_c6b7I)
 
-**Step 9** - Run the start_exp.sh file and wait for the experiments to finish.
+**Step 9** - Run the ```start_exp.sh``` file which is found in the scrips directory and wait for the experiments to finish.
 
-**step 10** - Get the result of the experiment from ```opencog/experiments/insect-poison/data/log``` director.
+**step 10** - Get the result of the experiment from ```opencog/experiments/insect-poison/data/log``` directory.
+
