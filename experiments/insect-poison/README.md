@@ -40,4 +40,4 @@
 
 **Step 9** - Run the start_exp.sh file and wait for the experiments to finish.
 
-**step 10** Get your result which will be stored in ```opencog/experiments/insect-poison/data/kb```.
+**step 10** - Get the result of the experiment from ```opencog/experiments/insect-poison/data/log``` director.
