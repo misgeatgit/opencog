@@ -1,0 +1,123 @@
+/*
+ * InsectPoisonExpModule.cc
+ *
+ *  Created on: Apr 19, 2015
+ *      Author: misgana
+ */
+
+#include <sstream>
+#include <string>
+#include <fstream>
+#include <iomanip>
+#include <stdio.h>
+
+#include <opencog/atomspace/AtomSpace.h>
+#include <opencog/attentionbank/AttentionBank.h>
+#include <opencog/guile/SchemeEval.h>
+
+#include <opencog/attention/atom_types.h>
+
+#include <opencog/cogserver/server/CogServer.h>
+#include <opencog/cogserver/server/Module.h>
+#include <opencog/util/Config.h>
+
+#include <opencog/attention/AttentionStat.h>
+
+#include "InsectPoisonExpModule.h"
+
+using namespace opencog;
+
+DECLARE_MODULE(InsectPoisonExpModule);
+
+InsectPoisonExpModule::InsectPoisonExpModule(CogServer& cs) :
+    Module(cs), _cs(cs)
+{
+    _as = &_cs.getAtomSpace();
+    _bank = &attentionbank(_as);
+    _stimulus_rec = &(_bank->stimulusRec);
+
+    // file_name = std::string(PROJECT_SOURCE_DIR)
+    //             + "/experiments/attention/dump";
+    registerAgentRequests();
+}
+
+InsectPoisonExpModule::~InsectPoisonExpModule()
+{
+    unregisterAgentRequests();
+}
+
+void InsectPoisonExpModule::registerAgentRequests()
+{
+    do_dump_af_stat_register();
+    do_start_logger_register();
+}
+
+void InsectPoisonExpModule::unregisterAgentRequests()
+{
+    do_dump_af_stat_unregister();
+    do_start_logger_unregister();
+}
+
+#define LOGGER_AGENT_PTR(AGENT_PTR) (dynamic_cast<LoggerAgent*>(AGENT_PTR.get()))
+
+void InsectPoisonExpModule::init(void)
+{
+    registerAgentRequests();
+    _cs.registerAgent(LoggerAgent::info().id,
+                      &loggerAgentFactory);
+    _logger_agentptr = _cs.createAgent(
+                           LoggerAgent::info().id, false);
+    _logger_agent = LOGGER_AGENT_PTR(_logger_agentptr);
+}
+
+std::string InsectPoisonExpModule::do_dump_af_stat(Request *req,
+        std::list<std::string> args)
+{
+    std::string file_name = args.front(); //get file name if provided.
+
+    // case when dump-af-stat is called with no argument
+    if (file_name.empty()) {
+        file_name = "afstat.data";
+    } else {
+        file_name += ".data";
+    }
+
+    std::ofstream outf(file_name, std::ofstream::trunc);
+
+    outf << "TOTAL_STIMULUS_REC: " << _stimulus_rec->size() << "\n";
+
+    outf << "Logged_at: "
+         << print_timept((_logger_agent)->last_probing_time) << "\n";
+
+    outf  << "Atom(uuid)" << ", Atom(name)" << ", AtTime(H:m:s:ms)," <<" TotalSTI" <<", DirectSTI"  << "\n";
+
+    for (auto p : (_logger_agent)->afStat) {
+        Handle h = p.second.h;
+        outf << h.value() <<", ";
+        if (h->is_node()) {
+            outf << h->get_name();
+        } else {
+            //convert the link to one line
+            std::string str = h->to_short_string();
+            str.erase(std::remove(str.begin(), str.end(), '\n'), str.end());
+            outf <<  nameserver().getTypeName(h->get_type()) << "["
+                << "-" << "]";
+        }
+
+        outf << ", " << print_timept(p.first)
+            << ", " << p.second.total_sti
+            << ", " << p.second.direct_sti_gain << "\n ";
+    }
+    outf.flush();
+    outf.close();
+    return "Dumped it to " + file_name + "\n";
+}
+
+std::string InsectPoisonExpModule::do_start_logger(Request* req,
+        std::list<std::string> args)
+{
+    _cs.startAgent(_logger_agentptr, false, "AFLogger");
+    return "LoggerAgent started\n";
+}
+
+
