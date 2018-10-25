@@ -65,9 +65,23 @@ public:
         AttentionValue::sti_t direct_sti_gain;  
     };
 
+    struct AFDuration {
+    };
+   
+    /*
+     * for(each atom in AF):
+     *      
+     *
+     *
+     */ 
+    
+
+    std::vector< std::pair<time_point<system_clock>, std::vector<AtomAFStat>>> af_duration_stat;
+
     std::vector<Handle> af_size_stat;
 
     std::vector< std::pair<std::chrono::system_clock::time_point, AtomAFStat>> afStat;
+
     time_point<system_clock> last_probing_time; //duration of stay in sec.
 
     // This is guarenteed to function properly only when you load the

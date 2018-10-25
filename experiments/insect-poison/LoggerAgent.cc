@@ -32,7 +32,7 @@ LoggerAgent::LoggerAgent(CogServer& cs) : Agent(cs), _start(system_clock::now())
     //_bank->AddAFSignal().connect(std::bind(&LoggerAgent::atomAddedListener, this, _1));
 
     try {
-        af_size_stat.reserve(MAX_SAMPLES); //allocate 50K sample holding space.
+        af_duration_stat.reserve(MAX_SAMPLES); //allocate 50K sample holding space.
     } catch (const std::exception& e) {
         std::cout << "Allocation Error: " << e.what() << '\n';
     }
@@ -51,23 +51,20 @@ void LoggerAgent::run(void)
     _bank->get_handle_set_in_attentional_focus(std::back_inserter(afset));
     if (afset.size() <= 0 )
         return;
-
-    static auto last_run = system_clock::now();
    
     auto at_time = system_clock::now();
+    std::vector<AtomAFStat> stat;
+    stat.reserve(afset.size());
+
     for(auto h : afset) {
         AttentionValue::sti_t direct_sti = 0.0f;
         if (_stimulus_rec->find(h) != _stimulus_rec->end())
             direct_sti = (*_stimulus_rec)[h];
         
-        AtomAFStat afstat {h, get_sti(h), direct_sti};
-        afStat.push_back(std::make_pair(at_time, afstat));
+        //AtomAFStat afstat {h, get_sti(h), direct_sti};
+        stat.push_back(AtomAFStat{h,get_sti(h), direct_sti});
     }
-
-    duration<double> dr = system_clock::now() - last_run;
-
-    //last_probing_time = system_clock::now(); //reference time to deduce whether atom is still in AF or not.
-
-    last_run = system_clock::now();
+ 
+     af_duration_stat.push_back(std::make_pair(at_time, stat));
 }
 
