@@ -65,9 +65,20 @@ public:
         AttentionValue::sti_t direct_sti_gain;  
     };
 
-    struct AFDuration {
+    struct LogData {
+        Handle h;
+        time_point<system_clock> t1;
+        time_point<system_clock> t2;
+        double duration;
+        AttentionValue::sti_t sti1 = 0;
+        AttentionValue::sti_t direct_sti1 = 0;
+        AttentionValue::sti_t sti2 = -1;
+        AttentionValue::sti_t direct_sti2 = -1;
+        double sti_change = 0;
+        double direct_sti_change = 0;
     };
-   
+
+    std::vector<LogData> logdata;
     /*
      * for(each atom in AF):
      *      
