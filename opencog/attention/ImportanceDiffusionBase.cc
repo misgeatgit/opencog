@@ -41,7 +41,6 @@
 
 #include "ImportanceDiffusionBase.h"
 #include "AttentionStat.h"
-#include "AttentionUtils.h"
 
 #define DEBUG
 #define _unused(x) ((void)x)
@@ -57,17 +56,21 @@ ImportanceDiffusionBase::ImportanceDiffusionBase(CogServer& cs) : Agent(cs)
 {
     _bank = &attentionbank(_as);
 
-    // Load diffusion parameters
-    maxSpreadPercentage = std::stod(_atq.get_param_value(
-                AttentionParamQuery::dif_spread_percentage));
-    hebbianMaxAllocationPercentage =std::stod(_atq.get_param_value(
-                AttentionParamQuery::heb_max_alloc_percentage));
-    spreadHebbianOnly = std::stoi(_atq.get_param_value(
-                AttentionParamQuery::dif_spread_hebonly));
-
     // Provide a logger
     setLogger(new opencog::Logger("ImportanceDiffusionBase.log",
-                                  Logger::FINE, true));
+                Logger::FINE, true));
+}
+
+/*
+ * Allow the maximum diffusion percentage parameter to be varied dynamically by
+ * modifying a configuration atom in the atomspace. This method checks for the
+ * existence of the configuration atom, and if it exists, updates the parameter
+ * to its current value. The value should be a probability between 0 and 1.
+ */
+void ImportanceDiffusionBase::updateMaxSpreadPercentage()
+{
+    maxSpreadPercentage = std::stod(_atq.get_param_value(
+                AttentionParamQuery::dif_spread_percentage));
 }
 
 ImportanceDiffusionBase::~ImportanceDiffusionBase()
@@ -127,6 +130,54 @@ void ImportanceDiffusionBase::diffuseAtom(Handle source)
     AttentionValue::sti_t totalDiffusionAmount =
             calculateDiffusionAmount(source);
 
+#ifdef DEBUG
+    std::cout << "Total diffusion amount: " << totalDiffusionAmount << std::endl;
+#endif
+
+    /* ===================================================================== */
+
+    // If there is nothing to diffuse, finish
+    if (totalDiffusionAmount == 0)
+    {
+        return;
+    }
+
+    static bool isFirstRun = true;
+    // Filter out atoms listed in SPREADING_FILTER param so that no
+    // STI would be propagated to them.
+    if(isFirstRun){
+        Handle memberlink = _atq.get_param_hvalue(AttentionParamQuery::spreading_filter);
+        hsFilterOut = memberlink->getOutgoingSet();
+        isFirstRun = false;
+    }
+
+    // Redistribute sti values that should not go to types in hsFilterOut.
+    std::map<Handle, double> refund;
+    double remaining_sti = 0;
+    for(auto it = probabilityVector.begin() ; it !=probabilityVector.end() ; ++it){
+        std::vector<std::pair<Handle, double>> tempRefund;
+        auto r = redistribute(it->first, it->second, tempRefund);
+        if( r != 0){
+            remaining_sti += r;
+            continue;
+        }
+        // Now lets append the tempRefund map to refund map
+        for(const auto& p : tempRefund){
+           if(refund.find(p.first) == refund.end())
+               refund[p.first] = p.second;
+           else
+               refund[p.first] += (refund[p.first] + p.second);
+        }
+    }
+
+    // Divide STIs not distributed.
+    double per_atom = remaining_sti/ refund.size();
+    for(auto& p : refund)
+        p.second += per_atom;
+
+    // Finishe the redistribution by assigning new values to probabilityVector.
+    probabilityVector = refund;
+
 #ifdef LOG_AV_STAT
     // Log sti gain from spreading via  non-hebbian links
     for(const auto& kv : probabilityVectorIncident){
@@ -157,18 +208,6 @@ void ImportanceDiffusionBase::diffuseAtom(Handle source)
     atom_avstat[source].spreading += totalDiffusionAmount;
 #endif
 
-#ifdef DEBUG
-    std::cout << "Total diffusion amount: " << totalDiffusionAmount << std::endl;
-#endif
-
-    /* ===================================================================== */
-
-    // If there is nothing to diffuse, finish
-    if (totalDiffusionAmount == 0)
-    {
-        return;
-    }
-
     // Perform diffusion from the source to each atom target
     for( const auto& p : probabilityVector)
     {
@@ -177,7 +216,7 @@ void ImportanceDiffusionBase::diffuseAtom(Handle source)
         // Calculate the diffusion amount using the entry in the probability
         // vector for this particular target (stored in iterator->second)
         diffusionEvent.amount = (AttentionValue::sti_t)
-                (totalDiffusionAmount * p.second);
+            (totalDiffusionAmount * p.second);
 
         diffusionEvent.source = source;
         diffusionEvent.target = p.first;
@@ -196,6 +235,8 @@ void ImportanceDiffusionBase::diffuseAtom(Handle source)
 
     // TODO: Support inverse hebbian links
 }
+
+
 
 /*
  * Trades STI between a source atom and a target atom
@@ -289,6 +330,27 @@ HandleSeq ImportanceDiffusionBase::hebbianAdjacentAtoms(Handle h)
             get_target_neighbors(h, ASYMMETRIC_HEBBIAN_LINK);
 
     return resultSet;
+}
+
+void ImportanceDiffusionBase::removeHebbianLinks(HandleSeq& sources)
+{
+    auto it_end =
+        std::remove_if(sources.begin(), sources.end(),
+                [=](const Handle& h)
+                {
+                Type type = h->get_type();
+
+                if (type == ASYMMETRIC_HEBBIAN_LINK ||
+                    type == HEBBIAN_LINK ||
+                    type == SYMMETRIC_HEBBIAN_LINK ||
+                    type == INVERSE_HEBBIAN_LINK ||
+                    type == SYMMETRIC_INVERSE_HEBBIAN_LINK)
+                         return true;
+                else
+                         return false;
+                });
+
+    sources.erase(it_end, sources.end());
 }
 
 /*
@@ -502,4 +564,72 @@ void ImportanceDiffusionBase::processDiffusionStack()
 #endif
 
 }
+/**
+ * Redistributed amount of sti that should have gone to target atom if
+ * the atom type is in the Fitler set. The sti will be equally distributed
+ * to the incoming or outgoing set of target atom.
+ *
+ * @param target the atom whose to type is to be checked against the filter set.
+ *
+ * @sti   the sti that should be redistribited if the target's type is in Filter
+ * set.
+ *
+ * @refund a list of pairs of atoms and redistributed sti.
+ *
+ * @return 0 on successfull redistribution or @param sti on failure to do so.
+ *
+ */
+double ImportanceDiffusionBase::redistribute(const Handle& target, const double& sti,
+                                           std::vector<std::pair<Handle, double>>& refund){
+    static unsigned int NRECURSION = 1; // Prevent stack-overflowing. XXX how to determing maxdepth?
+    auto ij = std::find_if(hsFilterOut.begin(), hsFilterOut.end(),
+            [target](const Handle& h){
+            return (target->get_type() == nameserver().getType(h->get_name()));
+            });
+    double not_redistributed = 0;
+    if(ij != hsFilterOut.end()){
+        // If STI to be distributed is smaller that the af boundary or the
+        // recursion has reached maximum depth allowed, assign the sti to
+        // the valid atom type in refund vector or if the refund is empty,
+        // return the STI itself.
+        auto min_spreading_value = _bank->get_af_min_sti();
+        if(sti < min_spreading_value or NRECURSION > 100){
+            if(not refund.empty()){
+                refund[refund.size()-1].second += sti;
+                return 0;
+            } else{
+                return sti;
+            }
+        }
 
+        // Redistribute to all neighbors.
+        HandleSeq seq;
+        if(target->is_link())
+            seq = target->getOutgoingSet();
+
+        target->getIncomingSet(std::back_inserter(seq));
+
+        size_t spreaded_to = 0;
+        double r = sti/(double)seq.size();
+        for(const Handle& h : seq)
+        {
+            ++NRECURSION;
+            ++spreaded_to;
+            double rsti = redistribute(h, r, refund);
+            // Adjust sti per atom if sti isn't spread.
+            if( rsti > 0){
+                // If the last one failed. return amount.
+                if( spreaded_to == seq.size()){
+                    not_redistributed = rsti;
+                    break;
+                }
+                r += (rsti / ( seq.size() - spreaded_to));
+            }
+        }
+    }
+    else{
+        refund.push_back(std::make_pair(target, sti));
+    }
+
+    return not_redistributed;
+}

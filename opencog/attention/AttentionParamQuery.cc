@@ -1,5 +1,4 @@
 
-#include <opencog/atoms/proto/NameServer.h>
 #include <opencog/atomutils/Neighbors.h>
 #include <opencog/atoms/base/Link.h>
 #include <opencog/guile/SchemeEval.h>
@@ -59,8 +58,6 @@ const std::string AttentionParamQuery::rent_tournament_size = "RENT_TOURNAMENT_S
  */
 AttentionParamQuery::AttentionParamQuery(AtomSpace* as): _as(as)
 {
-    load_default_values();
-    
     parent_param = _as->add_node(CONCEPT_NODE, "ECAN_PARAMS");
 
     Handle var = _as->add_node(VARIABLE_NODE, "__ECAN_PARAM__");
@@ -72,6 +69,7 @@ AttentionParamQuery::AttentionParamQuery(AtomSpace* as): _as(as)
 std::string AttentionParamQuery::get_param_value(const std::string& param)
 {
     Handle hparam = _as->add_node(CONCEPT_NODE, param);
+    std::string value = "";
     // This should always return one atom.
     HandleSeq hsvalue = get_target_neighbors(hparam, STATE_LINK);
     if(hsvalue.empty()){

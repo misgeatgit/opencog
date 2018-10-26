@@ -22,7 +22,6 @@
 #include <opencog/util/Config.h>
 #include <opencog/util/algorithm.h>
 
-#include <opencog/atoms/proto/NameServer.h>
 #include <opencog/atoms/base/Link.h>
 #include <opencog/truthvalue/IndefiniteTruthValue.h>
 #include <opencog/truthvalue/SimpleTruthValue.h>
@@ -33,7 +32,6 @@
 #include <opencog/attentionbank/AttentionBank.h>
 #include <opencog/cogserver/server/CogServer.h>
 
-#include "AttentionUtils.h"
 #include "HebbianCreationAgent.h"
 
 #ifdef DEBUG
@@ -43,7 +41,7 @@
 using namespace opencog;
 
 HebbianCreationAgent::HebbianCreationAgent(CogServer& cs) :
-    Agent(cs), _atq(&cs.getAtomSpace()), maxLinkNum(0), localToFarLinks(0)
+    Agent(cs), _atq(&cs.getAtomSpace())
 {
     _bank = &attentionbank(_as);
 
@@ -74,15 +72,10 @@ void HebbianCreationAgent::run()
         return;
 
     // Retrieve the atoms in the AttentionalFocus
+    
     HandleSet attentionalFocus;
     _bank->get_handle_set_in_attentional_focus(std::inserter(attentionalFocus,attentionalFocus.begin()));
   
-    // Remove HebbianLinks. if AF is not full HebbianLinks might be inserted
-    // into AF when set_sti function is called.
-    HandleSeq attentionalF(attentionalFocus.begin(), attentionalFocus.end());
-    removeHebbianLinks(attentionalF);
-    attentionalFocus = HandleSet(attentionalF.begin(),attentionalF.end());
-
     // Exclude the source atom
     attentionalFocus.erase(source);
 

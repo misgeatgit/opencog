@@ -37,8 +37,6 @@
 
 #include "AttentionParamQuery.h"
 
-class ImportanceDiffusionUTest;
-
 namespace opencog
 {
 /** \addtogroup grp_attention
@@ -51,12 +49,16 @@ class AttentionBank;
 class ImportanceDiffusionBase : public Agent
 {
 protected:
-    friend class ::ImportanceDiffusionUTest;
     AttentionBank* _bank;
     double maxSpreadPercentage;
     double hebbianMaxAllocationPercentage;
     bool spreadHebbianOnly;
     AttentionParamQuery _atq;
+    // Set of atoms types spreading should not happen to.
+    // These types of atoms will not have STI value but
+    // atoms linked via them will receive STI via
+    // spreading.
+    HandleSeq hsFilterOut;
 
     typedef struct DiffusionEventType
     {
@@ -72,6 +74,7 @@ protected:
 
     HandleSeq incidentAtoms(Handle);
     HandleSeq hebbianAdjacentAtoms(Handle);
+    void      removeHebbianLinks(HandleSeq& hseq);
 
     std::map<Handle, double> probabilityVector(HandleSeq);
     std::map<Handle, double> probabilityVectorIncident(HandleSeq);
@@ -83,11 +86,16 @@ protected:
     double calculateIncidentDiffusionPercentage(Handle);
 
     void tradeSTI(DiffusionEventType);
+    void updateMaxSpreadPercentage();
 
     void diffuseAtom(Handle);
     virtual void spreadImportance() = 0;
     virtual AttentionValue::sti_t calculateDiffusionAmount(Handle) = 0;
 
+    // Recursively try to redistribute STI which was supposed to be delivered to
+    // certain atom types which should not receive STI.
+    double redistribute(const Handle& target, const double& sti, std::vector<std::pair<Handle,
+                      double>>& refund);
 public:
     ImportanceDiffusionBase(CogServer&);
     virtual ~ImportanceDiffusionBase();
