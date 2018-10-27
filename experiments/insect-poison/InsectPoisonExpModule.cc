@@ -74,7 +74,7 @@ std::string InsectPoisonExpModule::do_dump_af_stat(Request *req,
         std::list<std::string> args)
 {
 
-    std::vector<LoggerAgent::LogData>& logdata = _logger_agent->logdata;
+    std::vector<std::vector<LoggerAgent::LogData>>& logdata = _logger_agent->logdata;
     std::string file_name = args.front(); //get file name if provided.
 
     // case when dump-af-stat is called with no argument
@@ -93,26 +93,28 @@ std::string InsectPoisonExpModule::do_dump_af_stat(Request *req,
 
     outf  << "Atom(uuid)" << ", Atom(name)" << ", t1(H:m:s:ms)," <<" t2(H:m:s:ms)" <<" STI_1" <<", STI_2" <<", duration" <<", sti_diff"  << "\n";
 
-    for (auto p : logdata) {
-        Handle h = p.h;
-        outf << h.value() <<", ";
-        if (h->is_node()) {
-            outf << h->get_name();
-        } else {
-            //convert the link to one line
-            std::string str = h->to_short_string();
-            str.erase(std::remove(str.begin(), str.end(), '\n'), str.end());
-            outf <<  nameserver().getTypeName(h->get_type()) << "["
-                << "-" << "]";
-        }
+    for (auto vec : logdata) {
+        for (auto p : vec){
+            Handle h = p.h;
+            outf << h.value() <<", ";
+            if (h->is_node()) {
+                outf << h->get_name();
+            } else {
+                //convert the link to one line
+                std::string str = h->to_short_string();
+                str.erase(std::remove(str.begin(), str.end(), '\n'), str.end());
+                outf <<  nameserver().getTypeName(h->get_type()) << "["
+                    << "-" << "]";
+            }
 
-        outf << ", " << print_timept(p.t1)
-             << ", " << print_timept(p.t2)
-            << ", " << p.sti1
-            << ", " << p.sti2
-            << ", " << p.duration
-            << ", " << p.sti_change
-            << "\n ";
+            outf << ", " << print_timept(p.t1)
+                << ", " << print_timept(p.t2)
+                << ", " << p.sti1
+                << ", " << p.sti2
+                << ", " << p.duration
+                << ", " << p.sti_change
+                << "\n ";
+        }
     }
     outf.flush();
     outf.close();

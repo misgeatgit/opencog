@@ -32,7 +32,7 @@ LoggerAgent::LoggerAgent(CogServer& cs) : Agent(cs), _start(system_clock::now())
     //_bank->AddAFSignal().connect(std::bind(&LoggerAgent::atomAddedListener, this, _1));
 
     try {
-        af_duration_stat.reserve(MAX_SAMPLES); //allocate 50K sample holding space.
+        logdata.reserve(MAX_SAMPLES); //allocate 50K sample holding space.
     } catch (const std::exception& e) {
         std::cout << "Allocation Error: " << e.what() << '\n';
     }
@@ -55,37 +55,64 @@ void LoggerAgent::run(void)
     auto at_time = system_clock::now();
 
     std::vector<LogData> now;
-    for(auto h : afset) {
-       auto it = std::find_if(logdata.begin(), logdata.end(),[h](LogData& ld)
-                             {return ld.h == h;});
-       
-       AttentionValue::sti_t direct_sti = 0.0f;
-       if (_stimulus_rec->find(h) != _stimulus_rec->end())
-           direct_sti = (*_stimulus_rec)[h];
+    
+    
+    if(not logdata.empty()) {
+        std::vector<LogData>& topdata = logdata[logdata.size()-1];
+        for(auto h : afset) {
+            auto it = std::find_if(topdata.begin(), topdata.end(),[h](LogData& ld)
+                    {return ld.h == h;});
 
-       if(it != logdata.end()){
-           (*it).sti2 = get_sti(h);
-           (*it).direct_sti2 = direct_sti;
-           (*it).t2 = at_time;
-           duration<double> dr = (*it).t2 - (*it).t1;
-           (*it).duration = dr.count();
-           (*it).sti_change = (*it).sti2 - (*it).sti1;
-           (*it).direct_sti_change = (*it).direct_sti1 - (*it).direct_sti2;
-           // Add it to the newest list
-           now.push_back(*it);
-           // Remove it from the prev list.
-           logdata.erase(it);
-       } else {
-           LogData ld;
-           ld.h = h;
-           ld.sti1 = get_sti(h);
-           ld.direct_sti1 = direct_sti;
-           ld.t1 = at_time;
-           now.push_back(ld);
-       }
+            AttentionValue::sti_t direct_sti = 0.0f;
+            if (_stimulus_rec->find(h) != _stimulus_rec->end())
+                direct_sti = (*_stimulus_rec)[h];
+
+            if(it != topdata.end()){
+                (*it).sti2 = get_sti(h);
+                (*it).direct_sti2 = direct_sti;
+                (*it).t2 = at_time;
+                duration<double> dr = (*it).t2 - (*it).t1;
+                (*it).duration = dr.count();
+                (*it).sti_change = (*it).sti2 - (*it).sti1;
+                (*it).direct_sti_change = (*it).direct_sti1 - (*it).direct_sti2;
+                // Add it to the newest list
+                now.push_back(*it);
+                // Remove it from the prev list.
+                topdata.erase(it);
+            } else {
+                LogData ld;
+                ld.h = h;
+                ld.sti1 = get_sti(h);
+                ld.direct_sti1 = direct_sti;
+                ld.t1 = at_time;
+                ld.t2 = at_time;
+                duration<double> dr = ld.t2 - ld.t1;
+                ld.duration = dr.count();
+                now.push_back(ld);
+            }
+        }
+        // First time.
+    } else {
+        for(auto h : afset) {
+            AttentionValue::sti_t direct_sti = 0.0f;
+            if (_stimulus_rec->find(h) != _stimulus_rec->end())
+                direct_sti = (*_stimulus_rec)[h];
+
+            LogData ld;
+            ld.h = h;
+            ld.sti1 = get_sti(h);
+            ld.direct_sti1 = direct_sti;
+            ld.t1 = at_time;
+            ld.t2 = at_time;
+            duration<double> dr = ld.t2 - ld.t1;
+            ld.duration = dr.count();
+            now.push_back(ld);
+        }
     }
-   
-   // merge the previous and latest as the newest logdata.
-   logdata.insert(logdata.end(), now.begin(), now.end());
+
+    // merge the previous and latest as the newest topdata.
+    //topdata.insert(topdata.end(), now.begin(), now.end());
+    //logdata.pop();
+    logdata.push_back(now);
 }
 
