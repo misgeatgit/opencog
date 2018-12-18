@@ -560,7 +560,7 @@ double ImportanceDiffusionBase::redistribute(const Handle& target, const double&
     static unsigned int NRECURSION = 1; // Prevent stack-overflowing. XXX how to determing maxdepth?
     auto ij = std::find_if(hsFilterOut.begin(), hsFilterOut.end(),
             [target](const Handle& h){
-            return (target->get_type() == classserver().getType(h->get_name()));
+            return (target->get_type() == nameserver().getType(h->get_name()));
             });
     double not_redistributed = 0;
     if(ij != hsFilterOut.end()){
