@@ -674,7 +674,6 @@
   (cog-execute! (Put (DefinedSchema "sing") (List)))
 )
 
-<<<<<<< 10c1ac40444ad7b831bcffc3afb6127aca197c05
 ; --------------------------------------------------------------
 (define-syntax define-emotion-parameter (lambda (x)
   "define-emotion-parameter EMO-PARAM
@@ -773,7 +772,3 @@
     (Number (* 20 (log10 (- 1.0 (/ percent-num 100)))))
   )
 )
-=======
-
-
->>>>>>> Update the sing schema
