@@ -37,7 +37,6 @@
 (add-to-ltdl-path (string-append (getcwd) "/opencog/nlp/types"))
 (add-to-ltdl-path (string-append (getcwd) "/opencog/spacetime"))
 (add-to-ltdl-path (string-append (getcwd) "/opencog/attention"))
-(add-to-ltdl-path (string-append (getcwd) "/opencog/embodiment"))
 
 ; Scheme wrappers for c++ code
 (add-to-ltdl-path (string-append (getcwd) "/opencog/nlp/fuzzy"))
@@ -57,13 +56,6 @@
 ; --------------------------------------------------------------
 ; Default OpenCog modules loaded
 ; --------------------------------------------------------------
-; TODO: some of the modules loaded by SCM_PRELOAD in opencog.conf can be
-; removed and imported using (use-modules), so
-; 1. Figure out which one this are and remove them and replace them with an
-;    import in this file
-; 2. Make sure this works when cogserver is installed
-; 3. Document the steps needed when installing atomspace/cogutils/opencog
-;    in non-standard locations.
 
 ; Load core-types and other utility functions.
 ; NOTE: Must be loaded first to avoid error likes

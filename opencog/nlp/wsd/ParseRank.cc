@@ -15,8 +15,8 @@
 
 #include <opencog/util/platform.h>
 #include <opencog/atoms/base/Node.h>
-#include <opencog/truthvalue/CountTruthValue.h>
-#include <opencog/truthvalue/TruthValue.h>
+#include <opencog/atoms/truthvalue/CountTruthValue.h>
+#include <opencog/atoms/truthvalue/TruthValue.h>
 #include <opencog/nlp/wsd/ForeachWord.h>
 
 using namespace opencog;
@@ -50,7 +50,7 @@ Handle ParseRank::get_top_ranked_parse(const Handle& h)
  */
 bool ParseRank::lookat_parse(const Handle& h)
 {
-	double rank = h->getTruthValue()->getConfidence();
+	double rank = h->getTruthValue()->get_confidence();
 #ifdef DEBUG
 	printf("; ParseRank::lookat_parse parse=%lx rank=%f\n", (unsigned long) h, rank);
 #endif

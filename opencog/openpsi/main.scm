@@ -1,143 +1,187 @@
+;
+; main.scm
+;
+; Defines the method to single-step the rule engine, and the main loop
+; to call it.
+;
 ; Copyright (C) 2015-2016 OpenCog Foundation
-
-(use-modules (srfi srfi-1)) ; For `append-map`
-
-(use-modules (opencog) (opencog exec) (opencog query) (opencog rule-engine))
-
-(load "action-selector.scm")
-(load "demand.scm")
-(load "modulator.scm")
-(load "rule.scm")
-(load "utilities.scm")
-
+; Copyright (C) 2017 MindCloud
 
 ; --------------------------------------------------------------
-; Variable for controlling whether to keep on running the loop or not.
-(define psi-do-run-loop #f)
+; Configure openpsi logger
+(define opl (cog-new-logger))
+(cog-logger-set-component! opl "OpenPsi")
+(cog-logger-set-level! opl "info")
+(cog-logger-set-stdout! opl #f)
 
-; --------------------------------------------------------------
-(define-public (psi-running?)
+(define (psi-get-logger)
 "
-  Return #t if the openpsi loop is running, else return #f.
+  psi-get-logger
+
+  Returns the looger for openpsi.
 "
-    psi-do-run-loop
+  opl
 )
 
 ; --------------------------------------------------------------
-(define psi-loop-count 0)
-
-(define-public (psi-get-loop-count)
-"
-  Returns how many times psi-step have been executed.
-"
-    psi-loop-count
-)
+; Define the component category. Components are like mind-agents
+; but there activities are defined using openpsi-rules and action-selectors
+; associated with it.
+(define psi-component-node (ConceptNode "component"))
+(psi-add-category psi-component-node)
 
 ; --------------------------------------------------------------
-(define-public (psi-run-continue?)  ; public only because its in a GPN
+(define* (psi-component name #:optional step)
 "
-  Function used for checking whether the thread that is executing the
-  psi-loop should continue doing so.
+  psi-component NAME STEP
+    Create and return a ConceptNode that represents an OpenPsi engine driven
+    component called NAME. It associates an action-selector, and a psi-step
+    loop. If evaluatable atom, STEP, that encodes what needs to be
+    done during each loop, is passed then the loop will evaluate STEP during
+    each cycle. If STEP is not passed then the loop will use psi-step.
 "
-    (set! psi-loop-count (+ psi-loop-count 1))
+  ; NOTE: All the values associated with the component can easily be
+  ; moved into the atomspace.
+  (let ((component (ConceptNode name))
+    (loop-node (DefinedPredicate (string-append name "-loop")))
+    )
+    (InheritanceLink component psi-component-node)
 
-    ; Pause for 101 millisecs, to keep the number of loops
-    ; within a reasonable range.
-    (usleep 101000)
-    (if psi-do-run-loop (stv 1 1) (stv 0 1))
-)
-
-; ----------------------------------------------------------------------
-(define-public (psi-step)
-"
-  The main function that defines the steps to be taken in every cycle.
-"
-; TODO: Add reinforcement signal in psi-step
-; 1. Record which rule-was selected per demand on the previous run.
-; 2. Update the rule strength depndeing on the reinforcement signal.
-; 3. Define the representation for the reinforcement signal.
-    (define (get-context-grounding-atoms rule)
-        #!
-        (let* ((pattern (GetLink (AndLink (psi-get-context rule))))
-                ;FIXME: Cache `results` during `psi-select-rules` stage
-               (results (cog-execute! pattern)))
-            (cog-delete pattern)
-            ; If it is only links then nothing to pass to an action.
-            (if (null? (cog-get-all-nodes results))
-                '()
-                results
-            )))!#
-            '())
-
-
-    (define (act-and-evaluate rule)
-        ;NOTE: This is the job of the action-orchestrator.
-        (let* ((action (psi-get-action rule))
-               (goals (psi-related-goals action))
-               (context-atoms (get-context-grounding-atoms rule)))
-
-            (if (null? context-atoms)
-                (cog-execute! action)
-                (cog-execute! (PutLink action context-atoms))
-            )
-            (map cog-evaluate! goals)
-        ))
-
-
-    (map
-        (lambda (d)
-            (let ((updater (psi-get-updater d)))
-                ; Run the updater for the demand.
-                (if (not (null? updater))
-                    (cog-evaluate! updater)
-                )
-                ; The assumption is that the rules can be run concurrently.
-                ; FIXME: Once action-orchestrator is available then a modified
-                ; `psi-select-rules` should be used insted of
-                ; `psi-select-rules-per-demand`
-                (map act-and-evaluate (psi-select-rules-per-demand d))
-            ))
-
-        (psi-get-all-valid-demands)
+    ; Assign a default action-selector
+    (psi-set-action-selector! component
+      (ExecutionOutput
+        (GroundedSchema "scm: psi-get-satisfiable-rules")
+        (List component))
     )
 
-    (stv 1 1) ; For continuing psi-run loop.
+    ; Add a value for controlling whether to keep on running the loop or not.
+    (cog-set-value! component (Predicate "run-loop") (StringValue "#f"))
+
+    ; Add a value for counting the number of times the psi-step has
+    ; been executed
+    (cog-set-value! component (Predicate "loop-count") (FloatValue 0))
+
+    ; Define the loop that would be run. This is stored as value so as
+    ; to save on searching for it in the atomspace and make it accessible
+    ; through any programming language.
+    (Define
+      loop-node
+      (Satisfaction
+        (SequentialAnd
+          (if step
+            step
+            (Evaluation
+              (GroundedPredicate "scm: psi-step")
+              (List component)))
+          (Evaluation
+            (GroundedPredicate "scm: psi-run-continue?")
+            (List component))
+          ; tail-recursive call
+          loop-node)))
+
+    (cog-set-value! component (Predicate "loop") loop-node)
+    component
+  )
 )
 
 ; --------------------------------------------------------------
-(define-public (psi-run)
+;
+; XXX FIXME -- right now, this assumes that a single thread, running
+; at no more than 100 steps per second, is sufficient to run all of the
+; psi rules.  For now, this is OK, but at some point, this will become
+; a bottleneck, as we will need to evaluate more rules more often.
+;
+(define (psi-run component)
 "
-  Run `psi-step` in a new thread. Call (psi-halt) to exit the loop.
+  psi-run COMPONENT
+
+  Create a new thread, and repeatedly invoke `psi-step` in it.
+  This thread can be halted by calling `(psi-halt COMPONENT)`, which will exit
+  the loop, and kill the thread.
 "
-    (define loop-name (string-append psi-prefix-str "loop"))
-    (define loop-node (DefinedPredicateNode loop-name))
-    (define (define-psi-loop)
-        (DefineLink
-            loop-node
-            (SatisfactionLink
-                (SequentialAnd
-                    (Evaluation
-                        (GroundedPredicate "scm: psi-step")
-                        (ListLink))
-                    (Evaluation
-                        (GroundedPredicate "scm: psi-run-continue?")
-                        (ListLink))
-                    ; tail-recursive call
-                    loop-node))))
+  (if (not (psi-running? component))
+    (begin
+      (cog-set-value! component (Predicate "run-loop") (StringValue "#t"))
+      (call-with-new-thread
+        (lambda () (cog-evaluate! (cog-value component (Predicate "loop"))))))
+  )
+)
 
-    (if (or (null? (cog-node 'DefinedPredicateNode loop-name))
-            (null? (cog-chase-link 'DefineLink 'SatisfactionLink loop-node)))
-        (define-psi-loop))
+; --------------------------------------------------------------
+(define (psi-running? component)
+"
+  psi-running? COMPONENT
 
-    (set! psi-do-run-loop #t)
-    (call-with-new-thread
-        (lambda () (cog-evaluate! loop-node)))
+  Return #t if the openpsi loop of COMPONENT is running, else return #f.
+"
+  (equal? "#t"
+    (cog-value-ref (cog-value component (Predicate "run-loop")) 0))
+)
+
+; --------------------------------------------------------------
+(define (psi-run-continue? component)  ; public because its in a GPN
+"
+  psi-run-continue? COMPONENT
+
+  Return TRUE_TV if the psi loop of COMPONENT should continue running,
+  else returns FALSE_TV.
+"
+    ; Pause for 10 millisecs, so that the psi engine doesn't hog
+    ; all CPU. FIXME -- this is obviously a hack, awaiting some sort
+    ; of better way of scehduling psi rules.
+    (usleep 10000)
+    (if (psi-running? component) (stv 1 1) (stv 0 1))
 )
 
 ; -------------------------------------------------------------
-(define-public (psi-halt)
+(define (psi-halt component)
 "
-  Tells the psi loop thread, that is started by running `(psi-run)`, to exit.
+  psi-halt COMPONENT
+
+  Halts COMPONENT's previously-started psi loop thread. The thread is
+  started by calling `(psi-run COMPONENT)`.
 "
-    (set! psi-do-run-loop #f)
+  (cog-set-value! component (Predicate "run-loop") (StringValue "#f"))
+)
+
+; --------------------------------------------------------------
+(define (psi-loop-count component)
+"
+  psi-loop-count COMPONENT
+
+  Returns the number of times that psi-step has been executed.
+"
+  (cog-value-ref (cog-value component (Predicate "loop-count")) 0)
+)
+
+; ----------------------------------------------------------------------
+(define (psi-step component)
+"
+  psi-step COMPONENT
+
+  Take one step of the OpenPsi rule engine COMPONENT.
+  Returns TRUE_TV, always.
+"
+  (define (psi-act rule)
+    ; The rules passed in are result from the action-selector associated
+    ; with the component. This is here only for logging.
+    (cog-logger-debug opl "In component ~a starting evaluation of ~a"
+      component rule)
+    (psi-imply rule)
+    (cog-logger-debug opl "In component ~a finished evaluation of ~a"
+      component rule))
+
+  (let ((lc (psi-loop-count component)))
+    (cog-set-value! component (Predicate "loop-count") (FloatValue (+ lc 1)))
+
+    (cog-logger-debug opl
+      "In component ~a taking one psi-step, loop-count = ~a" component lc)
+
+    ; Do action-selection and action-execution.
+    (par-map psi-act (psi-select-rules component))
+
+    (cog-logger-debug opl
+      "In component ~a ending psi-step, loop-count = ~a" component lc)
+    (stv 1 1) ; For continuing psi-run loop.
+  )
 )

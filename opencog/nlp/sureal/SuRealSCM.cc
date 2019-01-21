@@ -99,14 +99,13 @@ void SuRealSCM::init()
 static void get_all_unique_nodes(const Handle& h,
                                  UnorderedHandleSet& node_set)
 {
-   LinkPtr lll(LinkCast(h));
-   if (nullptr == lll)
+   if (h->is_node())
    {
       node_set.insert(h);
       return;
    }
 
-   for (const Handle& o : lll->getOutgoingSet())
+   for (const Handle& o : h->getOutgoingSet())
       get_all_unique_nodes(o, node_set);
 }
 
@@ -114,10 +113,9 @@ static void get_all_unique_nodes(const Handle& h,
  * Implement the "reset-sureal-cache" scheme primitive.
  *
  */
-HandleSeqSeq SuRealSCM::reset_cache(Handle dummy)
+void SuRealSCM::reset_cache(void)
 {
     SuRealCache::instance().reset();
-    return HandleSeqSeq();
 }
 
 /**
@@ -153,19 +151,19 @@ HandleSeqSeq SuRealSCM::do_sureal_match(Handle h, bool use_cache)
 {
 #ifdef HAVE_GUILE
     // only accept SetLink
-    if (h->getType() != SET_LINK)
+    if (h->get_type() != SET_LINK)
         return HandleSeqSeq();
 
     AtomSpace* pAS = SchemeSmob::ss_get_env_as("sureal-match");
 
-    OrderedHandleSet sVars;
+    HandleSet sVars;
 
     // Extract the graph under the SetLink; this is done so that the content
     // of the SetLink could be matched to another SetLink with differnet arity.
     // It is possible to keep the clauses in a SetLink and override the PM's
     // link_match() callback to skip SetLink's arity check , but that would
     // be assuming R2L will never use SetLink for other purposes.
-    const HandleSeq& qClauses = LinkCast(h)->getOutgoingSet();
+    const HandleSeq& qClauses = h->getOutgoingSet();
 
     // get all the nodes to be treated as variable in the Pattern Matcher
     // XXX perhaps it's better to write a eval_q in SchemeEval to convert
@@ -181,7 +179,7 @@ HandleSeqSeq SuRealSCM::do_sureal_match(Handle h, bool use_cache)
         // them as variables;  this is because we have
         //    (InterpreationNode "MicroplanningNewSentence")
         // from the microplanner that should be matched to any InterpretationNode
-        if (n->getType() == INTERPRETATION_NODE || n->getType() == VARIABLE_NODE)
+        if (n->get_type() == INTERPRETATION_NODE || n->get_type() == VARIABLE_NODE)
         {
             sVars.insert(n);
             continue;
@@ -190,20 +188,40 @@ HandleSeqSeq SuRealSCM::do_sureal_match(Handle h, bool use_cache)
         // special treatment for DefinedLinguisticConceptNode and
         // DefinedLinguisticPredicateNode, do not treat them as variables
         // because they are not actual words of a sentence.
-        if (n->getType() == DEFINED_LINGUISTIC_CONCEPT_NODE or
-            n->getType() == DEFINED_LINGUISTIC_PREDICATE_NODE)
+        if (n->get_type() == DEFINED_LINGUISTIC_CONCEPT_NODE or
+            n->get_type() == DEFINED_LINGUISTIC_PREDICATE_NODE)
            continue;
 
-        std::string sName = NodeCast(n)->getName();
-        std::string sWord = sName.substr(0, sName.find_first_of('@'));
-        Handle hWordNode = pAS->get_handle(WORD_NODE, sWord);
+        std::string sName = n->get_name();
 
+        // if it is an instance, check if it has the LG relationships
+        if (sName.find("@") != std::string::npos)
+        {
+            Handle hWordInstNode = pAS->get_handle(WORD_INSTANCE_NODE, sName);
+
+            // no corresponding WordInstanceNode found
+            if (hWordInstNode == nullptr)
+                continue;
+
+            // if no LG link generated for the instance
+            if (get_target_neighbors(hWordInstNode, LG_WORD_CSET).empty())
+                continue;
+        } 
+        // n is a concept or predicate node
+        Handle hWordNode;
+        HandleSeq neighbor_win = get_target_neighbors(n, REFERENCE_LINK);
+        if (neighbor_win.size() != 0)
+        {
+            HandleSeq neighbor_wn = get_target_neighbors(neighbor_win[0], REFERENCE_LINK);
+            hWordNode = neighbor_wn[0];
+        }
+        else
+        {
+            std::string sWord = sName.substr(0, sName.find_first_of('@'));
+            hWordNode = pAS->get_handle(WORD_NODE, sWord);
+        }
         // no WordNode found
-        if (hWordNode == Handle::UNDEFINED)
-            continue;
-
-        // if no LG dictionary entry
-        if (get_target_neighbors(hWordNode, LG_DISJUNCT).empty())
+        if (hWordNode == nullptr)
             continue;
 
         sVars.insert(n);
@@ -249,12 +267,12 @@ HandleSeqSeq SuRealSCM::do_sureal_match(Handle h, bool use_cache)
         // get the corresponding SetLink
         HandleSeq qi = get_target_neighbors(hi, REFERENCE_LINK);
         HandleSeq qj = get_target_neighbors(hj, REFERENCE_LINK);
-        qi.erase(std::remove_if(qi.begin(), qi.end(), [](Handle& h) { return h->getType() != SET_LINK; }), qi.end());
-        qj.erase(std::remove_if(qj.begin(), qj.end(), [](Handle& h) { return h->getType() != SET_LINK; }), qj.end());
+        qi.erase(std::remove_if(qi.begin(), qi.end(), [](Handle& h) { return h->get_type() != SET_LINK; }), qi.end());
+        qj.erase(std::remove_if(qj.begin(), qj.end(), [](Handle& h) { return h->get_type() != SET_LINK; }), qj.end());
 
         // assuming each InterpretationNode is only linked to one SetLink
         // and compare using arity
-        return LinkCast(qi[0])->getArity() < LinkCast(qj[0])->getArity();
+        return qi[0]->get_arity() < qj[0]->get_arity();
     };
 
     std::sort(keys.begin(), keys.end(), itprComp);
@@ -299,9 +317,9 @@ HandleSeqSeq SuRealSCM::do_sureal_match(Handle h, bool use_cache)
  * @param mappings   the node-to-node mapping
  * @return           a list-of-list of the above structure
  */
-HandleSeqSeq SuRealSCM::sureal_get_mapping(Handle& h, std::vector<std::map<Handle, Handle> >& mappings)
+HandleSeqSeq SuRealSCM::sureal_get_mapping(Handle& h, std::vector<HandleMap >& mappings)
 {
-    logger().debug("[SuReal] %d mapping(s) for %s", mappings.size(), h->toShortString().c_str());
+    logger().debug("[SuReal] %d mapping(s) for %s", mappings.size(), h->to_short_string().c_str());
 
     HandleSeq qKeys, qVars;
 
@@ -318,7 +336,7 @@ HandleSeqSeq SuRealSCM::sureal_get_mapping(Handle& h, std::vector<std::map<Handl
     // if there are more than one mapping, loop thru them
     for (unsigned i = 1; i < mappings.size(); ++i)
     {
-        std::map<Handle, Handle>& mapping = mappings[i];
+        HandleMap& mapping = mappings[i];
 
         qVars.clear();
 

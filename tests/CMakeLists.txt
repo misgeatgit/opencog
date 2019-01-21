@@ -2,22 +2,22 @@ ENABLE_TESTING()
 INCLUDE(AddCxxtest)
 
 IF (WIN32)
-	ADD_DEFINITIONS(-D_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES
-	                -D_CRT_SECURE_NO_WARNINGS)
+    ADD_DEFINITIONS(-D_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES
+                    -D_CRT_SECURE_NO_WARNINGS)
 ENDIF (WIN32)
 
-ADD_DEFINITIONS(-DPROJECT_SOURCE_DIR=\\"${CMAKE_SOURCE_DIR}\\"
-                -DPROJECT_BINARY_DIR=\\"${CMAKE_BINARY_DIR}\\")
+ADD_DEFINITIONS(-DPROJECT_SOURCE_DIR="${CMAKE_SOURCE_DIR}"
+                -DPROJECT_BINARY_DIR="${CMAKE_BINARY_DIR}")
 
 # The atom_types.h file is written to the build directory
 INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR})
 
 # Perform tests in component-dependency order, as much as possible.
-# For example, since most things depends on the atomspace,
-# its is tested first.
 IF (CXXTEST_FOUND)
 
 	IF (HAVE_ATOMSPACE)
+		ADD_SUBDIRECTORY (attention)
+
 		# Persistence is for saving/restoring atomspace to disk.
 		ADD_SUBDIRECTORY (persist)
 
@@ -28,15 +28,11 @@ IF (CXXTEST_FOUND)
 
 		IF (HAVE_OCTOMAP)
 			ADD_SUBDIRECTORY (spacetime)
-			ADD_SUBDIRECTORY (spatial)
-			ADD_SUBDIRECTORY (timeoctomap)
 		ENDIF (HAVE_OCTOMAP)
 
 		ADD_SUBDIRECTORY (nlp)
 
 		ADD_SUBDIRECTORY (pln)
-
-		ADD_SUBDIRECTORY (pln_old)
 
 		ADD_SUBDIRECTORY (openpsi)
 
@@ -47,10 +43,10 @@ IF (CXXTEST_FOUND)
 		ADD_SUBDIRECTORY (python)
 	ENDIF (HAVE_CYTHON AND PYTHONINTERP_FOUND)
 
-	IF (HAVE_ATTENTION)
-		ADD_SUBDIRECTORY (dynamics)
-	ENDIF (HAVE_ATTENTION)
-
 	ADD_SUBDIRECTORY (learning)
 
 ENDIF (CXXTEST_FOUND)
+
+IF (HAVE_GUILE)
+	ADD_SUBDIRECTORY(ghost)
+ENDIF()

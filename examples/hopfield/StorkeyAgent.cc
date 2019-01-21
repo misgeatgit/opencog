@@ -26,8 +26,8 @@
 
 #include <opencog/atomspace/AtomSpace.h>
 #include <opencog/atoms/base/Link.h>
-#include <opencog/truthvalue/IndefiniteTruthValue.h>
-#include <opencog/truthvalue/SimpleTruthValue.h>
+#include <opencog/atoms/truthvalue/IndefiniteTruthValue.h>
+#include <opencog/atoms/truthvalue/SimpleTruthValue.h>
 #include <opencog/cogserver/server/CogServer.h>
 #include <opencog/util/Config.h>
 #include <opencog/util/Logger.h>
@@ -43,7 +43,7 @@ using namespace std;
 
 StorkeyAgent::StorkeyAgent(CogServer& cs) : Agent(cs)
 {
-    static const std::string defaultConfig[] = {
+    static const std::vector<std::string> defaultConfig = {
         "ECAN_CONVERT_LINKS","false",
         "",""
     };

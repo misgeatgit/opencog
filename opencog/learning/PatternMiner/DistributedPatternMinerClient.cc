@@ -26,7 +26,6 @@
 #include <opencog/cogserver/server/CogServer.h>
 #include <opencog/cogserver/server/Factory.h>
 #include <opencog/util/Logger.h>
-#include <opencog/guile/load-file.h>
 
 using namespace opencog;
 
@@ -40,13 +39,13 @@ DistributedPatternMinerClientModule::DistributedPatternMinerClientModule(CogServ
 
 DistributedPatternMinerClientModule::~DistributedPatternMinerClientModule()
 {
-    logger().info("[TestPatternMinerModule] destructor");
+    logger().info("[PatternMinerModule] destructor");
     _cogserver.stopAllAgents(DistributedPatternMinerClient::info().id);
 }
 
 void DistributedPatternMinerClientModule::init()
-{   
-    logger().info("[TestPatternMinerModule] init");
+{
+    logger().info("[PatternMinerModule] init");
     _cogserver.registerAgent(DistributedPatternMinerClient::info().id, &factory);
     _cogserver.createAgent(DistributedPatternMinerClient::info().id, true);
 }
@@ -64,18 +63,15 @@ DistributedPatternMinerClient::DistributedPatternMinerClient(CogServer& cs) : Ag
 //                        "pm_test_corpus.scm"
 //                      );
 
-    this->patternMiner = new PatternMiner(&(cs.getAtomSpace()));
+    this->patternMiner = new DistributedPatternMiner(cs.getAtomSpace());
 
     logger().info("[DistributedPatternMinerClient] constructor");
-
 }
 
 DistributedPatternMinerClient::~DistributedPatternMinerClient()
 {
     logger().info("[DistributedPatternMinerClient] destructor");
 }
-
-
 
 void DistributedPatternMinerClient::run()
 {
@@ -84,9 +80,7 @@ void DistributedPatternMinerClient::run()
     if (hasRun)
         return;
 
-
     this->patternMiner->launchADistributedWorker();
 
     hasRun = true;
-
 }

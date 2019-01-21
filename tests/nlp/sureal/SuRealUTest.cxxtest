@@ -26,13 +26,15 @@
 #include <opencog/util/Logger.h>
 #include <opencog/guile/SchemeEval.h>
 #include <opencog/guile/SchemeSmob.h>
-#include <opencog/cogserver/server/CogServer.h>
+#include <opencog/atomspace/AtomSpace.h>
+#include <opencog/nlp/sureal/SuRealCache.h>
 
 using namespace opencog;
 
 class SuRealUTest :  public CxxTest::TestSuite
 {
 private:
+    AtomSpace* _as;
     SchemeEval* _evaluator;
 
 public:
@@ -47,9 +49,29 @@ public:
         {
             std::cerr << e.get_message() << std::endl;
         }
-        logger().set_filename(config()["LOG_FILE"]);
-        logger().set_level(Logger::get_level_from_string(config()["LOG_LEVEL"]));
-        logger().set_print_to_stdout_flag(config().get_bool("LOG_TO_STDOUT"));
+
+        // XXX FIXME This unit test fails, if multiple atomspaces
+        // are used, instead of re-using the same atomspace (and
+        // clearing it.) Something is majorly wrong with this, but
+        // I can't figure it out...
+        _as = new AtomSpace();
+
+        _evaluator = new SchemeEval(_as);
+
+        // need this for loading LG dictionary
+        _evaluator->eval("(setlocale LC_CTYPE \"\")");
+        _evaluator->clear_pending();
+
+        _evaluator->eval("(use-modules (opencog))");
+        _evaluator->eval("(use-modules (opencog nlp))");
+        _evaluator->eval("(use-modules (opencog nlp lg-dict))");
+        // MUST load spacetime types, before loading relex2logic,
+        // else the libspacetime-types.so won't be found.
+        // _evaluator->eval("(use-modules (opencog spacetime))");
+
+        _evaluator->eval("(use-modules (opencog nlp relex2logic))");
+        _evaluator->eval("(use-modules (opencog nlp sureal))");
+        _evaluator->clear_pending();
     }
 
     ~SuRealUTest()
@@ -73,50 +95,28 @@ public:
 
 void SuRealUTest::setUp(void)
 {
-    server(CogServer::createInstance);
-    cogserver().getAtomSpace().clear();
-
-    _evaluator = new SchemeEval(&cogserver().getAtomSpace());
-
-    // need this for loading LG dictionary
-    _evaluator->eval("(setlocale LC_CTYPE \"\")");
-    _evaluator->clear_pending();
-
-    _evaluator->eval("(use-modules (opencog))");
-    _evaluator->eval("(add-to-load-path \"" PROJECT_BINARY_DIR "/opencog/\")");
-    _evaluator->eval("(add-to-load-path \"" PROJECT_BINARY_DIR "/opencog/scm\")");
-
-    // Bunch of fucked up library path because circle-jenkins-fucking-ci
-    // is too brain-de-fucking-dead to be able to run unit tests
-    // correctly.  Its a piece of bro-fucking-ken technology.
-    _evaluator->eval("(setenv \"LTDL_LIBRARY_PATH\" "
-		"\"/usr/local/lib/opencog:/usr/local/lib/opencog/modules:"
-		PROJECT_BINARY_DIR "/opencog/spacetime:"
-		PROJECT_BINARY_DIR "/opencog/attention:"
-		PROJECT_BINARY_DIR "/opencog/embodiment"
-		"\")");
-
-    _evaluator->eval("(use-modules (opencog atom-types))");
-    _evaluator->eval("(use-modules (opencog nlp))");
-    _evaluator->eval("(use-modules (opencog nlp lg-dict))");
-    _evaluator->eval("(use-modules (opencog nlp relex2logic))");
-    _evaluator->eval("(use-modules (opencog nlp sureal))");
-    _evaluator->clear_pending();
+    // XXX Do not create an atomspace here, see comments above.
+    //_as = new AtomSpace();
 }
 
 void SuRealUTest::tearDown(void)
 {
-    delete _evaluator;
-    _evaluator = NULL;
+    // delete _evaluator;
+    // _evaluator = NULL;
+
+    // SuReal keeps a cache of atoms!  Aiiieee This needs fixing!!!
+    nlp::SuRealCache::instance().reset();
+    _as->clear();
+    // XXX Deleting the _as causes weird malloc pool corruption!
+    // delete _as;
 }
 
 void SuRealUTest::test_basic(void)
 {
     logger().debug("BEGIN TEST: %s", __FUNCTION__);
 
-    config().set("SCM_PRELOAD",
-                 "tests/nlp/sureal/r2l-atomspace1.scm");
-    cogserver().loadSCMModules();
+    _evaluator->eval("(load  \"" PROJECT_SOURCE_DIR
+                 "/tests/nlp/sureal/r2l-atomspace1.scm\")");
 
     // Sentences in r2l-atomspace1.scm
     // - He runs.
@@ -126,8 +126,9 @@ void SuRealUTest::test_basic(void)
     _evaluator->eval_h(R"( (WordNode "eats") )");
 
     // test sureal with short sentence
-    _evaluator->eval(R"( (define s-result (sureal (SetLink (EvaluationLink (PredicateNode "eats") (ListLink (ConceptNode "she")))))) )");
+    std::string rv = _evaluator->eval(R"( (define s-result (sureal (SetLink (EvaluationLink (PredicateNode "eats") (ListLink (ConceptNode "she")))))) )");
     bool eval_err = _evaluator->eval_error();
+    if (eval_err) printf("got %s\n", rv.c_str());
     _evaluator->clear_pending();
     TSM_ASSERT("Failed to run sureal!", !eval_err);
 
@@ -141,9 +142,8 @@ void SuRealUTest::test_complex(void)
 {
     logger().debug("BEGIN TEST: %s", __FUNCTION__);
 
-    config().set("SCM_PRELOAD",
-                 "tests/nlp/sureal/r2l-atomspace3.scm");
-    cogserver().loadSCMModules();
+    _evaluator->eval("(load  \"" PROJECT_SOURCE_DIR
+                 "/tests/nlp/sureal/r2l-atomspace3.scm\")");
 
     // Sentences in r2l-atomspace3.scm
     // - The yellow dog hates the cat.
@@ -161,7 +161,10 @@ void SuRealUTest::test_complex(void)
                          (ListLink (ConceptNode "cat") (ConceptNode "dog")))
                         (InheritanceLink (ConceptNode "cat") (ConceptNode "green")))))
                      )");
+    std::string sent = _evaluator->eval(R"( s-result  )");
+    printf("got %s\n", sent.c_str());
     std::string result = _evaluator->eval(R"( (equal? s-result (list (list "the" "green" "cat" "loves" "the" "dog" "."))) )");
+    printf("equality?  %s\n", result.c_str());
     TSM_ASSERT("Failed to sureal complex sentence!", result == "#t\n");
 
     logger().debug("END TEST: %s", __FUNCTION__);
@@ -171,9 +174,8 @@ void SuRealUTest::test_disconnected(void)
 {
     logger().debug("BEGIN TEST: %s", __FUNCTION__);
 
-    config().set("SCM_PRELOAD",
-                 "tests/nlp/sureal/r2l-atomspace4.scm");
-    cogserver().loadSCMModules();
+    _evaluator->eval("(load  \"" PROJECT_SOURCE_DIR
+                 "/tests/nlp/sureal/r2l-atomspace4.scm\")");
 
     // Sentences in r2l-atomspace4.scm
     // - He walked slowly and she ran quickly.
@@ -217,9 +219,8 @@ void SuRealUTest::test_multiconn(void)
 {
     logger().debug("BEGIN TEST: %s", __FUNCTION__);
 
-    config().set("SCM_PRELOAD",
-                 "tests/nlp/sureal/r2l-atomspace5.scm");
-    cogserver().loadSCMModules();
+    _evaluator->eval("(load  \"" PROJECT_SOURCE_DIR
+                 "/tests/nlp/sureal/r2l-atomspace5.scm\")");
 
     // Sentences in r2l-atomspace5.scm
     // - He ate a big round olive.
@@ -271,10 +272,10 @@ void SuRealUTest::test_good_enough(void)
 {
     logger().debug("BEGIN TEST: %s", __FUNCTION__);
 
-    config().set("SCM_PRELOAD",
-                 "tests/nlp/sureal/r2l-atomspace1.scm,"
-                 "tests/nlp/sureal/r2l-atomspace6.scm");
-    cogserver().loadSCMModules();
+    _evaluator->eval("(load  \"" PROJECT_SOURCE_DIR
+                 "/tests/nlp/sureal/r2l-atomspace1.scm\")");
+    _evaluator->eval("(load  \"" PROJECT_SOURCE_DIR
+                 "/tests/nlp/sureal/r2l-atomspace6.scm\")");
 
     // Sentences in r2l-atomspace1.scm and r2l-atomspace6.scm
     // - He runs.
@@ -299,9 +300,8 @@ void SuRealUTest::test_tense(void)
 {
     logger().debug("BEGIN TEST: %s", __FUNCTION__);
 
-    config().set("SCM_PRELOAD",
-                 "tests/nlp/sureal/r2l-atomspace7.scm");
-    cogserver().loadSCMModules();
+    _evaluator->eval("(load  \"" PROJECT_SOURCE_DIR
+                 "/tests/nlp/sureal/r2l-atomspace7.scm\")");
 
     // Sentences in r2l-atomspace7.scm
     // - "John drinks and she spoke."

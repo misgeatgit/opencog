@@ -43,13 +43,15 @@
 #define INVALID_SOCKET -1
 #endif
 
-IRC::IRC()
-{
-	hooks=0;
-	chan_users=0;
-	connected=false;
-	cur_nick=0;
-}
+IRC::IRC() :
+    irc_socket(-1),
+    connected(false),
+    cur_nick(nullptr),
+    dataout(nullptr),
+    datain(nullptr),
+    chan_users(nullptr),
+    hooks(nullptr)
+{}
 
 IRC::~IRC()
 {
@@ -149,7 +151,7 @@ int IRC::start(const char* server, int port, const char* nick,
 
 	/* Ping every .. I dunno -- 5 minutes? */
 	optval = 300;
-	rc=setsockopt(irc_socket, IPPROTO_TCP, TCP_KEEPIDLE, &optval, optlen);
+	rc=setsockopt(irc_socket, IPPROTO_TCP, TCP_KEEPINTVL, &optval, optlen);
 	if (0 > rc)
 	{
 		perror("setsockopt()");

@@ -349,7 +349,7 @@
 					(Inheritance (Concept subj_instance) (Concept subj_concept))
 					(r2l-wordinst-concept subj_instance)
 					(EvaluationLink
-						(PredicateNode var_name)
+						(VariableNode var_name)
 						(ListLink (ConceptNode subj_instance)))
 				)
 		))
@@ -581,8 +581,8 @@
 	(r2l-wordinst-predicate verb_instance)
 	(cond ((string=? qtype "when")
 		(AtTimeLink
-			(VariableNode "$qVar")
 			(PredicateNode verb_instance)
+			(VariableNode "$qVar")
 		))
 	((string=? qtype "where")
 		(EvaluationLink
@@ -631,7 +631,11 @@
 	(cond
 		((or (string=? determiner "those") (string=? determiner "these"))
 			(ListLink
-				(ImplicationLink
+				;; XXX FIXME: right now, this says ImplicationScopeLink
+				;; But I think the intended meaning is a for-all link:
+				;; (ForAllLink (VariableNode var_name) (ImplicationLink ...))
+				;; Right?
+				(ImplicationScopeLink
 					(MemberLink (VariableNode var_name) (ConceptNode instance))
 					(InheritanceLink (VariableNode var_name) (ConceptNode concept))))
 			(r2l-wordinst-concept instance)
@@ -969,8 +973,8 @@
 			(ImplicationLink (PredicateNode verb_instance) (PredicateNode verb))
 			(r2l-wordinst-predicate verb_instance)
 			(AtTimeLink
-				(VariableNode var_name)
 				(PredicateNode verb_instance)
+				(VariableNode var_name)
 			)
 		)
 	)
@@ -987,8 +991,8 @@
 			(InheritanceLink (ConceptNode subj_instance) (ConceptNode subj_concept))
 			(r2l-wordinst-concept subj_instance)
 			(AtTimeLink
-				(VariableNode var_name)
 				(ConceptNode subj_instance)
+				(VariableNode var_name)
 			)
 		)
 	)
@@ -1375,7 +1379,11 @@
 )
 
 ; Example: "The books are published."
-(define-public (passive-rule2 verb verb_instance obj obj_instance)
+(define-public (passive-rule2 verb_lemma verb_inst obj_lemma obj_inst)
+	(define verb (cog-name verb_lemma))
+	(define verb_instance (cog-name verb_inst))
+	(define obj (cog-name obj_lemma))
+	(define obj_instance (cog-name obj_inst))
 	(let ((var_name (choose-var-name)))
 		(ListLink
 			(ImplicationLink (PredicateNode verb_instance) (PredicateNode verb))
@@ -1384,10 +1392,10 @@
 			(r2l-wordinst-predicate verb_instance)
 			(EvaluationLink
 				(PredicateNode verb_instance)
-					(ListLink
-						(VariableNode var_name)
-						(ConceptNode obj_instance)
-					)
+				(ListLink
+					(VariableNode var_name)
+					(ConceptNode obj_instance)
+				)
 			)
 		)
 	)
@@ -1631,10 +1639,10 @@
 ;    (define time-node
 ;        (if (string=? $period "am")
 ;            (TimeNode $hour)
-;            (TimeNode (number->string (+ (string->number $hour) 12)))
+;            (TimeNode (+ (string->number $hour) 12))
 ;        )
 ;    )
-;    (ListLink (AtTimeLink time-node (PredicateNode $v_instance)))
+;    (ListLink (AtTimeLink (PredicateNode $v_instance) time-node))
 ;)
 ;
 ;
@@ -1863,12 +1871,12 @@
 ;	(InheritanceLink (ConceptNode subj_instance) (ConceptNode subj_concept))
 ;	(InheritanceLink (ConceptNode obj_instance) (ConceptNode obj_concept))
 ;	(AtTimeLink
-;		(VariableNode "$qVar")
 ;		(EvaluationLink
 ;			(PredicateNode verb_instance)
 ;				(ListLink
 ;					(ConceptNode subj_instance)
-;					(ConceptNode obj_instance))))
+;					(ConceptNode obj_instance)))
+;		(VariableNode "$qVar"))
 ;))
 ;
 ; Example:
@@ -1880,13 +1888,13 @@
 ;	(InheritanceLink (ConceptNode obj_instance) (ConceptNode obj_concept))
 ;	(InheritanceLink (ConceptNode iobj_instance) (ConceptNode iobj_concept))
 ;	(AtTimeLink
-;		(VariableNode "$qVar")
 ;		(EvaluationLink
 ;			(PredicateNode verb_instance)
 ;				(ListLink
 ;					(ConceptNode subj_instance)
 ;					(ConceptNode obj_instance)
-;					(ConceptNode iobj_instance))))
+;					(ConceptNode iobj_instance)))
+;		(VariableNode "$qVar"))
 ;))
 ;--------------------------------------------------------
 ;

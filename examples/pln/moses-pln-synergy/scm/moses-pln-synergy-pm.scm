@@ -1,5 +1,6 @@
 ;; PLN inference carried over the background knowledge to overwrite
 ;; the truth value of the MOSES model based solely on the dataset.
+(use-modules (opencog) (opencog exec))
 
 ;; Load MOSES model
 (load "moses-model.scm")
@@ -8,57 +9,57 @@
 (load "background-knowledge.scm")
 
 ;; Load the PLN configuration for this demo
-(load "pln-config.scm")
+(load "pln-fc-config.scm")
 
 ;; Apply the inference rules using the pattern matcher. This only
 ;; contains the executions, see the README.md for the explanations and
 ;; the expected results.
 
 ;; (1)
-(for-each (lambda (i) (cog-bind implication-partial-instantiation-rule))
+(for-each (lambda (i) (cog-execute! implication-partial-instantiation-rule))
           (iota 2))
 
 ;; (2)
-(cog-bind implication-scope-distribution-rule)
+(cog-execute! implication-scope-to-implication-rule)
 
 ;; (3)
-(cog-bind and-lambda-distribution-rule)
+(cog-execute! and-lambda-distribution-rule)
 
 ;; (4)
-(cog-bind lambda-grounded-construction-rule)
+(cog-execute! closed-lambda-evaluation-rule)
 
 ;; (5)
-(cog-bind implication-construction-rule)
+(cog-execute! implication-introduction-rule)
 
 ;; (6)
-(cog-bind implication-implicant-distribution-rule)
+(cog-execute! implication-implicant-distribution-rule)
 
 ;; (7)
-(cog-bind implication-and-lambda-factorization-rule)
+(cog-execute! implication-and-lambda-factorization-rule)
 
 ;; (8)
-(cog-bind deduction-implication-rule)
+(cog-execute! deduction-implication-rule)
 
 ;; (9)
-(cog-bind deduction-implication-rule)
+(cog-execute! deduction-implication-rule)
 
 ;; (10)
-(cog-bind implication-full-instantiation-rule)
+(cog-execute! implication-full-instantiation-rule)
 
 ;; (11)
-(cog-bind (ure-get-forward-rule equivalence-to-double-implication-rule))
+(cog-execute! equivalence-to-implication-rule)
 
 ;; (12)
-(cog-bind deduction-implication-rule)
+(cog-execute! deduction-implication-rule)
 
 ;; (13)
-(cog-bind deduction-implication-rule)
+(cog-execute! deduction-implication-rule)
 
 ;; (14)
-(cog-bind deduction-implication-rule)
+(cog-execute! deduction-implication-rule)
 
 ;; (15)
-;; (cog-bind deduction-implication-rule)
+;; (cog-execute! deduction-implication-rule)
 
 ;; (16)
-(cog-bind implication-implicant-disjunction-rule)
+(cog-execute! implication-implicant-disjunction-rule)

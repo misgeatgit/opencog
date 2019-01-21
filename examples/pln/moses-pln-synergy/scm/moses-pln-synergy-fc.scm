@@ -2,10 +2,9 @@
 ;; forward chainer.
 
 ;; Set logger to DEBUG
-(use-modules (opencog logger))
-;; (cog-logger-set-sync #t)
-;; (cog-logger-set-stdout #t)
-;; (cog-logger-set-level "debug")
+;; (ure-logger-set-sync! #t)
+;; (ure-logger-set-stdout! #t)
+;; (ure-logger-set-level! "debug")
 
 ;; Load MOSES model
 (load "moses-model.scm")
@@ -14,7 +13,7 @@
 (load "background-knowledge.scm")
 
 ;; Load the PLN configuration for this demo
-(load "pln-config.scm")
+(load "pln-fc-config.scm")
 
 (pln-fc (SetLink if-X-takes-Y-and-Y-contains-Z-then-X-takes-Z
                  take-treatment-1-X-is-equivalent-to-take-X-treatment-1

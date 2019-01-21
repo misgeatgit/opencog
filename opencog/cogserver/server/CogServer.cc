@@ -43,12 +43,12 @@
 #include <opencog/util/platform.h>
 
 #include <opencog/atomspace/AtomSpace.h>
+#include <opencog/attentionbank/AttentionBank.h>
 
 #ifdef HAVE_CYTHON
 #include <opencog/cython/PythonEval.h>
 #endif
 
-#include <opencog/guile/load-file.h>
 #include <opencog/guile/SchemeEval.h>
 
 #include <opencog/cogserver/server/Agent.h>
@@ -56,10 +56,6 @@
 #include <opencog/cogserver/server/NetworkServer.h>
 #include <opencog/cogserver/server/SystemActivityTable.h>
 #include <opencog/cogserver/server/Request.h>
-
-#ifdef HAVE_PERSIST_SQL
-#include <opencog/cogserver/modules/PersistModule.h>
-#endif
 
 #include "CogServer.h"
 #include "BaseServer.h"
@@ -106,53 +102,38 @@ CogServer::~CogServer()
             // invoke the module's unload function
             (*mdata.unloadFunction)(mdata.module);
 
-            // erase the map entries (one with the filename as key, and one with the module)
-            // id as key
+            // erase the map entries (one with the filename as key, and
+            // one with the module id as key)
             modules.erase(filename);
             modules.erase(id);
         }
     }
 
-#ifdef HAVE_CYTHON
-    // Delete the singleton instance of the PythonEval.
-    PythonEval::delete_singleton_instance();
-
-    // Cleanup Python.
-    global_python_finalize();
-#endif /* HAVE_CYTHON */
-
-    // Clear the system activity table here because it relies on the
-    // atom table's existence.
-    _systemActivityTable.clearActivity();
-
-    // Delete the static atomSpace instance (defined in BaseServer.h)
-    if (atomSpace) {
-        delete atomSpace;
-        atomSpace = NULL;
-    }
+    // Shut down the system activity table.
+    _systemActivityTable.halt();
+    if (_private_as) delete _private_as;
 
     logger().debug("[CogServer] exit destructor");
 }
 
 CogServer::CogServer(AtomSpace* as) :
-    cycleCount(1), running(false)
+    BaseServer(as),
+    cycleCount(1), running(false), _networkServer(nullptr)
 {
-    // We shouldn't get called with a non-NULL atomSpace static global as
-    // that's indicative of a missing call to CogServer::~CogServer.
-    if (atomSpace) {
-        throw (RuntimeException(TRACE_INFO,
-               "Found non-NULL atomSpace. CogServer::~CogServer not called!"));
+    if (nullptr == as) {
+        _atomSpace = new AtomSpace();
+        _attentionBank = &attentionbank(_atomSpace);
+        _private_as = _atomSpace;
     }
-
-    if (nullptr == as)
-        atomSpace = new AtomSpace();
-    else
-        atomSpace = as;
+    else {
+        _atomSpace = as;
+        _private_as = nullptr;
+    }
 
 #ifdef HAVE_GUILE
     // Tell scheme which atomspace to use.
     SchemeEval::init_scheme();
-    SchemeEval::set_scheme_as(atomSpace);
+    SchemeEval::set_scheme_as(_atomSpace);
 #endif // HAVE_GUILE
 #ifdef HAVE_CYTHON
     // Initialize Python.
@@ -160,31 +141,27 @@ CogServer::CogServer(AtomSpace* as) :
 
     // Tell the python evaluator to create its singleton instance
     // with our atomspace.
-    PythonEval::create_singleton_instance(atomSpace);
+    PythonEval::create_singleton_instance(_atomSpace);
 #endif // HAVE_CYTHON
 
     _systemActivityTable.init(this);
+    agentScheduler.set_activity_table(&_systemActivityTable);
 
     agentsRunning = true;
 }
 
-NetworkServer& CogServer::networkServer()
+void CogServer::enableNetworkServer(int port)
 {
-    return _networkServer;
-}
-
-void CogServer::enableNetworkServer()
-{
-    // WARN: By using boost::asio, at least one listener must be added to
-    // the NetworkServer before starting its thread. Other Listeners may
-    // be added later, though.
-    _networkServer.addListener<ConsoleSocket>(config().get_int("SERVER_PORT"));
-    _networkServer.start();
+    if (_networkServer) return;
+    _networkServer = new NetworkServer(config().get_int("SERVER_PORT", port));
 }
 
 void CogServer::disableNetworkServer()
 {
-    _networkServer.stop();
+    if (_networkServer) {
+        delete _networkServer;
+        _networkServer = nullptr;
+    }
 }
 
 SystemActivityTable& CogServer::systemActivityTable()
@@ -195,7 +172,7 @@ SystemActivityTable& CogServer::systemActivityTable()
 void CogServer::serverLoop()
 {
     struct timeval timer_start, timer_end, elapsed_time;
-    time_t cycle_duration = config().get_int("SERVER_CYCLE_DURATION") * 1000;
+    time_t cycle_duration = config().get_int("SERVER_CYCLE_DURATION", 100) * 1000;
 //    bool externalTickMode = config().get_bool("EXTERNAL_TICK_MODE");
 
     logger().info("Starting CogServer loop.");
@@ -216,6 +193,15 @@ void CogServer::serverLoop()
             usleep((unsigned int) delta);
         timer_start = timer_end;
     }
+
+    // Perform a clean shutdown. Drain the request queue.
+    while (0 < getRequestQueueSize())
+    {
+        processRequests();
+    }
+
+    // No way to process requests. Stop accepting network connections.
+    disableNetworkServer();
 }
 
 void CogServer::runLoopStep(void)
@@ -242,6 +228,7 @@ void CogServer::runLoopStep(void)
     // Process mind agents
     if (customLoopRun() and agentsRunning and 0 < agentScheduler.get_agents().size())
     {
+        gettimeofday(&timer_start, NULL);
         agentScheduler.process_agents();
 
         gettimeofday(&timer_end, NULL);
@@ -263,7 +250,7 @@ bool CogServer::customLoopRun(void)
 
 void CogServer::processRequests(void)
 {
-    std::unique_lock<std::mutex> lock(processRequestsMutex);
+    std::lock_guard<std::mutex> lock(processRequestsMutex);
     while (0 < getRequestQueueSize()) {
         Request* request = popRequest();
         request->execute();
@@ -316,6 +303,7 @@ void CogServer::startAgent(AgentPtr agent, bool dedicated_thread,
         else {
             agentThreads.emplace_back(new AgentRunnerThread);
             runner = agentThreads.back().get();
+            runner->set_activity_table(&_systemActivityTable);
             if (!thread_name.empty())
             {
                 runner->set_name(thread_name);
@@ -343,9 +331,6 @@ void CogServer::stopAllAgents(const std::string& id)
     agentScheduler.remove_all_agents(id);
     for (auto &runner: agentThreads)
         runner->remove_all_agents(id);
-//    // remove statistical record of their activities
-//    for (size_t n = 0; n < to_delete.size(); n++)
-//        _systemActivityTable.clearActivity(to_delete[n]);
 }
 
 void CogServer::startAgentLoop(void)
@@ -601,18 +586,34 @@ Module* CogServer::getModule(const std::string& moduleId)
 
 void CogServer::loadModules(std::vector<std::string> module_paths)
 {
-    if (module_paths.empty()) {
-        // Sometimes paths are given without the "opencog" part.
-        for (auto p : get_module_paths()) {
+    if (module_paths.empty())
+    {
+        // Give priority search oorder to the build directories
+        module_paths.push_back("./opencog/cogserver/server/");
+        module_paths.push_back("./opencog/cogserver/shell/");
+
+        // If not found at above locations, search the install paths
+        for (auto p : get_module_paths())
+        {
             module_paths.push_back(p);
             module_paths.push_back(p + "/opencog");
+            module_paths.push_back(p + "/opencog/modules");
         }
     }
 
     // Load modules specified in the config file
-    bool load_failure = false;
+    std::string modlist;
+    if (config().has("MODULES"))
+        modlist = config().get("MODULES");
+    else
+        // Defaults: search the build dirs first, then the install dirs.
+        modlist =
+            "libbuiltinreqs.so, "
+            "libscheme-shell.so, "
+            "libpy-shell.so";
     std::vector<std::string> modules;
-    tokenize(config()["MODULES"], std::back_inserter(modules), ", ");
+    tokenize(modlist, std::back_inserter(modules), ", ");
+    bool load_failure = false;
     for (const std::string& module : modules) {
         bool rc = false;
         if (not module_paths.empty()) {
@@ -637,63 +638,6 @@ void CogServer::loadModules(std::vector<std::string> module_paths)
         for (auto p : module_paths)
             logger().warn("Searched for module at %s", p.c_str());
     }
-}
-
-void CogServer::loadSCMModules(std::vector<std::string> module_paths)
-{
-#ifdef HAVE_GUILE
-    if (module_paths.empty()) {
-        // Sometimes paths are given without the "opencog" part.
-        for (auto p : get_module_paths()) {
-            module_paths.push_back(p);
-            module_paths.push_back(p + "/opencog");
-        }
-    }
-
-
-    load_scm_files_from_config(*atomSpace, module_paths);
-#else /* HAVE_GUILE */
-    logger().warn("Server compiled without SCM support");
-#endif /* HAVE_GUILE */
-}
-
-void CogServer::openDatabase(void)
-{
-#ifdef HAVE_PERSIST_SQL
-    // No-op if the user has not configured a storage backend
-    if (!config().has("STORAGE")) {
-        logger().warn("No database persistant storage configured! "
-                      "Use the STORAGE config keyword to define.");
-        return;
-    }
-
-    const std::string &dbname = config()["STORAGE"];
-    const std::string &username = config()["STORAGE_USERNAME"];
-    const std::string &passwd = config()["STORAGE_PASSWD"];
-
-    std::list<std::string> args;
-    args.push_back(dbname);
-    args.push_back(username);
-    args.push_back(passwd);
-
-    // Do this all very politely, by loading the required module,
-    // and then calling methods on it, as needed.
-    loadModule("libPersistModule.so");
-
-    Module *mod = getModule("opencog::PersistModule");
-    if (NULL == mod)
-    {
-        logger().warn("Failed to pre-load database, because persist module not found!\n");
-        return;
-    }
-    PersistModule *pm = dynamic_cast<PersistModule *>(mod);
-    const std::string &resp = pm->do_open(NULL, args);
-
-    logger().info("Preload %s as user %s msg: %s",
-        dbname.c_str(), username.c_str(), resp.c_str());
-#else
-    logger().warn("Cogserver compiled without database support");
-#endif
 }
 
 Logger &CogServer::logger()

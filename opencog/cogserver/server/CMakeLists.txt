@@ -8,7 +8,6 @@ ENDIF (HAVE_CYTHON)
 ADD_LIBRARY (builtinreqs SHARED
 	BuiltinRequestsModule
 	Request
-	SleepRequest
 	LoadModuleRequest
 	ListRequest
 	ShutdownRequest
@@ -17,8 +16,7 @@ ADD_LIBRARY (builtinreqs SHARED
 )
 
 TARGET_LINK_LIBRARIES(builtinreqs
-	${ATOMSPACE_LIBRARY}
-	${COGUTIL_LIBRARY}
+	server
 )
 
 INSTALL (TARGETS builtinreqs
@@ -40,34 +38,21 @@ ADD_LIBRARY (server SHARED
 )
 
 TARGET_LINK_LIBRARIES(server
-	nlp-types
-	${ATOMSPACE_LIBRARY}
+	${ATOMSPACE_attentionbank_LIBRARY}
+	${ATOMSPACE_execution_LIBRARY}
+	${ATOMSPACE_smob_LIBRARY}
 	${COGUTIL_LIBRARY}
 	${Boost_FILESYSTEM_LIBRARY}
-	${Boost_THREAD_LIBRARY}
-	${Boost_SYSTEM_LIBRARY}
 	dl
 )
 
-IF (HAVE_PERSIST_SQL)
-	TARGET_LINK_LIBRARIES(server PersistModule)
-ENDIF (HAVE_PERSIST_SQL)
-
 IF (HAVE_CYTHON)
-	TARGET_LINK_LIBRARIES(server
-		${ATOMSPACE_PythonEval_LIBRARY}
-		#py-shell
-		${ATOMSPACE_LIBRARIES}
-		${PYTHON_LIBRARIES})
+	TARGET_LINK_LIBRARIES(server ${ATOMSPACE_PythonEval_LIBRARY})
 ENDIF (HAVE_CYTHON)
 
 # IF (HAVE_GUILE)
 # 	TARGET_LINK_LIBRARIES(server scheme-shell ${ATOMSPACE_LIBRARIES})
 # ENDIF (HAVE_GUILE)
-
-IF (ODBC_FOUND)
-	TARGET_LINK_LIBRARIES(server PersistModule)
-ENDIF (ODBC_FOUND)
 
 # ------------------------------------------------------------
 # This defines the guile scheme loadable module
@@ -95,7 +80,6 @@ ADD_EXECUTABLE(cogserver
 TARGET_LINK_LIBRARIES(cogserver
 	server
 	${Boost_SYSTEM_LIBRARY}
-	${GUILE_LIBRARIES}
 )
 
 SET_TARGET_PROPERTIES(cogserver PROPERTIES LINK_DIRECTORIES "${BOOST_LIBRARY_DIRS}")
@@ -109,25 +93,17 @@ INSTALL (TARGETS server DESTINATION "lib${LIB_DIR_SUFFIX}/opencog")
 
 INSTALL (FILES
 	Agent.h
+	AgentRunnerBase.h
+	AgentRunnerThread.h
 	BaseServer.h
-	BuiltinRequestsModule.h
 	CogServer.h
 	ConsoleSocket.h
 	Factory.h
-	IHasMimeType.h
-	IRequestComplete.h
-	ListRequest.h
-	LoadModuleRequest.h
 	Module.h
 	NetworkServer.h
-	SocketListener.h
-	SocketPort.h
 	SystemActivityTable.h
 	Registry.h
 	Request.h
 	RequestClassInfo.h
-	RequestResult.h
-	ShutdownRequest.h
-	UnloadModuleRequest.h
 	DESTINATION "include/${PROJECT_NAME}/cogserver/server"
 )

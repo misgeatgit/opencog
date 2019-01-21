@@ -1,18 +1,11 @@
-(setenv "LTDL_LIBRARY_PATH"
-    (if (getenv "LTDL_LIBRARY_PATH")
-        (string-append (getenv "LTDL_LIBRARY_PATH")
-            ":/usr/local/lib/opencog:/usr/local/lib/opencog/modules")
-        "/usr/local/lib/opencog:/usr/local/lib/opencog/modules"))
-
 (define-module (opencog nlp fuzzy))
 
+(use-modules (opencog))
 (load-extension "libnlpfz" "opencog_nlp_fuzzy_init")
 
 (use-modules (srfi srfi-1)
              (ice-9 optargs)      ; for doing define*-public
-             (opencog)
              (opencog query)      ; for fuzzy-match
-             (opencog atom-types) ; for WordNode, ParseNode, etc.
              (opencog nlp)
              (opencog nlp sureal)
              (opencog nlp microplanning))
@@ -126,7 +119,7 @@
 "
     ; Return the set of similar sets.
     (define r2l-set (get-r2l-set-of-sent sent-node))
-    (nlp-fuzzy-match r2l-set 'SetLink exclude-list)
+    (nlp-fuzzy-match r2l-set 'SetLink exclude-list #f)
 )
 
 ; ----------------------------------------------------------
@@ -166,7 +159,7 @@
         (let ( (max-score 0)
                (results '()))
             (for-each (lambda (s)
-                (let ( (score (string->number (cog-name (cadr (cog-outgoing-set s))))))
+                (let ( (score (cog-number (cadr (cog-outgoing-set s)))))
                     ; Make sure it can be used to generate a sentence by sureal
                     (if (and (>= score max-score) (not (equal? (sureal (car (cog-outgoing-set s))) '())))
                         (begin
@@ -186,7 +179,7 @@
             (r2l-set (get-r2l-set-of-sent sent-node))
 
             ; fzset is the set of similar r2l-sets.
-            (fzset (nlp-fuzzy-match r2l-set 'SetLink exclude-list))
+            (fzset (nlp-fuzzy-match r2l-set 'SetLink exclude-list #f))
 
             ; ppset is a set of atoms that will be used for sentence generation
             ; after doing some post-processing

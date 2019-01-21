@@ -1,253 +1,300 @@
+;
+; rule.scm
+; Utilities for defining and working with OpenPsi rules.
+;
 ; Copyright (C) 2016 OpenCog Foundation
-
-(use-modules (ice-9 threads)) ; For `par-map`
-(use-modules (srfi srfi-1)) ; For `append-map`
-
-(use-modules (opencog))
-
-(load "demand.scm")
-(load "utilities.scm")
+; Copyright (C) 2017 MindCloud
+;
+; Design Notes:
+; Aliases: Rules can be given a "name", called an "alias", below.
+; Certain parts of the design assume that a rule has only one name,
+; but other parts of the code pass around lists of names. This can
+; lead to crazy bugs, due to a lack of checking or enforcement of a
+; one-name-per-rule policy.  Also -- each rule should, in principle
+; have a unique name; however, the current chatbot uses the same name
+; for all chat rules.
 
 ; --------------------------------------------------------------
-(define psi-action (ConceptNode (string-append psi-prefix-str "action")))
+; Used as a key for naming rules
+(define psi-rule-name-predicate-node (Predicate "alias"))
+; Used to declare the set of actions.
+(define psi-action-node (Concept "action"))
+; Used to declare the set of goals.
+(define psi-goal-node (Concept "goal"))
+; Key used to declare the desired-goal-value
+(define dgv-key (Predicate "desired-goal-value"))
 
 ; --------------------------------------------------------------
-(define-public (psi-rule-nocheck context action goal a-stv demand)
+(define (psi-set-gv! goal gv)
 "
-  psi-rule-nocheck -- same as psi-rule, but no checking
+  psi-set-gv! GOAL GV
+
+  Set the goal-value of GOAL to GV. GV is a number.
 "
-    (define implication (Implication a-stv (And context action) goal))
-
-    ; These memberships are needed for making filtering and searching simpler..
-    ; If GlobNode had worked with GetLink at the time of coding this,
-    ; that might have been; better, (or not as it might need as much chasing)
-    ; TODO: Remove this when ExecutionLinks are used as that can be used
-    ; for filtering.
-    (MemberLink action psi-action)
-
-    ; This memberLink is added so as to minimize the tree walking needed to get
-    ; from a goal to a psi-rule. For example, if the goal is a DefinedPredicate.
-    (MemberLink implication demand)
-
-    implication
+  (cog-set-value! goal (Predicate "value") (FloatValue gv))
 )
 
 ; --------------------------------------------------------------
-(define-public (psi-rule context action goal a-stv demand)
+(define (psi-goal-value goal)
 "
-  psi-rule CONTEXT ACTION GOAL TV DEMAND - create a psi-rule.
+  psi-goal-value GOAL
 
-  Associate an action with a context such that, if the action is
-  taken, then the goal will be satisfied.  The structure of a rule
-  is in the form of an `ImplicationLink`,
-
-    (ImplicationLink TV
-        (AndLink
-            CONTEXT
-            ACTION)
-        GOAL)
-
-  where:
-  CONTEXT is a scheme list containing all of the terms that should
-    be met for the ACTION to be taken. These are atoms that, when
-    evaluated, should result in a true or false TV.
-
-  ACTION is an evaluatable atom, i.e. returns a TV when evaluated by
-    `cog-evaluate!`.  It should return a true or false TV.
-
-  GOAL is an evaluatable atom, i.e. returns a TV when evaluated by
-    `cog-evaluate!`.  The returned TV is used as a formula to rank
-    how this rule affects the demands.
-
-  TV is the TruthValue assigned to the ImplicationLink. It should
-    be a SimpleTruthValue.
-
-  DEMAND is a Node, representing the demand that this rule affects.
+  Return the present value of GOAL.
 "
-    (define func-name "psi-rule") ; For use in error reporting
-
-    ; Check arguments
-    (if (not (list? context))
-        (error (string-append "In procedure " func-name ", expected first "
-            "argument to be a list, got:") context))
-    (if (not (cog-atom? action))
-        (error (string-append "In procedure " func-name ", expected second "
-            "argument to be an atom, got:") action))
-    (if (not (cog-atom? goal))
-        (error (string-append "In procedure " func-name ", expected third "
-            "argument to be an atom, got:") goal))
-    (if (not (cog-tv? a-stv))
-        (error (string-append "In procedure " func-name ", expected fourth "
-            "argument to be a stv, got:") a-stv))
-    (if (not (psi-demand? demand))
-        (error (string-append "In procedure " func-name ", expected fifth "
-            "argument to be a node representing a demand, got:") demand))
-
-    (psi-rule-nocheck context action goal a-stv demand)
+  (define gv (cog-value goal (Predicate "value")))
+  (if (null? gv)
+    (error (format #f "Goal \"~a\" has not been created?" (cog-name goal)))
+    (cog-value-ref gv 0))
 )
 
 ; --------------------------------------------------------------
-(define-public (psi-get-rules demand-node)
+(define (psi-set-dgv! goal num)
 "
-  Returns a list of all psi-rules that affect the given demand.
+  psi-set-dgv! GOAL NUM
 
-  demand-node:
-  - The node that represents the demand.
+  Returns GOAL after setting its desired-goal-value to NUM.
 "
-    (cog-chase-link 'MemberLink 'ImplicationLink demand-node)
+  (cog-set-value! goal dgv-key (FloatValue num))
 )
 
 ; --------------------------------------------------------------
-(define-public (psi-get-all-rules)
+(define (psi-dgv goal)
 "
-  Returns a list of all known openpsi rules.
+  psi-dgv GOAL
 
-XXX FIXME -- this is painfully slow --- multiple minutes when
-there are 100K rules!
+  Returns the present desired-goal-value for GOAL. GOAL is a node
+  representin the goal concerned.
 "
-    (fold append '()
-        (par-map (lambda (x) (cog-chase-link 'MemberLink 'ImplicationLink x))
-            (psi-get-all-demands)))
+  (define gv (cog-value goal dgv-key))
+  (if (null? gv)
+    (error (format #f "Goal \"~a\" has not been created?" (cog-name goal)))
+    (cog-value-ref gv 0))
 )
 
 ; --------------------------------------------------------------
-(define-public (psi-rule? atom)
+(define* (psi-goal name value #:optional (dgv 1))
 "
-  Returns `#t` or `#f` depending on whether the passed argument
-  is a valid psi-rule or not. An ImplicationLink that is a member
-  of the demand sets is a psi-rule.
+  psi-goal NAME VALUE [DGV]
 
-  atom:
-  - An atom passed for checking.
+  Create and return (ConceptNode NAME) that represents the OpenPsi goal
+  called NAME. Also sets the goal-value to VALUE.  If DGV is passed
+  then it is used as the desired-goal-value for the goal otherwise,
+  1 is assumed to be the desired-goal-value.
+
+  VALUE and DGV should be in the range [0, 1].
 "
-    (let ((candidates (cog-chase-link 'MemberLink 'ConceptNode atom)))
+  ; NOTE: Why not make this part of psi-rule function? Because, developers
+  ; might want to specify the behavior they prefer, when it comes to how
+  ; to measure the level of achivement of goal, and how the goal's measurement
+  ; value should change.
+  (if (not (and (<= 0 dgv) (<= dgv 1)))
+    (error "Expected 0 <= dgv <= 1, got" dgv))
+  (if (not (and (<= 0 value) (<= value 1)))
+    (error "Expected 0 <= value <= 1, got" value))
 
-        ; A filter is used to account for empty list as well as
-        ; cog-chase-link returning multiple results, just in case.
-        (not (null?
-            (filter psi-demand? candidates)))
+  (let* ((goal (Concept name)))
+    (InheritanceLink goal psi-goal-node)
+    (psi-set-gv! goal value)
+    ; A value is used instead of an EvalutionLink b/c it is simpler and faster
+    ; to change. Of course a StateLink can be used. At present there isn't
+    ; any process that uses that explicit(aka queryable) information, thus
+    ; nothing is lost.
+    (if (and (<= 0 dgv) (<= dgv 1))
+      (psi-set-dgv! goal dgv)
+      (error "Expected 0 <= dgv <= 1, got" dgv)
     )
+  )
 )
 
 ; --------------------------------------------------------------
-(define-public (psi-get-all-actions)
+(define (psi-goal? ATOM)
 "
-  Returns a list of all openpsi actions.
+  Check if ATOM is a goal and return `#t`, if it is, and `#f`
+  otherwise. An atom is a goal if it a member of the set
+  represented by (ConceptNode \"goal\").
 "
-    (append
-        (cog-chase-link 'MemberLink 'ExecutionOutputLink psi-action)
-        (cog-chase-link 'MemberLink 'DefinedSchemaNode psi-action))
+  (not (null?  (cog-link 'InheritanceLink ATOM psi-goal-node)))
 )
 
 ; --------------------------------------------------------------
-(define-public (psi-action? ATOM)
+(define (psi-urge goal)
 "
-  Check if ATOM is an action and return `#t`, if it is, and `#f`
-  otherwise. An atom is an action if it a member of the set
-  represented by (ConceptNode \"OpenPsi: action\").
-"
-    (let ((candidates (cog-chase-link 'MemberLink 'ConceptNode ATOM)))
+  psi-urge GOAL
 
-        ; A filter is used to account for empty list as well as
-        ; cog-chase-link returning multiple results, just in case.
-        (not (null?
-            (filter (lambda (x) (equal? x psi-action)) candidates)))
-    )
+  Returns the urge value of GOAL. Urge is calculated as (GOAL_VALUE - DGV),
+  where GOAL_VALUE is the present value of the goal, and DGV is the
+  desired-goal-value for the GOAL.
+"
+  ; TODO: Add utilities for declaring custom urge formula.
+  (- (psi-dgv goal) (psi-goal-value goal))
 )
 
 ; --------------------------------------------------------------
-(define (get-c&a impl-link)
+(define (psi-decrease-urge goal value)
 "
-  Get context and action list from ImplicationLink.
+  psi-decrease-urge GOAL VALUE
+
+  Return GOAL after decreasing the urge by given value. Decreasing means
+  minimizing the difference between the desired-goal-value and present
+  goal-value, thus VALUE should be a positive number. This assumes
+  the desired-goal-value to be 1.
 "
-    (cog-outgoing-set (list-ref (cog-outgoing-set impl-link) 0))
+  ; TODO: Add utilities for declaring custom decrease-urge formula.
+  (let* ((u (psi-urge goal))
+    (gv (- 1 (- u (abs value)))))
+
+    (cond
+      ((equal? 0.0 u) goal)
+      ((<= 1 gv) (psi-set-gv! goal 1))
+      (else (psi-set-gv! goal gv)))
+  )
 )
 
 ; --------------------------------------------------------------
-(define-public (psi-get-context rule)
+(define (psi-increase-urge goal value)
 "
-  Get the context of an openpsi-rule.
+  psi-increase-urge GOAL VALUE
 
-  rule:
-  - An openpsi-rule.
+  Return GOAL after increasing the magnitude of the urge by VALUE. VALUE
+  should be a positive number. This assumes the desired-goal-value to be 1.
 "
-    (remove psi-action? (get-c&a rule))
+  ; TODO: Add utilities for declaring custom increase-urge formula.
+  (let* ((u (psi-urge goal))
+    (gv (- 1 (+ u (abs value)))))
+
+    (cond
+      ((<= 1 gv) (psi-set-gv! goal 1))
+      ((>= 0 gv) (psi-set-gv! goal 0))
+      (else (psi-set-gv! goal gv)))
+  )
 )
 
 ; --------------------------------------------------------------
-(define-public (psi-get-action rule)
+(define (psi-get-rules category)
 "
-  Get the action of an openpsi-rule.
-
-  rule:
-  - An openpsi-rule.
+  psi-get-rules CATEGORY
+    Returns a list of all psi-rules that are member of CATEGORY.
 "
-    (car (filter psi-action? (get-c&a rule)))
+  (cog-chase-link 'MemberLink 'ImplicationLink category)
 )
 
 ; --------------------------------------------------------------
-(define-public (psi-get-goal rule)
+(define (psi-rule-set-alias! rule name)
 "
-  Get the goal of an openpsi-rule.
+  psi-rule-set-alias! RULE NAME
+    NAME is a string that will be associated with the rule and is used
+    as a repeatable means of referring to the rule. The hash of the
+    rule can't be used, because it is a function of the Type of atoms,
+    and there is no guarantee that the relationship between Types is
+    static; as a result of which the hash-value could change.
+"
+  (EvaluationLink
+    psi-rule-name-predicate-node
+    (ListLink
+      rule
+      (ConceptNode name)))
 
-  rule:
-  - An openpsi-rule.
-"
-    ; NOTE: Why this function? -> For consisentency and to accomodate future
-    ; changes
-     (cadr (cog-outgoing-set rule))
+  ; TODO Uncomment after testing with ghost
+  ;(cog-set-value!
+  ;  rule
+  ;  psi-rule-name-predicate-node
+  ;  (StringValue name))
 )
 
 ; --------------------------------------------------------------
-(define-public (psi-related-goals action)
+(define (psi-rule-alias rule)
 "
-  Return a list of all the goals that are associated by an action. Associated
-  goals are those that are the implicand of the psi-rules that have the given
-  action in the implicant.
+  psi-rule-alias RULE
+    Returns the alias of the RULE, if it was set, or null if not.
+"
+  ;; Using a GetLink here is quite inefficient; this would run much
+  ;; faster if cog-chase-link was used instead. FIXME.
+  (cog-outgoing-set (cog-execute!
+    (GetLink
+      (TypedVariableLink
+        (VariableNode "rule-alias")
+        (TypeNode "ConceptNode"))
+      (EvaluationLink
+        psi-rule-name-predicate-node
+        (ListLink
+          (QuoteLink rule)  ;; ?? why is a Quote needed here?
+          (VariableNode "rule-alias"))))))
 
-  action:
-  - An action that is part of a psi-rule.
-"
-    (let* ((and-links (cog-filter 'AndLink (cog-incoming-set action)))
-           (rules (filter psi-rule? (append-map cog-incoming-set and-links))))
-           (delete-duplicates (map psi-get-goal rules))
-    )
+  ; TODO Uncomment after testing with ghost
+  ;(let ((alias-value (cog-value rule psi-rule-name-predicate-node)))
+  ;  (if (null? alias-value)
+  ;    '()
+  ;    (cog-value-ref alias-value 0)
+  ;  )
+  ;)
 )
 
 ; --------------------------------------------------------------
-(define-public (psi-satisfiable? rule)
+(define (psi-related-goals action)
 "
-  Check if the rule is satisfiable and return TRUE_TV or FALSE_TV.
+  psi-related-goals ACTION
+    Return a list of all of the goals that are associated with the ACTION.
+    A goal is associated with an action whenever the goal appears in
+    a psi-rule with that action in it.
+"
+  ;; XXX this is not an efficient way of searching for goals.  If
+  ;; this method is used a lot, we should search for the goals directly
+  ;; See https://github.com/opencog/opencog/pull/2899.
+  (let* (
+    (and-links (cog-incoming-by-type action 'AndLink))
+    (rules (filter psi-rule?  (append-map
+      (lambda (sand) (cog-incoming-by-type sand 'ImplicationLink))
+          and-links))))
 
-  rule:
-  - A psi-rule to be checked if its context is satisfiable.
-"
-    ; NOTE: stv are choosen as the return values so as to make the function
-    ; usable in evaluatable-terms.
-    (let* ((pattern (SatisfactionLink (AndLink (psi-get-context rule))))
-           (result (cog-evaluate! pattern)))
-          (cog-delete pattern)
-          result
-    )
+    (delete-duplicates (map psi-get-goal rules))
+  )
 )
 
 ; --------------------------------------------------------------
-(define-public (psi-get-satisfiable-rules demand-node)
+(define (is-satisfiable? rule)
 "
-  Returns a list of psi-rules of the given demand that are satisfiable.
-
-  demand-node:
-  - The node that represents the demand.
+  is-satisfiable? RULE
+    Returns crisp #t or #f depending on whether RULE is satisfiable
+    or not.
 "
-    (filter  (lambda (x) (equal? (stv 1 1) (psi-satisfiable? x)))
-        (psi-get-rules demand-node))
+  (equal? (stv 1 1) (psi-satisfiable? rule))
 )
 
 ; --------------------------------------------------------------
-(define-public (psi-get-all-satisfiable-rules)
+(define (psi-get-satisfiable-rules category)
 "
-  Returns a list of all the psi-rules that are satisfiable.
+  psi-get-satisfiable-rules CATEGORY
+    Returns a SetLink of all of the psi-rules that are member of CATEGORY
+    and are satisfiable.
 "
-    (filter  (lambda (x) (equal? (stv 1 1) (psi-satisfiable? x)))
-        (psi-get-all-rules))
+  (Set (filter is-satisfiable? (psi-get-rules category)))
+)
+
+; --------------------------------------------------------------
+(define (psi-context-weight rule)
+"
+  psi-context-weight RULE
+
+  Return a TruthValue containing the weight Sc of the context of the
+  psi-rule RULE.  The strength of the TV will contain the weight.
+"
+  (define (context-stv stv-list)
+    ; See and-side-effect-free-formula in pln-and-construction-rule
+    ; Createas an stv which is the comonentwise product of all the stvs in
+    ; stv-list, for the purpose of estimating the truthvalue of a
+    ; context when it is true.
+    (stv
+      (fold * 1 (map (lambda (x) (cog-tv-mean x)) stv-list))
+      (fold min 1 (map (lambda (x) (cog-tv-confidence x)) stv-list)))
+  )
+
+  ; map-in-order is used to simulate AndLink assuming
+  ; psi-get-context maintains, which is unlikely. What other options
+  ; are there?
+  ; XXX FIXME How about actually using a SequentialAndLink?
+  ; then the code will be faster, and there won't be this problem.
+  ; TODO: This calculation can be done in OpenPsiImplicator::grounding or
+  ; when the rule is being added. Since it unlikely to change except
+  ; during learning it can be saved in the AndLink.
+  (context-stv (map-in-order cog-evaluate! (psi-get-context rule)))
 )

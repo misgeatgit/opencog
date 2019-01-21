@@ -14,7 +14,7 @@
 #include <set>
 
 #include <opencog/atomspace/AtomSpace.h>
-#include <opencog/atoms/base/types.h>
+#include <opencog/atoms/atom_types/types.h>
 
 namespace opencog {
 
@@ -22,14 +22,14 @@ class Sweep
 {
 	private:
 		AtomSpace *atom_space;
-		OrderedHandleSet maxgraph;
-		OrderedHandleSet curgraph;
-		OrderedHandleSet maxedges;
-		OrderedHandleSet curedges;
+		HandleSet maxgraph;
+		HandleSet curgraph;
+		HandleSet maxedges;
+		HandleSet curedges;
 		bool mark_word(const Handle&);
 		bool start_mark_sense(const Handle&, const Handle&);
 		bool mark_sense(const Handle&, const Handle&);
-		void delete_edges(OrderedHandleSet &);
+		void delete_edges(HandleSet &);
 	public:
 		void set_atom_space(AtomSpace *);
 		void sweep_parse(const Handle&);

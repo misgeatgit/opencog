@@ -25,8 +25,8 @@
 #include "ListRequest.h"
 
 #include <opencog/atomspace/AtomSpace.h>
-#include <opencog/atoms/base/ClassServer.h>
-#include <opencog/atoms/base/types.h>
+#include <opencog/atoms/atom_types/NameServer.h>
+#include <opencog/atoms/atom_types/types.h>
 #include <opencog/cogserver/server/CogServer.h>
 
 using namespace opencog;
@@ -69,17 +69,6 @@ bool ListRequest::execute()
             handle = Handle::UNDEFINED;
             subtypes = false;
             break;
-        } else if (*it == "-h") { // filter by handle
-            ++it;
-            if (it == _parameters.end()) return syntaxError();
-            UUID uuid = strtol(it->c_str(), NULL, 0);
-            handle = Handle(uuid);
-            if (!as.is_valid_handle(handle)) {
-                _error << "Error: Invalid handle" << std::endl;
-                sendError();
-                return false;
-            }
-            _handles.push_back(handle);
         } else if (*it == "-n")  { // filter by name
             ++it;
             if (it == _parameters.end()) return syntaxError();
@@ -87,7 +76,7 @@ bool ListRequest::execute()
         } else if (*it == "-t") { // filter by type, excluding subtypes
             ++it;
             if (it == _parameters.end()) return syntaxError();
-            type = classserver().getType(it->c_str());
+            type = nameserver().getType(it->c_str());
             if (type == NOTYPE) {
                 _error << "Error: Invalid type" << std::endl;
                 sendError();
@@ -96,7 +85,7 @@ bool ListRequest::execute()
         } else if (*it == "-T") { // filter by type, including subtypes
             ++it;
             if (it == _parameters.end()) return syntaxError();
-            type = classserver().getType(it->c_str());
+            type = nameserver().getType(it->c_str());
             if (type == NOTYPE) {
                 _error << "invalid type" << std::endl;
                 sendError();
@@ -114,16 +103,22 @@ bool ListRequest::execute()
         }
     }
     if (name != "" && type != NOTYPE) { // filter by name & type
-        classserver().foreachRecursive(
+        nameserver().foreachRecursive(
             [&](Type t)->void {
-                 Handle h(as.get_handle(t, name));
-                 if (h) _handles.push_back(h); }, type);
+                 try {
+                     Handle h(as.get_handle(t, name));
+                     if (h) _handles.push_back(h);
+                 } catch (const std::exception& e) {}
+            }, type);
 
     } else if (name != "") {     // filter by name
-        classserver().foreachRecursive(
+        nameserver().foreachRecursive(
             [&](Type t)->void {
-                 Handle h(as.get_handle(t, name));
-                 if (h) _handles.push_back(h); }, NODE);
+                 try {
+                     Handle h(as.get_handle(t, name));
+                     if (h) _handles.push_back(h);
+                 } catch (const std::exception& e) {}
+            }, NODE);
 
     } else if (type != NOTYPE) { // filter by type
         as.get_handles_by_type(std::back_inserter(_handles), type, subtypes);
@@ -142,25 +137,16 @@ bool ListRequest::execute()
 void ListRequest::sendOutput()
 {
     std::ostringstream oss;
-
-    if (_mimeType == "text/plain") {
-        for (Handle& h : _handles) {
-            oss << h->toString() << std::endl;
-        }
-    } else throw RuntimeException(TRACE_INFO, "Unsupported mime-type: %s",
-            _mimeType.c_str());
-
+    for (const Handle& h : _handles) {
+        oss << h->to_string() << std::endl;
+    }
     send(oss.str());
 }
 
 void ListRequest::sendError()
 {
-    if (_mimeType != "text/plain")
-        throw RuntimeException(TRACE_INFO, "Unsupported mime-type: %s",
-                _mimeType.c_str());
     _error << "Supported options:" << std::endl;
     _error << "-a          List all atoms" << std::endl;
-    _error << "-h handle   List given handle" << std::endl;
     _error << "-n name     List all atoms with name" << std::endl;
     _error << "-t type     List all atoms of type" << std::endl;
     _error << "-T type     List all atoms with type or subtype" << std::endl;

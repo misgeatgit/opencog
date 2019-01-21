@@ -21,7 +21,7 @@
 #include <time.h>
 #include <sstream>
 
-#define DEPRECATED_ATOMSPACE_CALLS
+#include <opencog/atoms/atom_types/NameServer.h>
 #include <opencog/atomspace/AtomSpace.h>
 #include <opencog/cogserver/server/CogServer.h>
 
@@ -45,16 +45,16 @@ void TulipWriter::writeNodes()
     // Output Node numbers/ids
     myfile << "(nodes ";
     for (Handle h : nodeHandles) {
-        myfile << h << " ";
+	    myfile << h.value() << " ";
     }
     for (Handle h : linkHandles) {
-        myfile << h << " ";
+	    myfile << h.value() << " ";
     }
     myfile << ")" << endl;
 
 }
 
-void TulipWriter::writeHeader(std::string comment)
+void TulipWriter::writeHeader(const std::string &comment)
 {
     // Write header
     myfile << "(tlp \"2.0\"" << endl;
@@ -73,7 +73,7 @@ void TulipWriter::writeCluster(Handle setLink)
     a.get_handles_by_type(back_inserter(linkHandles), (Type) LINK, true );
 
     // Output setLink as a cluster
-    OrderedHandleSet inSet;
+    HandleSet inSet;
     if (setLink != Handle::UNDEFINED) {
         HandleSeq setLinks = setLink->getOutgoingSet();
         for (Handle h : setLinks) {
@@ -83,7 +83,7 @@ void TulipWriter::writeCluster(Handle setLink)
     myfile << "(cluster 1 \"In Set\"" << endl;
     myfile << " (nodes ";
     for (Handle h : inSet) {
-        myfile << h << " ";
+	    myfile << h.value() << " ";
     }
     myfile << ")\n)" << endl;
 
@@ -91,8 +91,8 @@ void TulipWriter::writeCluster(Handle setLink)
     myfile << "(cluster 2 \"Not in set\"" << endl;
     myfile << " (nodes ";
     for (Handle h : nodeHandles) {
-        OrderedHandleSet::iterator si = inSet.find(h);
-        if (si == inSet.end()) myfile << h << " ";
+        HandleSet::iterator si = inSet.find(h);
+        if (si == inSet.end()) myfile << h.value() << " ";
     }
     for (Handle h : linkHandles) {
         inSet.find(h);
@@ -102,7 +102,7 @@ void TulipWriter::writeCluster(Handle setLink)
     // TODO : also output the appropriate fake edges
 //    myfile << " (edges ";
 //    for (Handle h : linkHandles) {
-//        OrderedHandleSet::iterator si = inSet.find(h);
+//        HandleSet::iterator si = inSet.find(h);
 //        if (si == inSet.end()) {
 //            myfile << h << " ";
 //        }
@@ -145,11 +145,11 @@ void TulipWriter::writeNodeNames()
     myfile << "(property  0 string \"viewLabel\" " << endl;
     myfile << "  (default \"\" \"\" )" << endl;
     for (Handle h : nodeHandles) {
-        myfile << "  (node " << h << " \"" << a.get_name(h) << "\")" << endl;
+        myfile << "  (node " << h << " \"" << h->get_name() << "\")" << endl;
     }
     // give not nodes the name NOT
     for (Handle h : linkHandles) {
-        myfile << "(node " << h << " \"" << classserver().getTypeName(h->getType()) 
+        myfile << "(node " << h << " \"" << nameserver().getTypeName(h->get_type()) 
             << "\" )" << endl;
     }
     myfile << ")" << endl;
@@ -179,7 +179,7 @@ void TulipWriter::writeTruthValue()
     myfile << "(default \"0.0\" \"0.0\" )" << endl;
     for (const Handle& h : handles) {
         myfile << "  (node " << h << " \"" <<
-          h->getTruthValue()->getMean() << "\")" << endl;
+          h->getTruthValue()->get_mean() << "\")" << endl;
     }
     myfile << ")" << endl;
 
@@ -196,7 +196,7 @@ void TulipWriter::writeTruthValue()
         HandleSeq out = h->getOutgoingSet();
         for (const Handle& d : out) {
             myfile << "(edge " << h << d << " \"" << 1.0 /
-              (h->getTruthValue()->getMean()+0.0000001) << "\")" << endl;
+              (h->getTruthValue()->get_mean()+0.0000001) << "\")" << endl;
         }
     }
     myfile << ")" << endl;
@@ -206,7 +206,7 @@ void TulipWriter::writeTruthValue()
     myfile << "(default \"0.0\" \"0.0\" )" << endl;
     for (const Handle& h : handles) {
         myfile << "  (node " << h << " \"" <<
-           h->getTruthValue()->getConfidence() << "\")" << endl;
+           h->getTruthValue()->get_confidence() << "\")" << endl;
     }
     myfile << ")" << endl;
 }

@@ -28,6 +28,7 @@
 
 #include <boost/pointer_cast.hpp>
 
+#include <opencog/atoms/atom_types/NameServer.h>
 #include <opencog/atomspace/AtomSpace.h>
 #include <opencog/atoms/base/Link.h>
 #include <opencog/atoms/base/Node.h>
@@ -67,12 +68,12 @@ public:
 
         std::ostringstream ost;
         ost << h.value() << " [";
-        if (!classserver().isNode(a->getType()))
+        if (!nameserver().isNode(a->get_type()))
             ost << "shape=\"diamond\" ";
-        ost << "label=\"[" << classserver().getTypeName(a->getType()) << "]";
-        if (classserver().isNode(a->getType())) {
+        ost << "label=\"[" << nameserver().getTypeName(a->get_type()) << "]";
+        if (nameserver().isNode(a->get_type())) {
             NodePtr n(NodeCast(a));
-            ost << " " << n->getName();
+            ost << " " << n->get_name();
         } //else {
             // TODO: anything to output for links?
             //LinkPtr l = boost::dynamic_pointer_cast<Link>(a);
@@ -98,14 +99,15 @@ public:
 
             if (compact and out.size() == 2 and h->getIncomingSetSize() == 0)
             {
-                ost << out[0] << " -> " << out[1] << " [label=\""
-                    << classserver().getTypeName(a->getType()) << "\"];\n";
+	            ost << out[0].value() << " -> " << out[1].value() << " [label=\""
+                    << nameserver().getTypeName(a->get_type()) << "\"];\n";
                 answer += ost.str();
                 return false;
             }
 
             for (size_t i = 0; i < out.size(); i++) {
-                ost << h << "->" << out[i] << " [label=\"" << i << "\"];\n";
+	            ost << h.value() << "->" << out[i].value()
+	                << " [label=\"" << i << "\"];\n";
             }
         }
 
@@ -114,7 +116,8 @@ public:
             h->getIncomingSet(back_inserter(hs));
             int i = 0;
             for (const Handle& h : hs) {
-                ost << h << "->" << h << " [style=\"dotted\" label=\"" << i << "\"];\n";
+	            ost << h.value() << "->" << h.value()
+	                << " [style=\"dotted\" label=\"" << i << "\"];\n";
                 i++;
             }
         }

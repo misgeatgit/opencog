@@ -26,7 +26,7 @@
 
 #include <opencog/atomspace/AtomSpace.h>
 #include <opencog/atoms/base/Link.h>
-#include <opencog/truthvalue/SimpleTruthValue.h>
+#include <opencog/atoms/truthvalue/SimpleTruthValue.h>
 #include <opencog/cogserver/server/CogServer.h>
 #include <opencog/util/Config.h>
 #include <opencog/util/Logger.h>
@@ -41,7 +41,7 @@ using namespace opencog;
 
 ImprintAgent::ImprintAgent(CogServer& cs) : Agent(cs), epsilon(Pattern(0,0))
 {
-    static const std::string defaultConfig[] = {
+    static const std::vector<std::string> defaultConfig = {
 //        "ECAN_CONVERT_LINKS","false",
         "",""
     };

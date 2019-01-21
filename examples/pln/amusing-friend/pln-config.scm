@@ -19,11 +19,12 @@
 (use-modules (opencog))
 (use-modules (opencog rule-engine))
 
-;XXX This is bad and broken and wrong; one should not try to bypass the
-; scheme module system like this, its just asking for carpet burns.
-(load-from-path "utilities.scm")
-(load-from-path "av-tv.scm")
-(load-from-path "opencog/rule-engine/rule-engine-utils.scm")
+;; TODO Maybe we can remove that definitely?
+;; ;XXX This is bad and broken and wrong; one should not try to bypass the
+;; ; scheme module system like this, its just asking for carpet burns.
+;; (load-from-path "utilities.scm")
+;; (load-from-path "av-tv.scm")
+;; (load-from-path "opencog/rule-engine/rule-engine-utils.scm")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Define PLN rule-based system ;;
@@ -36,8 +37,8 @@
 )
 
 ;; Define pln-fc and pln-bc for convenience 
-(define (pln-fc source) (cog-fc source pln-rbs (SetLink)))
-(define (pln-bc target) (cog-bc target pln-rbs (SetLink)))
+(define (pln-fc source) (cog-fc pln-rbs source))
+(define (pln-bc target) (cog-bc pln-rbs target))
 
 ;;;;;;;;;;;;;;;;
 ;; Load rules ;;
@@ -47,17 +48,17 @@
 (define pln-rules-dir "../../../opencog/pln/rules/")
 (define (append-rule-dir basename) (string-append pln-rules-dir basename))
 (define rule-basenames
-  (list "implication-instantiation-rule.scm"
-        "implication-scope-distribution-rule.scm"
-        "equivalence-to-double-implication-rule.scm"
-        "lambda-predicate-construction-rule.scm"
-        "inversion-rule.scm"
-        "implication-implicant-conjunction-rule.scm"
-        "and-lambda-factorization-double-implication-rule.scm"
-        "deduction-rule.scm"
-        "implication-scope-factorization-rule.scm"
-        "equivalence-scope-distribution-rule.scm"
-        "and-construction-rule.scm"
+  (list "wip/implication-instantiation.scm"
+        "wip/implication-scope-to-implication.scm"
+        "wip/equivalence-to-implication.scm"
+        "wip/predicate-lambda-evaluation.scm"
+        "wip/inversion.scm"
+        "wip/implication-implicant-conjunction.scm"
+        "wip/and-lambda-factorization-double-implication.scm"
+        "term/deduction.scm"
+        "wip/implication-to-implication-scope.scm"
+        "wip/equivalence-scope-distribution.scm"
+        "wip/and-introduction.scm"
         )
   )
 (define rule-files (map append-rule-dir rule-basenames))
@@ -67,19 +68,19 @@
 ;; Associate rules to PLN ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-; List the rules and their weights.
+; List the rules
 (define rules
-  (list (list implication-scope-distribution-rule-name 1)
-        (list implication-full-instantiation-rule-name 1)
-        (list equivalence-to-double-implication-rule-name 1)
-        (list lambda-predicate-construction-rule-name 1)
-        (list inversion-implication-rule-name 1)
-        (list implication-implicant-conjunction-rule-name 1)
-        (list and-lambda-factorization-double-implication-rule-name 1)
-        (list deduction-implication-rule-name 1)
-        (list implication-scope-factorization-rule-name 1)
-        (list equivalence-scope-distribution-rule-name 1)
-        (list and-construction-grounded-evaluation-rule-name 1)
+  (list scope-to-implication-rule-name
+        full-instantiation-rule-name
+        equivalence-to-implication-rule-name
+        lambda-predicate-evaluation-rule-name
+        inversion-implication-rule-name
+        implication-implicant-conjunction-rule-name
+        and-lambda-factorization-double-implication-rule-name
+        deduction-implication-rule-name
+        implication-to-implication-scope-rule-name
+        equivalence-scope-distribution-rule-name
+        and-introduction-grounded-evaluation-rule-name
         )
   )
 
