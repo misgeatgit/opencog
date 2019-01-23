@@ -27,16 +27,16 @@
 
 using namespace opencog;
 
-//class FCAgent:
+//class FCAgent: 
 //  result_set
 //  person_smokes_mean
 //  friends_mean
 //  run:
-//    If {AF} != EMPTY:
+//    If {AF} != EMPTY:    
 //      fc_step_once(source={RANDOM_FROM_AS}, focus_set={EMPTY})
 //    else:
 //      fc_step_once(source={AF}, focus_set={AF})
-//
+//    
 //    for_each result in fc_result and result not in result_set:
 //       evaluate_surprisingess(mean_smoke|mean_friendship inheritance,fc_result)
 //       if result is surprising_enough:
@@ -45,16 +45,15 @@ using namespace opencog;
 //How much of a stimulus to provide?
 //How often to stimulate?
 //How to calculate surprisingness?
-//  Calculcate the population mean for smokes predicate and Friends predicate
-//  Calculate MIs with each Friends and Smokes relation with their mean
+//	Calculcate the population mean for smokes predicate and Friends predicate
+//	Calculate MIs with each Friends and Smokes relation with their mean
 //      Boost STI for those with higher MI
 // How much of surprisingness value would be enought to stimulate an atom?
 // Store surprisingness distribution and check if current values fall in top 5% of the distribution as a decission boundary to stimulate it.
 
-class SmokesDBFCAgent: public Agent
-{
+class SmokesDBFCAgent: public Agent {
 private:
-    HandleSeq fc_result = {};
+    HandleSeq fc_result={};
     AtomSpace& _atomspace;
     AttentionBank* _bank;
     SchemeEval* _eval;
@@ -89,8 +88,7 @@ private:
         }
 
         if (atom_sti_map.size() == 0) {
-            std::cout <<
-                      "[SmokesDBFCAgent::select_source] Empty source candidate set exiting.\n";
+            std::cout << "[SmokesDBFCAgent::select_source] Empty source candidate set exiting.\n";
             throw std::runtime_error("[SmokesDBFCAgent::select_source] Empty source candidate set.");
         }
         URECommons urec(_atomspace);
@@ -103,12 +101,10 @@ private:
     {
         HandleSeq out;
         _bank->get_handle_set_in_attentional_focus(std::back_inserter(out));
-        if (out.size() == 0)
+        if(out.size() == 0)
             return;
         auto comparator =
-        [](const Handle & h1, const Handle & h2) {
-            return get_sti(h1) > get_sti(h2);
-        };
+                [](const Handle& h1, const Handle& h2) {return get_sti(h1) > get_sti(h2);};
         std::sort(out.begin(), out.end(), comparator);
 
         AttentionValue::sti_t afboundary;
@@ -118,7 +114,7 @@ private:
             afboundary = get_sti(out[out.size() - 1]);
         }
         // Set the AF boundary
-        // _atomspace.set_attentional_focus_boundary(afboundary);
+       // _atomspace.set_attentional_focus_boundary(afboundary);
 
     }
 
@@ -140,7 +136,7 @@ public:
     void run();
 
     float surprisingness_value(const Handle& h);
-
+    
     void log_reward(const Handle& h, AttentionValue::sti_t sti_reward);
 };
 

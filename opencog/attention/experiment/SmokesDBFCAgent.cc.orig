@@ -38,10 +38,10 @@ float SmokesDBFCAgent::friends_mean()
     Handle var_1 = _atomspace.add_node(VARIABLE_NODE, "$A");
     Handle var_2 = _atomspace.add_node(VARIABLE_NODE, "$B");
 
-    Handle friend_list = _atomspace.add_link(LIST_LINK, {var_1, var_2});
-    Handle eval_link = _atomspace.add_link(EVALUATION_LINK, {friends_predicate,
-                                           friend_list});
-    Handle bind_link = _atomspace.add_link(BIND_LINK, {eval_link, eval_link});
+    Handle friend_list = _atomspace.add_link(LIST_LINK,{var_1, var_2});
+    Handle eval_link = _atomspace.add_link(EVALUATION_LINK,{friends_predicate,
+            friend_list});
+    Handle bind_link = _atomspace.add_link(BIND_LINK,{eval_link, eval_link});
 
     //Handle friends = satisfying_set(&_atomspace, bind_link);
     Handle friends = bindlink(&_atomspace, bind_link);
@@ -63,9 +63,9 @@ float SmokesDBFCAgent::smokes_mean()
     Handle var = _atomspace.add_node(VARIABLE_NODE, "$A");
 
     Handle smokes_list = _atomspace.add_link(LIST_LINK, HandleSeq{var});
-    Handle eval_link = _atomspace.add_link(EVALUATION_LINK, {smokes_predicate,
-                                           smokes_list});
-    Handle bind_link = _atomspace.add_link(BIND_LINK, {eval_link, eval_link});
+    Handle eval_link = _atomspace.add_link(EVALUATION_LINK,{smokes_predicate,
+            smokes_list});
+    Handle bind_link = _atomspace.add_link(BIND_LINK,{eval_link, eval_link});
 
     //Handle smokers = satisfying_set(&_atomspace, bind_link);
     Handle smokers = bindlink(&_atomspace, bind_link);
@@ -90,9 +90,9 @@ float SmokesDBFCAgent::cancer_mean()
     Handle var = _atomspace.add_node(VARIABLE_NODE, "$A");
 
     Handle list = _atomspace.add_link(LIST_LINK, HandleSeq{var});
-    Handle eval_link = _atomspace.add_link(EVALUATION_LINK, {cancer_predicate,
-                                           list});
-    Handle bind_link = _atomspace.add_link(BIND_LINK, {eval_link, eval_link});
+    Handle eval_link = _atomspace.add_link(EVALUATION_LINK,{cancer_predicate,
+            list});
+    Handle bind_link = _atomspace.add_link(BIND_LINK,{eval_link, eval_link});
 
     //Handle smokers = satisfying_set(&_atomspace, bind_link);
     Handle cancerous = bindlink(&_atomspace, bind_link);
@@ -115,22 +115,15 @@ SmokesDBFCAgent::SmokesDBFCAgent(CogServer& cs) :
     Agent(cs), _atomspace(cs.getAtomSpace())
 {
     //Load core types
-    std::vector<std::string> preload = {
-        "/usr/local/share/opencog/scm/core_types.scm",
-        "/usr/local/share/opencog/scm/utilities.scm",
-        "/usr/local/share/opencog/scm/av-tv.scm",
-       PROJECT_SOURCE_DIR"/opencog/attention/experiment/data/smokes/smokes_db.scm",
-       PROJECT_SOURCE_DIR"/opencog/attention/experiment/data/noise.scm",
-       PROJECT_SOURCE_DIR"/opencog/attention/experiment/data/smokes/rule_base.scm"
-    };
+    config().set("SCM_PRELOAD", "/usr/local/share/opencog/scm/core_types.scm, "
+            "/usr/local/share/opencog/scm/utilities.scm, "
+            "/usr/local/share/opencog/scm/av-tv.scm, "
+            "opencog/attention/experiment/data/smokes/smokes_db.scm, "
+            "opencog/attention/experiment/data/noise.scm, "
+            "opencog/attention/experiment/data/smokes/rule_base.scm");
 
     _bank = &attentionbank(&_atomspace);
     _eval = new SchemeEval(&_atomspace);
-
-    for(auto& path : preload) {
-       _eval->eval("(load \""+ path +"\")");    
-    }
-    
     //load_scm_files_from_config(_atomspace); //TODO What is its effect?
     smokes_logger = new Logger(loggername);
     rule_base = _atomspace.get_node(CONCEPT_NODE, "SMOKES_RB");
@@ -147,8 +140,8 @@ void SmokesDBFCAgent::run()
     HandleSeq af_set;
     Handle source = Handle::UNDEFINED;
     HandleSeq targets = {_atomspace.add_node(PREDICATE_NODE, "friends"),
-                         _atomspace.add_node(PREDICATE_NODE, "smokes"),
-                         _atomspace.add_node(PREDICATE_NODE, "cancer")};
+        _atomspace.add_node(PREDICATE_NODE, "smokes"),
+        _atomspace.add_node(PREDICATE_NODE, "cancer")};
 
     starting_cycle = cogserver().getCycleCount();
     std::cerr << "CYCLE:" << cogserver().getCycleCount() << std::endl;
@@ -180,10 +173,11 @@ void SmokesDBFCAgent::run()
             }
 
             if (af_set.empty()) {
-                std::cerr << "******COULDNT FIND A SMOKES OR FRIENDS "
-                    "SOURCE.RETURNING.********\n";
+                std::cerr
+                    << "******COULDNT FIND A SMOKES OR FRIENDS SOURCE.RETURNING.********\n";
 
-                save("smokes-fc-result.data", HandleSeq{},
+                save("smokes-fc-result.data",
+                        HandleSeq{},
                         "\n******COULDNT FIND A SMOKES OR FRIENDS SOURCE.RETURNING.********\n");
 
                 return;
@@ -192,7 +186,7 @@ void SmokesDBFCAgent::run()
             //Stimulate source and focus set
             int size = af_set.size();
             save("smokes-fc-result.data", HandleSeq{},
-                 "INTERESTING_ATOMS_SIZE=" + std::to_string(size));
+                    "INTERESTING_ATOMS_SIZE=" + std::to_string(size));
 
             for (Handle& h : af_set) {
                 auto sv = surprisingness_value(h);
@@ -208,16 +202,16 @@ void SmokesDBFCAgent::run()
 
                 //stimulateAtom(h, scaled_stim);
                 if (scaled_stim > 0)
-                    log_reward(h, scaled_stim);
+                  log_reward(h,scaled_stim);
 
-                _bank->set_sti(h, get_sti(h) + scaled_stim);
+                _bank->set_sti(h, get_sti(h)+scaled_stim);
             }
             source = select_source(); // tournament selection by STI
 
             first_run = false;
 
             continue;
-            //return; // We have to let the stimulus get converted to STI
+            //return; // We have to let the stimulus get converted to STI 
             // by the next running ECAN agent.
         }
 
@@ -226,7 +220,7 @@ void SmokesDBFCAgent::run()
         auto prev_afb = hseq[0];
         HandleSeq temphseq;
         _bank->get_handle_set_in_attentional_focus(
-            std::back_inserter(temphseq));
+                std::back_inserter(temphseq));
         auto prev_afsize = temphseq.size();
 
         // Dynamically set the AF boundary with lbound of the top K STI values
@@ -237,10 +231,10 @@ void SmokesDBFCAgent::run()
         _bank->get_handle_set_in_attentional_focus(std::back_inserter(af_set));
 
         std::cerr << "--ADJUSTED AF CONTENT AT CYCLE: "
-                  << cogserver().getCycleCount() << "--AF_SIZE: " << af_set.size()
-                  << "--PRE_AF_SIZE: " << prev_afsize <<
-                  "--INITAIL_AF_BOUNDARY: " << prev_afb << "--ADJUSTED_AF_BOUNDARY: "
-                  << af_set[0] << "--\n";
+            << cogserver().getCycleCount() << "--AF_SIZE: " << af_set.size()
+            << "--PRE_AF_SIZE: " << prev_afsize <<
+            "--INITAIL_AF_BOUNDARY: " << prev_afb << "--ADJUSTED_AF_BOUNDARY: "
+            << af_set[0] << "--\n";
 
         for (const Handle& h : af_set)
             std::cerr << h->to_string() << "\n";
@@ -292,14 +286,15 @@ void SmokesDBFCAgent::run()
 
         std::cerr << "\tFound " << unique_set.size() << " unique inferences.\n\t";
         save("smokes-fc-result.data",
-             HandleSeq{},
-             "\n***FORWARD CHAINING RESULT***\ncycle=" + std::to_string(
-                 cogserver().getCycleCount())
-             + " smokers mean_tv=" + std::to_string(smokes_mean())
-             + " friendship mean_tv=" + std::to_string(friends_mean()) + "\nFound "
-             + std::to_string(unique_set.size()) + "unique inferences.\n");
+                HandleSeq{},
+                "\n***FORWARD CHAINING RESULT***\ncycle=" + std::to_string(
+                    cogserver().getCycleCount())
+                + " smokers mean_tv=" + std::to_string(smokes_mean())
+                + " friendship mean_tv=" + std::to_string(friends_mean()) + "\nFound "
+                + std::to_string(unique_set.size()) + "unique inferences.\n");
 
-        auto interesting_atom = [](const Handle & h) {
+        auto interesting_atom = [](const Handle & h)
+        {
             std::vector<string> namelist = {"Anna", "Bob", "Edward", "Frank"};
             // Looking for
             // EvaluationLink
@@ -309,11 +304,9 @@ void SmokesDBFCAgent::run()
             //     >
             if (h->get_type() == EVALUATION_LINK and h->getOutgoingSet().size() == 2) {
                 HandleSeq outgs = h->getOutgoingSet();
-                if (outgs[0]->get_type() == PREDICATE_NODE
-                    and NodeCast(outgs[0])->get_name() == "cancer") {
+                if (outgs[0]->get_type() == PREDICATE_NODE and NodeCast(outgs[0])->get_name() == "cancer") {
                     string smoker_name = NodeCast(outgs[1]->getOutgoingSet()[0])->get_name();
-                    if (std::find(namelist.begin(), namelist.end(),
-                                  smoker_name) != namelist.end()) {
+                    if (std::find(namelist.begin(), namelist.end(), smoker_name) != namelist.end()) {
                         return smoker_name;
                     }
                 }
@@ -326,26 +319,25 @@ void SmokesDBFCAgent::run()
             auto sv = surprisingness_value(h);
             AttentionValue::sti_t scaled_stim = 8 * pow(10, sv) * sv;
             //stimulateAtom(h, scaled_stim);
-            log_reward(h, scaled_stim);
-            _bank->set_sti(h, get_sti(h) + scaled_stim);
+            log_reward(h,scaled_stim);
+            _bank->set_sti(h, get_sti(h)+scaled_stim);
 
             if (not interesting_atom(h).empty()) {
                 save("smokes-fc-result.data",
-                     HandleSeq{h},
-                     "INTERESTING:" + interesting_atom(h) + "," + std::to_string(
-                         cogserver().getCycleCount() - starting_cycle)
-                     + "\n");
+                        HandleSeq{h},
+                        "INTERESTING:" + interesting_atom(h) + "," + std::to_string(cogserver().getCycleCount() - starting_cycle)
+                        + "\n");
             }
 
             std::cerr << "provided stimulus \n to " << h.value() << " of amount "
-                      << std::to_string(scaled_stim) + "\n";
+                << std::to_string(scaled_stim) + "\n";
             save("smokes-fc-result.data", HandleSeq{h},
-                 "provided stimulus amount " + std::to_string(scaled_stim) + "\n");
+                    "provided stimulus amount " + std::to_string(scaled_stim) + "\n");
         }
 
         std::cout << "[DEBUG] [SmokesDBFCAgent] sleeping for \n";
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
-    } //END OF WHILE
+    } //END OF WHILE 
 
 }
 
@@ -364,33 +356,33 @@ float SmokesDBFCAgent::surprisingness_value(const Handle& hx)
     if (is_friendship_reln(h)) {
         mean_tv = friends_mean();
         mi = sqrtJsdC_hs(10, mean_tv, 100, 10, (h->getTruthValue())->get_mean(),
-                         100, 100);
+                100, 100);
         save("smokes-fc-result.data",
-             HandleSeq{},
-             "JSD_VAL(10, " + std::to_string(mean_tv) + "100, 10, "
-             + std::to_string((h->getTruthValue())->get_mean())
-             + ", 100, 100) = " + std::to_string(mi));
+                HandleSeq{},
+                "JSD_VAL(10, " + std::to_string(mean_tv) + "100, 10, "
+                + std::to_string((h->getTruthValue())->get_mean())
+                + ", 100, 100) = " + std::to_string(mi));
 
     } else if (is_smokes_reln(h)) {
         mean_tv = smokes_mean();
         mi = sqrtJsdC_hs(10, mean_tv, 100, 10, (h->getTruthValue())->get_mean(),
-                         100, 100);
+                100, 100);
         save("smokes-fc-result.data",
-             HandleSeq{},
-             "JSD_VAL(10," + std::to_string(mean_tv) + "100,10,"
-             + std::to_string((h->getTruthValue())->get_mean()) + ",100,100) = "
-             + std::to_string(mi));
+                HandleSeq{},
+                "JSD_VAL(10," + std::to_string(mean_tv) + "100,10,"
+                + std::to_string((h->getTruthValue())->get_mean()) + ",100,100) = "
+                + std::to_string(mi));
 
     }// If it contains has_cancer predicate, let it be surprising.
     else if (is_cancer_reln(h)) {
         mean_tv = cancer_mean();
         mi = sqrtJsdC_hs(10, mean_tv, 100, 10, (h->getTruthValue())->get_mean(),
-                         100, 100);
+                100, 100);
         save("smokes-fc-result.data",
-             HandleSeq{},
-             "JSD_VAL(10," + std::to_string(mean_tv) + "100,10,"
-             + std::to_string((h->getTruthValue())->get_mean()) + ",100,100) = "
-             + std::to_string(mi));
+                HandleSeq{},
+                "JSD_VAL(10," + std::to_string(mean_tv) + "100,10,"
+                + std::to_string((h->getTruthValue())->get_mean()) + ",100,100) = "
+                + std::to_string(mi));
 
     }
 
@@ -399,13 +391,12 @@ float SmokesDBFCAgent::surprisingness_value(const Handle& hx)
 
 using  sys_clock = std::chrono::system_clock;
 
-void SmokesDBFCAgent::log_reward(const Handle& h, AttentionValue::sti_t sti_reward)
-{
+void SmokesDBFCAgent::log_reward(const Handle& h, AttentionValue::sti_t sti_reward){
     auto in_time_t = sys_clock::to_time_t(sys_clock::now());
     static bool first_time = true;
     std::ofstream outf("reward.data", std::ofstream::out | std::ofstream::app);
 
-    if (first_time) {
+    if(first_time){
         outf << "uuid,sti,rewarded,af_boundary,time\n";
         first_time = false;
     }
@@ -413,12 +404,12 @@ void SmokesDBFCAgent::log_reward(const Handle& h, AttentionValue::sti_t sti_rewa
     char buff[31];
     strftime(buff, 30, "%H:%M:%S", std::localtime(&in_time_t));
     std::string ts(buff);
-
+    
     HandleSeq hseq;
     _bank->get_handle_set_in_attentional_focus(std::back_inserter(hseq));
     outf << h.value() << "," << get_sti(h) << "," << sti_reward << ","
-         << hseq[0] << "," << ts << "\n";
+        << hseq[0] << "," << ts << "\n";
 
     outf.flush();
-    outf.close();
+    outf.close();  
 }
