@@ -9,6 +9,9 @@
 
 #include "Globals.h"
 
+#include <opencog/atoms/base/Link.h>
+#include <opencog/atoms/base/Node.h>
+
 using namespace opencog;
 using namespace opencog::ECANExperiment;
 
@@ -29,13 +32,13 @@ bool opencog::ECANExperiment::are_similar(const Handle& h1, const Handle& h2, bo
         return true;
 
     if (NodeCast(h1) and NodeCast(h2))
-        return !strict_type_match or h1->getType() == h2->getType();
+        return !strict_type_match or h1->get_type() == h2->get_type();
 
     LinkPtr lh1(LinkCast(h1));
     LinkPtr lh2(LinkCast(h2));
 
     if (lh1 and lh2) {
-        if (strict_type_match and (lh1->getType() != lh2->getType()))
+        if (strict_type_match and (lh1->get_type() != lh2->get_type()))
             return false;
 
         HandleSeq hseqh1 = lh1->getOutgoingSet();
@@ -45,8 +48,8 @@ bool opencog::ECANExperiment::are_similar(const Handle& h1, const Handle& h2, bo
             return false;
 
         // Unordered links should be treated in a special way
-        if (classserver().isA(lh1->getType(), UNORDERED_LINK) or classserver().isA(
-                lh2->getType(), UNORDERED_LINK)) {
+        if (nameserver().isA(lh1->get_type(), UNORDERED_LINK) or nameserver().isA(
+                lh2->get_type(), UNORDERED_LINK)) {
 
             for (const auto& h1 : hseqh1) {
                 for (auto it = hseqh2.begin(); it != hseqh2.end(); ++it) {
@@ -152,7 +155,7 @@ void opencog::ECANExperiment::save(const std::string& filename, const HandleSeq&
     std::stringstream sstream;
     sstream << header << std::endl;
     for (const Handle& h : seq)
-        sstream << h->toShortString() << std::endl;
+        sstream << h->to_short_string() << std::endl;
 
     std::ofstream outf(filename, std::ofstream::out | std::ofstream::app);
     outf << sstream.str();

@@ -208,8 +208,8 @@ using  sys_clock = std::chrono::system_clock;
 
 void ImportanceDiffusionBase::tradeSTI(DiffusionEventType event)
 {
-    auto src_sti = event.source->getSTI();
-    auto trgt_sti = event.target->getSTI();
+    auto src_sti = get_sti(event.source);
+    auto trgt_sti = get_sti(event.target);
     auto diff_amount = event.amount;
     auto src_uuid = event.source.value();
     auto trgt_uuid = event.target.value();

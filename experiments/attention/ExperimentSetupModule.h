@@ -40,8 +40,6 @@ private:
     CogServer& _cs;
     Logger * _log;
 
-    boost::signals2::connection _AVChangedSignalConnection,_TVChangedSignalConnection,_AtomAddedSignalConnection;
-
     void AVChangedCBListener(const Handle& h, const AttentionValuePtr& av_old,
                              const AttentionValuePtr& av_new);
 

@@ -10,6 +10,7 @@
 #include <thread>
 #include <boost/filesystem.hpp>
 
+#include <opencog/attentionbank/AttentionBank.h>
 #include <opencog/atomutils/AtomUtils.h>
 #include <opencog/attention/atom_types.h>
 #include <opencog/cogserver/server/Factory.h>
@@ -32,6 +33,7 @@ SentenceGenStimulateAgent::SentenceGenStimulateAgent(CogServer& cs) :
         Agent(cs)
 {
     _scm_eval = new SchemeEval(_as);
+    _bank = &attentionbank(_as);
     current_group = 0;
     startcount = _cogserver.getCycleCount();
     stime = std::time(nullptr);
@@ -101,10 +103,10 @@ void SentenceGenStimulateAgent::generate_stimulate_sentence()
     }
 
     for (Handle h : hwords)
-        _as->stimulate(h,2);
+        _bank->stimulate(h,2);
     for (Handle h : hword_instances)
-        _as->stimulate(h,0.5);
+        _bank->stimulate(h,0.5);
     this_thread::sleep_for(milliseconds(400));
 
-    printf("stifunds: %ld \n",_as->get_STI_funds());
+    printf("stifunds: %ld \n",_bank->getSTIFunds());
 }

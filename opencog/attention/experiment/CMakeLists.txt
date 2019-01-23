@@ -33,7 +33,7 @@ IF (TBB_FOUND)
 		server
 		tbb
 		jsd
-                attention-experimental
+        #attention-experimental
 	)
 
 	ADD_DEPENDENCIES(dynamicsexpsetupmodule jsdistancehaskellinterface )

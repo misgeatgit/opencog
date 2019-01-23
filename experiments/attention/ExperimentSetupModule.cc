@@ -22,7 +22,8 @@
 
 #include <opencog/cogserver/server/CogServer.h>
 #include <opencog/cogserver/server/Module.h>
-
+#include <opencog/atoms/base/Node.h>
+#include <opencog/atoms/base/Link.h>
 #include <opencog/util/Config.h>
 #include <opencog/util/Logger.h>
 
@@ -31,6 +32,7 @@
 using namespace opencog;
 using namespace opencog::ECANExperiment;
 using namespace std::chrono;
+using namespace std::placeholders;
 
 DECLARE_MODULE(ExperimentSetupModule);
 
@@ -50,13 +52,11 @@ ExperimentSetupModule::ExperimentSetupModule(CogServer& cs) :
     _log->fine("uuid,cycle,sti_old,sti_new,lti,vlti,wage,rent,agent_name");
     _as = &_cs.getAtomSpace();
 
-    _AVChangedSignalConnection = _as->AVChangedSignal(
-            boost::bind(&ExperimentSetupModule::AVChangedCBListener, this, _1,
-                        _2, _3));
-    _AVChangedSignalConnection = _as->TVChangedSignal(
-            boost::bind(&ExperimentSetupModule::TVChangedCBListener, this, _1,
-                        _2, _3));
-
+    //_as->AVChangedSignal().connect(std::bind(
+    //      &ExperimentSetupModule::AVChangedCBListener, this, _1, _2, _3));
+    _as->TVChangedSignal().connect(std::bind(
+          &ExperimentSetupModule::TVChangedCBListener, this, _1,_2,_3));
+    
     file_name = std::string(PROJECT_SOURCE_DIR)
                 + "/experiments/attention/dump";
 
@@ -74,9 +74,9 @@ void ExperimentSetupModule::AVChangedCBListener(const Handle& h,
     NodePtr node;
     std::string name;
 
-    if (h->isNode()) {
+    if (h->is_node()) {
         node = NodeCast(h);
-        name = node->getName();
+        name = node->get_name();
         if (name.find("@") == std::string::npos)
         {
             std::ofstream outav(file_name + "-av.data", std::ofstream::app);
@@ -86,7 +86,7 @@ void ExperimentSetupModule::AVChangedCBListener(const Handle& h,
                  << av_new->getVLTI() << ","
                  << system_clock::now().time_since_epoch().count() << ","
                  << current_group << ","
-                 << _as->get_attentional_focus_boundary() << "\n";
+                 << /* _as->get_attentional_focus_boundary() <<*/ "\n";
             outav.close();
         }
     }
@@ -96,14 +96,14 @@ void ExperimentSetupModule::TVChangedCBListener(const Handle& h,
                                                 const TruthValuePtr& tv_old,
                                                 const TruthValuePtr& tv_new)
 {
-    if (h->getType() == ASYMMETRIC_HEBBIAN_LINK) {
+    if (h->get_type() == ASYMMETRIC_HEBBIAN_LINK) {
         HandleSeq outg = LinkCast(h)->getOutgoingSet();
         assert(outg.size() == 2);
 
-        if (!outg[0]->isNode() or !outg[1]->isNode())
+        if (!outg[0]->is_node() or !outg[1]->is_node())
             return;
-        std::string nn0 = NodeCast(outg[0])->getName();
-        std::string nn1 = NodeCast(outg[1])->getName();
+        std::string nn0 = NodeCast(outg[0])->get_name();
+        std::string nn1 = NodeCast(outg[1])->get_name();
 
         if (boost::starts_with(nn0, "group") and boost::starts_with(nn1, "group")
             and !boost::contains(nn0,"@") and !boost::contains(nn1,"@"))
@@ -112,8 +112,8 @@ void ExperimentSetupModule::TVChangedCBListener(const Handle& h,
             outheb << h.value() << ","
                    << nn0 << ","
                    << nn1 << ","
-                   << tv_new->getMean() << ","
-                   << tv_new->getConfidence() << ","
+                   /*<< tv_new->getMean() << ","
+                   << tv_new->getConfidence() << ","*/
                    << system_clock::now().time_since_epoch().count() << "\n";
             outheb.close();
         }

@@ -10,7 +10,7 @@
 
 #include <opencog/atomspace/AtomSpace.h>
 #include <opencog/atomspaceutils/AtomSpaceUtils.h>
-#include <opencog/guile/load-file.h>
+#include <opencog/attentionbank/AttentionBank.h>
 #include <opencog/cogserver/server/Agent.h>
 #include <opencog/cogserver/server/CogServer.h>
 #include <opencog/rule-engine/forwardchainer/ForwardChainer.h>
@@ -55,6 +55,7 @@ class SmokesDBFCAgent: public Agent {
 private:
     HandleSeq fc_result={};
     AtomSpace& _atomspace;
+    AttentionBank* _bank;
     SchemeEval* _eval;
     Handle rule_base;
     string loggername = "smokeslog.log";
@@ -73,17 +74,17 @@ private:
     Handle select_source(void)
     {
         HandleSeq out;
-        _atomspace.get_handle_set_in_attentional_focus(std::back_inserter(out));
-        std::map<Handle, float> atom_sti_map;
+        _bank->get_handle_set_in_attentional_focus(std::back_inserter(out));
+        std::map<Handle, double> atom_sti_map;
         for (Handle& h : out) {
-            auto type = h->getType();
+            auto type = h->get_type();
             if (type == ASYMMETRIC_HEBBIAN_LINK || type == HEBBIAN_LINK
                 || type == SYMMETRIC_HEBBIAN_LINK
                 || type == INVERSE_HEBBIAN_LINK
                 || type == SYMMETRIC_INVERSE_HEBBIAN_LINK) {
                 continue;
             }
-            atom_sti_map[h] = h->getSTI();
+            atom_sti_map[h] = get_sti(h);
         }
 
         if (atom_sti_map.size() == 0) {
@@ -92,27 +93,28 @@ private:
         }
         URECommons urec(_atomspace);
 
-        return urec.tournament_select(atom_sti_map);
+        return urec.tournament_select<Handle>(atom_sti_map);
     }
 
+    /**TODO AFBoundary is not adjustable anymore. But topKAtoms can be**/
     void adjust_af_boundary(int cap_size)
     {
         HandleSeq out;
-        _atomspace.get_handle_set_in_attentional_focus(std::back_inserter(out));
+        _bank->get_handle_set_in_attentional_focus(std::back_inserter(out));
         if(out.size() == 0)
             return;
         auto comparator =
-                [](const Handle& h1, const Handle& h2) {return h1->getSTI() > h2->getSTI();};
+                [](const Handle& h1, const Handle& h2) {return get_sti(h1) > get_sti(h2);};
         std::sort(out.begin(), out.end(), comparator);
 
         AttentionValue::sti_t afboundary;
         if (out.size() > (HandleSeq::size_type) cap_size) {
-            afboundary = out[cap_size]->getSTI();
+            afboundary = get_sti(out[cap_size]);
         } else {
-            afboundary = out[out.size() - 1]->getSTI();
+            afboundary = get_sti(out[out.size() - 1]);
         }
         // Set the AF boundary
-        _atomspace.set_attentional_focus_boundary(afboundary);
+       // _atomspace.set_attentional_focus_boundary(afboundary);
 
     }
 

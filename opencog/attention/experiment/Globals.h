@@ -9,6 +9,7 @@
 #define OPENCOG_ATTENTION_EXPERIMENT_GLOBALS_H_
 
 #include <opencog/cogserver/server/Agent.h>
+#include <opencog/attentionbank/AttentionBank.h>
 #include <opencog/cogserver/server/Factory.h>
 
 namespace opencog {

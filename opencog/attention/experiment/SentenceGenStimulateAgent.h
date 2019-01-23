@@ -4,6 +4,7 @@
  *  Created on: 10 Nov 2015
  *      Author: misgana
  */
+#include <opencog/attentionbank/AttentionBank.h>
 #include <opencog/guile/SchemeEval.h>
 #include <opencog/cogserver/server/Agent.h>
 #include <opencog/cogserver/server/CogServer.h>
@@ -22,6 +23,7 @@ private:
     UnorderedHandleSet _hword_wordInstance_nodes;
     SchemeEval* _scm_eval;
     AtomSpace& _as;
+    AttentionBank * _bank;
 
 public:
     virtual ~ SentenceGenStimulateAgent();

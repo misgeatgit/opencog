@@ -13,9 +13,6 @@
 #include <opencog/guile/SchemeEval.h>
 
 #include <opencog/attention/ForgettingAgent.h>
-#include <opencog/attention/ImportanceUpdatingAgent.h>
-#include <opencog/attention/SimpleHebbianUpdatingAgent.h>
-#include <opencog/attention/SimpleImportanceDiffusionAgent.h>
 #include <opencog/attention/atom_types.h>
 #include <opencog/attention/experiment/SmokesDBFCAgent.h>
 
@@ -30,6 +27,7 @@
 
 using namespace opencog;
 using namespace opencog::ECANExperiment;
+using namespace std::placeholders;
 
 DECLARE_MODULE(ExperimentSetupModule);
 
@@ -48,15 +46,12 @@ ExperimentSetupModule::ExperimentSetupModule(CogServer& cs) :
     _scmeval->eval("(add-to-load-path \"/usr/local/share/opencog/scm\")");
     _scmeval->eval("(use-modules  (opencog)");
 
-    _AVChangedSignalConnection = _as->AVChangedSignal(
-            boost::bind(&ExperimentSetupModule::AVChangedCBListener, this, _1,
-                _2, _3));
-    _AVChangedSignalConnection = _as->TVChangedSignal(
-            boost::bind(&ExperimentSetupModule::TVChangedCBListener, this, _1,
-                _2, _3));
-
-    _AtomAddedSignalConnection = _as->addAtomSignal(
-            boost::bind(&ExperimentSetupModule::AtomAddedCBListener, this, _1));
+    //_as->AVChangedSignal().connect(std::bind(
+    //      &ExperimentSetupModule::AVChangedCBListener, this, _1, _2, _3));
+    _as->TVChangedSignal().connect(std::bind(
+          &ExperimentSetupModule::TVChangedCBListener, this, _1,_2,_3));
+    _as->atomAddedSignal().connect(std::bind(
+          &ExperimentSetupModule::AtomAddedCBListener, this, _1));
 }
 
 ExperimentSetupModule::~ExperimentSetupModule()
@@ -78,7 +73,7 @@ void ExperimentSetupModule::TVChangedCBListener(const Handle& h,
         const TruthValuePtr& tv_old,
         const TruthValuePtr& tv_new)
 {
-    const Type t = h->getType();
+    const Type t = h->get_type();
     // For the experiment that aims at checking the sanity of the ECAN system.
     if (t == ASYMMETRIC_HEBBIAN_LINK) {
         HandleSeq outg = LinkCast(h)->getOutgoingSet();
@@ -88,14 +83,14 @@ void ExperimentSetupModule::TVChangedCBListener(const Handle& h,
         if (hspecial_word_nodes.find(outg[0]) != end and hspecial_word_nodes.find(
                     outg[1])
                 != end) {
-            TValues hebtvv(tv_new->getMean(), tv_new->getConfidence(),
+            TValues hebtvv(tv_new->get_mean(), tv_new->get_confidence(),
                     _cs.getCycleCount());
             _hebtv_data[h].push_back(hebtvv);
         }
     }
     // For the smokes FC experiment ( i.e Attention guided inference experiment with tuffy smokes database)
     else if (t == EVALUATION_LINK and is_cancer_reln(h)) {
-        TValues hebtvv(tv_new->getMean(), tv_new->getConfidence(),
+        TValues hebtvv(tv_new->get_mean(), tv_new->get_confidence(),
                 _cs.getCycleCount());
         _hascancer_tv_data[h].push_back(hebtvv);
     }
@@ -104,9 +99,9 @@ void ExperimentSetupModule::TVChangedCBListener(const Handle& h,
 
 void ExperimentSetupModule::AtomAddedCBListener(const Handle& h)
 {
-    if (h->getType() == EVALUATION_LINK and is_cancer_reln(h)) {
+    if (h->get_type() == EVALUATION_LINK and is_cancer_reln(h)) {
         TruthValuePtr tv = h->getTruthValue();
-        TValues tvs(tv->getMean(), tv->getConfidence(), _cs.getCycleCount());
+        TValues tvs(tv->get_mean(), tv->get_confidence(), _cs.getCycleCount());
         _hascancer_tv_data[h].push_back(tvs);
     }
 }
@@ -138,8 +133,8 @@ void ExperimentSetupModule::init(void)
 {
     //Load params
     //_as->set_attentional_focus_boundary((stim_t) config().get_int("AF_BOUNDARY"));
-    std::cout << "AF_BOUNDARY = " << _as->get_attentional_focus_boundary()
-        << std::endl;
+    //std::cout << "AF_BOUNDARY = " << _as->get_attentional_focus_boundary()
+    //    << std::endl;
     registerAgentRequests();
 }
 
@@ -202,18 +197,18 @@ std::string ExperimentSetupModule::do_ecan_start(Request *req,
      std::string afRent = AFRentCollectionAgent::info().id;
      std::string waRent = WARentCollectionAgent::info().id;
  
-     std::dynamic_pointer_cast<AFImportanceDiffusionAgent>
-                              (_afImportanceAgentPtr)->set_sleep_time(200);
-     std::dynamic_pointer_cast<WAImportanceDiffusionAgent>
-                              (_waImportanceAgentPtr)->set_sleep_time(700);
+     //std::dynamic_pointer_cast<AFImportanceDiffusionAgent>
+     //                         (_afImportanceAgentPtr)->set_sleep_time(200);
+     //std::dynamic_pointer_cast<WAImportanceDiffusionAgent>
+     //                         (_waImportanceAgentPtr)->set_sleep_time(700);
 
      _cs.startAgent(_afImportanceAgentPtr, true, afImportance);
      _cs.startAgent(_waImportanceAgentPtr, true, waImportance);
 
-     std::dynamic_pointer_cast<AFRentCollectionAgent>
-                             (_afRentAgentPtr)->set_sleep_time(1000); 
-     std::dynamic_pointer_cast<WARentCollectionAgent>
-                             (_waRentAgentPtr)->set_sleep_time(2000);
+     //std::dynamic_pointer_cast<AFRentCollectionAgent>
+     //                        (_afRentAgentPtr)->set_sleep_time(1000); 
+     //std::dynamic_pointer_cast<WARentCollectionAgent>
+     //                       (_waRentAgentPtr)->set_sleep_time(2000);
 
      _cs.startAgent(_afRentAgentPtr, true, afRent);
      _cs.startAgent(_waRentAgentPtr, true, waRent);
@@ -271,12 +266,12 @@ std::string ExperimentSetupModule::do_stimulate(Request *req,
         auto pos = pairs.find_first_of(",");
 
         std::string uuid = pairs.substr(0, pos - 1);
-        Handle h((UUID) std::strtoul(uuid.c_str(), nullptr, 10));
+        //Handle h((UUID) std::strtoul(uuid.c_str(), nullptr, 10));
 
         std::string stimulus = pairs.substr(pos + 1);
         stim_t stim = std::stoi(stimulus);
 
-        _artificialstimulatoragentptr->stimulateAtom(h, stim);
+       // _artificialstimulatoragentptr->stimulateAtom(h, stim);
     }
 
     return "stimulus provided.\n";

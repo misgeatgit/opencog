@@ -14,10 +14,10 @@
 #include <opencog/cogserver/server/Agent.h>
 #include <opencog/cogserver/server/Factory.h>
 
-#include <opencog/attention/experimental/AFImportanceDiffusionAgent.h>
-#include <opencog/attention/experimental/WAImportanceDiffusionAgent.h>
-#include <opencog/attention/experimental/AFRentCollectionAgent.h>
-#include <opencog/attention/experimental/WARentCollectionAgent.h>
+#include <opencog/attention/AFImportanceDiffusionAgent.h>
+#include <opencog/attention/WAImportanceDiffusionAgent.h>
+#include <opencog/attention/AFRentCollectionAgent.h>
+#include <opencog/attention/WARentCollectionAgent.h>
 
 #include "Globals.h"
 
@@ -71,8 +71,6 @@ private:
     static std::map<Handle, std::vector<AValues>> _av_data;
     static std::map<Handle, std::vector<TValues>> _hebtv_data;
     static std::map<Handle, std::vector<TValues>> _hascancer_tv_data;
-
-    boost::signals2::connection _AVChangedSignalConnection,_TVChangedSignalConnection,_AtomAddedSignalConnection;
 
     void AVChangedCBListener(const Handle& h, const AttentionValuePtr& av_old,
                              const AttentionValuePtr& av_new);

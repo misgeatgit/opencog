@@ -10,11 +10,12 @@
 #include <opencog/atomutils/FindUtils.h>
 #include <opencog/atomspaceutils/AtomSpaceUtils.h>
 #include <opencog/attention/atom_types.h>
-#include <opencog/guile/load-file.h>
 #include <opencog/cogserver/server/Agent.h>
 #include <opencog/cogserver/server/CogServer.h>
 #include <opencog/util/Logger.h>
 #include <opencog/rule-engine/forwardchainer/ForwardChainer.h>
+#include <opencog/atoms/base/Link.h>
+#include <opencog/atoms/base/Node.h>
 #include <opencog/guile/SchemeEval.h>
 #include <opencog/util/random.h>
 #include <opencog/query/BindLinkAPI.h>
@@ -48,7 +49,7 @@ float SmokesDBFCAgent::friends_mean()
     float count = 0.0f;
     for (const Handle& h : LinkCast(friends)->getOutgoingSet()) {
         if (not opencog::contains_atomtype(h, VARIABLE_NODE)) {
-            tv_sum += (h->getTruthValue())->getMean();
+            tv_sum += (h->getTruthValue())->get_mean();
             count++;
         }
     }
@@ -75,7 +76,7 @@ float SmokesDBFCAgent::smokes_mean()
 
     for (const Handle& h : LinkCast(smokers)->getOutgoingSet()) {
         if (not opencog::contains_atomtype(h, VARIABLE_NODE)) {
-            tv_sum += (h->getTruthValue())->getMean();
+            tv_sum += (h->getTruthValue())->get_mean();
             count++;
         }
     }
@@ -102,7 +103,7 @@ float SmokesDBFCAgent::cancer_mean()
 
     for (const Handle& h : LinkCast(cancerous)->getOutgoingSet()) {
         if (not opencog::contains_atomtype(h, VARIABLE_NODE)) {
-            tv_sum += (h->getTruthValue())->getMean();
+            tv_sum += (h->getTruthValue())->get_mean();
             count++;
         }
     }
@@ -121,12 +122,13 @@ SmokesDBFCAgent::SmokesDBFCAgent(CogServer& cs) :
             "opencog/attention/experiment/data/noise.scm, "
             "opencog/attention/experiment/data/smokes/rule_base.scm");
 
+    _bank = &attentionbank(&_atomspace);
     _eval = new SchemeEval(&_atomspace);
-    load_scm_files_from_config(_atomspace);
+    //load_scm_files_from_config(_atomspace); //TODO What is its effect?
     smokes_logger = new Logger(loggername);
     rule_base = _atomspace.get_node(CONCEPT_NODE, "SMOKES_RB");
     std::cout << "RULE_bASE:\n";
-    std::cout << rule_base->toString() << "\n";
+    std::cout << rule_base->to_string() << "\n";
 }
 
 SmokesDBFCAgent::~SmokesDBFCAgent() { }
@@ -161,7 +163,7 @@ void SmokesDBFCAgent::run()
             for (Handle& h : hs) {
                 //Choose associated atoms as focu_set
                 bool isntvariable = not opencog::contains_atomtype(h, VARIABLE_NODE);
-                bool isnthebbian = not classserver().isA(h->getType(), HEBBIAN_LINK);
+                bool isnthebbian = not nameserver().isA(h->get_type(), HEBBIAN_LINK);
 
                 if (isntvariable and isnthebbian) {
                     for (const Handle& t : targets) {
@@ -195,14 +197,14 @@ void SmokesDBFCAgent::run()
                 std::cerr << "Saving scaled stimuli \n";
                 /*save("smokes-fc-result.data",
                   HandleSeq{},
-                  "stimulating atom " + h->toString() + " with amount "
+                  "stimulating atom " + h->to_string() + " with amount "
                   + std::to_string(scaled_stim));*/
 
                 //stimulateAtom(h, scaled_stim);
                 if (scaled_stim > 0)
                   log_reward(h,scaled_stim);
 
-                h->setSTI(h->getSTI()+scaled_stim);
+                _bank->set_sti(h, get_sti(h)+scaled_stim);
             }
             source = select_source(); // tournament selection by STI
 
@@ -213,9 +215,11 @@ void SmokesDBFCAgent::run()
             // by the next running ECAN agent.
         }
 
-        auto prev_afb = _atomspace.get_attentional_focus_boundary();
+        HandleSeq hseq;
+        _bank->get_handle_set_in_attentional_focus(std::back_inserter(hseq));
+        auto prev_afb = hseq[0];
         HandleSeq temphseq;
-        _atomspace.get_handle_set_in_attentional_focus(
+        _bank->get_handle_set_in_attentional_focus(
                 std::back_inserter(temphseq));
         auto prev_afsize = temphseq.size();
 
@@ -224,16 +228,16 @@ void SmokesDBFCAgent::run()
         adjust_af_boundary(30);
 
         af_set.clear();
-        _atomspace.get_handle_set_in_attentional_focus(std::back_inserter(af_set));
+        _bank->get_handle_set_in_attentional_focus(std::back_inserter(af_set));
 
         std::cerr << "--ADJUSTED AF CONTENT AT CYCLE: "
             << cogserver().getCycleCount() << "--AF_SIZE: " << af_set.size()
             << "--PRE_AF_SIZE: " << prev_afsize <<
             "--INITAIL_AF_BOUNDARY: " << prev_afb << "--ADJUSTED_AF_BOUNDARY: "
-            << _atomspace.get_attentional_focus_boundary() << "--\n";
+            << af_set[0] << "--\n";
 
         for (const Handle& h : af_set)
-            std::cerr << h->toString() << "\n";
+            std::cerr << h->to_string() << "\n";
 
 
         if (af_set.size() == 0) {
@@ -245,11 +249,10 @@ void SmokesDBFCAgent::run()
 
         // Do one step forward chaining.
         std::cerr << "------------FCing-------------" << std::endl;
-        std::cerr << "RULE_BASE: " << rule_base->toString() << "\n";
-        std::cerr << "SOURCE: " << source->toString() << "\n";
+        std::cerr << "RULE_BASE: " << rule_base->to_string() << "\n";
+        std::cerr << "SOURCE: " << source->to_string() << "\n";
 
-        ForwardChainer fc(_atomspace, rule_base, source, HandleSeq{af_set},
-                opencog::source_selection_mode::STI);
+        ForwardChainer fc(_atomspace, rule_base, source, Handle::UNDEFINED, HandleSeq{af_set});
 
         // Just to compensate for randomness in FC.
         for (int i = 0; i < 5; i++)
@@ -257,7 +260,7 @@ void SmokesDBFCAgent::run()
 
         std::cerr << "FORWARD CHAINER STEPPED\n\t";
 
-        UnorderedHandleSet temp = fc.get_chaining_result();
+        HandleSet temp = fc.get_chaining_result();
         HandleSeq cur_fcresult;
         std::copy(temp.begin(), temp.end(), std::back_inserter(cur_fcresult));
 
@@ -266,7 +269,7 @@ void SmokesDBFCAgent::run()
         std::cerr << "Found " << cur_fcresult.size() << " results.\n";
         for (const Handle& h : cur_fcresult) {
             auto hinserted = _atomspace.add_atom(h);
-            std::cerr << "\t" << hinserted->toString() << "\n";
+            std::cerr << "\t" << hinserted->to_string() << "\n";
             bool unique = true;
             for (const Handle& hi : fc_result) {
                 if (hinserted == hi) {
@@ -299,10 +302,10 @@ void SmokesDBFCAgent::run()
             //    <ListLink
             //       ConceptNode <smoke's name>
             //     >
-            if (h->getType() == EVALUATION_LINK and h->getOutgoingSet().size() == 2) {
+            if (h->get_type() == EVALUATION_LINK and h->getOutgoingSet().size() == 2) {
                 HandleSeq outgs = h->getOutgoingSet();
-                if (outgs[0]->getType() == PREDICATE_NODE and NodeCast(outgs[0])->getName() == "cancer") {
-                    string smoker_name = NodeCast(outgs[1]->getOutgoingSet()[0])->getName();
+                if (outgs[0]->get_type() == PREDICATE_NODE and NodeCast(outgs[0])->get_name() == "cancer") {
+                    string smoker_name = NodeCast(outgs[1]->getOutgoingSet()[0])->get_name();
                     if (std::find(namelist.begin(), namelist.end(), smoker_name) != namelist.end()) {
                         return smoker_name;
                     }
@@ -317,7 +320,7 @@ void SmokesDBFCAgent::run()
             AttentionValue::sti_t scaled_stim = 8 * pow(10, sv) * sv;
             //stimulateAtom(h, scaled_stim);
             log_reward(h,scaled_stim);
-            h->setSTI(h->getSTI()+scaled_stim);
+            _bank->set_sti(h, get_sti(h)+scaled_stim);
 
             if (not interesting_atom(h).empty()) {
                 save("smokes-fc-result.data",
@@ -326,7 +329,7 @@ void SmokesDBFCAgent::run()
                         + "\n");
             }
 
-            std::cerr << "provided stimulus \n to " << h->getUUID() << " of amount "
+            std::cerr << "provided stimulus \n to " << h.value() << " of amount "
                 << std::to_string(scaled_stim) + "\n";
             save("smokes-fc-result.data", HandleSeq{h},
                     "provided stimulus amount " + std::to_string(scaled_stim) + "\n");
@@ -341,7 +344,7 @@ void SmokesDBFCAgent::run()
 float SmokesDBFCAgent::surprisingness_value(const Handle& hx)
 {
     Handle h;
-    if (hx->getType() == IMPLICATION_LINK) {
+    if (hx->get_type() == IMPLICATION_LINK) {
         h = LinkCast(hx)->getOutgoingSet()[1];
     } else
         h = hx;
@@ -352,33 +355,33 @@ float SmokesDBFCAgent::surprisingness_value(const Handle& hx)
     save("smokes-fc-result.data", HandleSeq{}, "\n");
     if (is_friendship_reln(h)) {
         mean_tv = friends_mean();
-        mi = sqrtJsdC_hs(10, mean_tv, 100, 10, (h->getTruthValue())->getMean(),
+        mi = sqrtJsdC_hs(10, mean_tv, 100, 10, (h->getTruthValue())->get_mean(),
                 100, 100);
         save("smokes-fc-result.data",
                 HandleSeq{},
                 "JSD_VAL(10, " + std::to_string(mean_tv) + "100, 10, "
-                + std::to_string((h->getTruthValue())->getMean())
+                + std::to_string((h->getTruthValue())->get_mean())
                 + ", 100, 100) = " + std::to_string(mi));
 
     } else if (is_smokes_reln(h)) {
         mean_tv = smokes_mean();
-        mi = sqrtJsdC_hs(10, mean_tv, 100, 10, (h->getTruthValue())->getMean(),
+        mi = sqrtJsdC_hs(10, mean_tv, 100, 10, (h->getTruthValue())->get_mean(),
                 100, 100);
         save("smokes-fc-result.data",
                 HandleSeq{},
                 "JSD_VAL(10," + std::to_string(mean_tv) + "100,10,"
-                + std::to_string((h->getTruthValue())->getMean()) + ",100,100) = "
+                + std::to_string((h->getTruthValue())->get_mean()) + ",100,100) = "
                 + std::to_string(mi));
 
     }// If it contains has_cancer predicate, let it be surprising.
     else if (is_cancer_reln(h)) {
         mean_tv = cancer_mean();
-        mi = sqrtJsdC_hs(10, mean_tv, 100, 10, (h->getTruthValue())->getMean(),
+        mi = sqrtJsdC_hs(10, mean_tv, 100, 10, (h->getTruthValue())->get_mean(),
                 100, 100);
         save("smokes-fc-result.data",
                 HandleSeq{},
                 "JSD_VAL(10," + std::to_string(mean_tv) + "100,10,"
-                + std::to_string((h->getTruthValue())->getMean()) + ",100,100) = "
+                + std::to_string((h->getTruthValue())->get_mean()) + ",100,100) = "
                 + std::to_string(mi));
 
     }
@@ -401,9 +404,11 @@ void SmokesDBFCAgent::log_reward(const Handle& h, AttentionValue::sti_t sti_rewa
     char buff[31];
     strftime(buff, 30, "%H:%M:%S", std::localtime(&in_time_t));
     std::string ts(buff);
-
-    outf << h.value() << "," << h->getSTI() << "," << sti_reward << ","
-        << _atomspace.get_attentional_focus_boundary() << "," << ts << "\n";
+    
+    HandleSeq hseq;
+    _bank->get_handle_set_in_attentional_focus(std::back_inserter(hseq));
+    outf << h.value() << "," << get_sti(h) << "," << sti_reward << ","
+        << hseq[0] << "," << ts << "\n";
 
     outf.flush();
     outf.close();  

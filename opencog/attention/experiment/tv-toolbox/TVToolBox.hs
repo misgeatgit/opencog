@@ -1,6 +1,6 @@
 -- Module containing types and functions to experiment with TruthValue
 -- types.
-
+{-# LANGUAGE OverloadedStrings #-}
 module TVToolBox (-- Types
                   MyFloat,
                   MultiDist,
@@ -48,7 +48,7 @@ import Data.Number.BigFloat (BigFloat, Prec10, Prec50)
 import Data.Function.Memoize (memoize)
 import Math.Combinatorics.Exact.Binomial (choose)
 import System.Environment (getArgs)
-import Text.Format (format)
+import Data.Text.Format (format)
 import Data.MultiMap (MultiMap, fromList, toMap, fromMap, mapKeys)
 import Data.Map (Map, map, fromList, toList, foldr, size, lookup, unionWith,
                  foldrWithKey, foldlWithKey, empty, insertWith, filter)
@@ -127,11 +127,11 @@ toPath :: Dist -> [(Double, Double)]
 toPath h = [(realToFrac s, realToFrac p) | (s, p) <- (Data.Map.toList h)]
 
 showDist :: Dist -> String
-showDist h = format "size = {0}, total = {1}, data = {2}"
-             [show (size h), show (distSum h), show (Data.Map.toList h)]
-
-defaultTitle :: Attribute
-defaultTitle = Title (format "Simple TV distribution (k={0})" [show defaultK])
+showDist h = "size = " ++ show (size h)
+--showDist h = format "size = {0}, total = {1}, data = {2}"
+--             [show (size h), show (distSum h), show (Data.Map.toList h)]
+--defaultTitle :: Attribute
+--defaultTitle = Title (format "Simple TV distribution (k={0})" [show defaultK])
 
 ---------------
 -- Simple TV --
@@ -358,9 +358,9 @@ toUp :: Dist -> MyFloat -> MyFloat -> MyFloat
 toUp h b l = fst (foldlWithKey f (0.0, 0.0) h)
   where
     -- Replace f by fDbg in the upper expression to debug
-    fDbg (u, a) s p = trace (format "toUp f {0} {1} {2} = {3}"
-                             [show (u, a), show s, show p, show res])
-                      res where res = f (u, a) s p
+--    fDbg (u, a) s p = trace (format "toUp f {0} {1} {2} = {3}"
+--                             [show (u, a), show s, show p, show res])
+--                      res where res = f (u, a) s p
     f (u, a) s p | s < l || b <= a = (u, a)
                  | otherwise = (s, a + p)
 
@@ -370,9 +370,9 @@ toLow :: Dist -> MyFloat -> MyFloat -> MyFloat
 toLow h b u = fst (foldrWithKey f (0.0, 0.0) h)
   where
     -- Replace f by fDbg in the upper expression to debug
-    fDbg s p (l, a) = trace (format "toLow f {0} {1} {2} = {3}"
-                             [show s, show p, show (l, a), show res])
-                      res where res = f s p (l, a)
+ --   fDbg s p (l, a) = trace (format "toLow f {0} {1} {2} = {3}"
+ --                            [show s, show p, show (l, a), show res])
+ --                     res where res = f s p (l, a)
     f s p (l, a) | u < s || b <= a = (l, a)
                  | otherwise = (s, a + p)
 
@@ -453,8 +453,8 @@ optimize fun jump step low up guess
                                                 -- optimize
 
 optimizeDbg fun jump step low up guess =
-    trace (format "optimize fun {0} {1} {2} = {3}"
-           (Prelude.map show [low, up, guess, result]))
+--    trace (format "optimize fun {0} {1} {2} = {3}"
+--           (Prelude.map show [low, up, guess, result]))
     result where result = optimize fun jump step low up guess
 
 -- MultiMap mapKeys fix

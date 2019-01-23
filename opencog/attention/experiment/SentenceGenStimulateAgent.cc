@@ -41,6 +41,7 @@ SentenceGenStimulateAgent::SentenceGenStimulateAgent(CogServer& cs) :
         Agent(cs), _as(cs.getAtomSpace())
 {
     _scm_eval = new SchemeEval(&_as);
+    _bank = &attentionbank(&_as);
 }
 
 const ClassInfo& SentenceGenStimulateAgent::classinfo() const
@@ -211,8 +212,11 @@ void SentenceGenStimulateAgent::generate_stimuate_sentence(void)
     //Should the non special word nodes be removed from the selection list?
 
     //Stimulate atoms. TODO change stimulus values.
-    stimulateAtom(hwords, 20);
-    stimulateAtom(hword_instances, 20);
+    for(auto& hword : hwords)
+       _bank->stimulate(hword, 20);
+    
+    for(auto& hword : hword_instances)
+      _bank->stimulate(hword, 20);
 
     cycle++;
 
