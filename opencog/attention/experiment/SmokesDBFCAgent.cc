@@ -300,7 +300,7 @@ void SmokesDBFCAgent::run()
              + std::to_string(unique_set.size()) + "unique inferences.\n");
 
         auto interesting_atom = [](const Handle & h) {
-            std::vector<string> namelist = {"Anna", "Bob", "Edward", "Frank"};
+            std::vector<std::string> namelist = {"Anna", "Bob", "Edward", "Frank"};
             // Looking for
             // EvaluationLink
             //    <PredicateNode "smokes">
@@ -311,7 +311,7 @@ void SmokesDBFCAgent::run()
                 HandleSeq outgs = h->getOutgoingSet();
                 if (outgs[0]->get_type() == PREDICATE_NODE
                     and NodeCast(outgs[0])->get_name() == "cancer") {
-                    string smoker_name = NodeCast(outgs[1]->getOutgoingSet()[0])->get_name();
+                    std::string smoker_name = NodeCast(outgs[1]->getOutgoingSet()[0])->get_name();
                     if (std::find(namelist.begin(), namelist.end(),
                                   smoker_name) != namelist.end()) {
                         return smoker_name;

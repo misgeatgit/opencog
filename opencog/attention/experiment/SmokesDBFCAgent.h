@@ -20,13 +20,13 @@
 #include <opencog/util/Config.h>
 #include <opencog/util/Logger.h>
 #include <opencog/attention/experiment/tv-toolbox/TVToolBoxCInterface_stub.h>
-#include <opencog/rule-engine/URECommons.h>
 #include <opencog/attention/atom_types.h>
 #include <algorithm>
+#include <map>
 #include <utility>
 
 using namespace opencog;
-
+using namespace std;
 //class FCAgent:
 //  result_set
 //  person_smokes_mean
@@ -59,7 +59,7 @@ private:
     AttentionBank* _bank;
     SchemeEval* _eval;
     Handle rule_base;
-    string loggername = "smokeslog.log";
+    std::string loggername = "smokeslog.log";
     Logger * smokes_logger;
     // A descending order sorted surprising result list.
     std::set<float, std::greater<int>> dist_surprisingness_friends;
@@ -72,6 +72,37 @@ private:
     float smokes_mean();
     float cancer_mean();
 
+    /** 
+     * Randomly pick about half of the elements, and amongst those
+     * return the fittest (higher is better). If tfitness_map is
+     * empty, then exception is thrown.
+     *
+     * TODO: generalize and move this method to
+     * opencog/util/selection.h
+     */
+    template<class Type>
+        Type tournament_select(const std::map<Type, double>& tfitnes_map) {
+            // Nothing to select, return the nullptr rule
+            if (tfitnes_map.empty())
+                throw RuntimeException(TRACE_INFO,
+                        "[URECommons] Empty fitness map provided.");
+
+            // Something to select, randomly pick (without replacement)
+            // about half of the rules and return the best.
+            //
+            // TODO change the way pick_size is calculated.
+            size_t pick_size = std::max(static_cast<size_t>(1),
+                    tfitnes_map.size() / 2); 
+            std::multimap<double, Type> winners;
+            dorepeat(pick_size)
+            {
+                auto el = rand_element(tfitnes_map);
+                winners.insert( { el.second, el.first }); 
+            }
+            return winners.rbegin()->second;
+        }
+
+
     Handle select_source(void)
     {
         HandleSeq out;
@@ -80,9 +111,9 @@ private:
         for (Handle& h : out) {
             auto type = h->get_type();
             if (type == ASYMMETRIC_HEBBIAN_LINK || type == HEBBIAN_LINK
-                || type == SYMMETRIC_HEBBIAN_LINK
-                || type == INVERSE_HEBBIAN_LINK
-                || type == SYMMETRIC_INVERSE_HEBBIAN_LINK) {
+                    || type == SYMMETRIC_HEBBIAN_LINK
+                    || type == INVERSE_HEBBIAN_LINK
+                    || type == SYMMETRIC_INVERSE_HEBBIAN_LINK) {
                 continue;
             }
             atom_sti_map[h] = get_sti(h);
@@ -90,12 +121,11 @@ private:
 
         if (atom_sti_map.size() == 0) {
             std::cout <<
-                      "[SmokesDBFCAgent::select_source] Empty source candidate set exiting.\n";
+                "[SmokesDBFCAgent::select_source] Empty source candidate set exiting.\n";
             throw std::runtime_error("[SmokesDBFCAgent::select_source] Empty source candidate set.");
         }
-        URECommons urec(_atomspace);
-
-        return urec.tournament_select<Handle>(atom_sti_map);
+        
+        return tournament_select<Handle>(atom_sti_map);
     }
 
     /**TODO AFBoundary is not adjustable anymore. But topKAtoms can be**/
@@ -106,9 +136,9 @@ private:
         if (out.size() == 0)
             return;
         auto comparator =
-        [](const Handle & h1, const Handle & h2) {
-            return get_sti(h1) > get_sti(h2);
-        };
+            [](const Handle & h1, const Handle & h2) {
+                return get_sti(h1) > get_sti(h2);
+            };
         std::sort(out.begin(), out.end(), comparator);
 
         AttentionValue::sti_t afboundary;
