@@ -153,9 +153,9 @@ void SmokesDBFCAgent::run()
     starting_cycle = cogserver().getCycleCount();
     std::cerr << "CYCLE:" << cogserver().getCycleCount() << std::endl;
 
-    while (true) {
+    //while (true) {
         if (first_run) {
-            // Pull some atoms to the AF set
+            // Pull some atoms into the AF set
             // and select a random source from the pulled set for starting FC with.
             HandleSeq hs;
             _atomspace.get_handles_by_type(std::back_inserter(hs), ATOM, true);
@@ -216,8 +216,8 @@ void SmokesDBFCAgent::run()
 
             first_run = false;
 
-            continue;
-            //return; // We have to let the stimulus get converted to STI
+            //continue;
+            return; // We have to let the stimulus get converted to STI
             // by the next running ECAN agent.
         }
 
@@ -343,9 +343,9 @@ void SmokesDBFCAgent::run()
                  "provided stimulus amount " + std::to_string(scaled_stim) + "\n");
         }
 
-        std::cout << "[DEBUG] [SmokesDBFCAgent] sleeping for \n";
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
-    } //END OF WHILE
+ //       std::cout << "[DEBUG] [SmokesDBFCAgent] sleeping for \n";
+//        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+   // } //END OF WHILE
 
 }
 
@@ -416,8 +416,8 @@ void SmokesDBFCAgent::log_reward(const Handle& h, AttentionValue::sti_t sti_rewa
 
     HandleSeq hseq;
     _bank->get_handle_set_in_attentional_focus(std::back_inserter(hseq));
-    outf << h.value() << "," << get_sti(h) << "," << sti_reward << ","
-         << hseq[0] << "," << ts << "\n";
+    outf << h.value() << "," << get_sti(h) << "," << sti_reward << "\n";//<< ","
+        // << hseq[0] << "," << ts << "\n";
 
     outf.flush();
     outf.close();

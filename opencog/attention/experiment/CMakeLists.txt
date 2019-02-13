@@ -24,6 +24,7 @@ IF (TBB_FOUND)
 		SentenceGenStimulateAgent	
 		ArtificialStimulatorAgent
 		SmokesDBFCAgent
+		LoggerAgent
 		Globals.cc
 	)
 	

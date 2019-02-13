@@ -41,6 +41,8 @@ ExperimentSetupModule::ExperimentSetupModule(CogServer& cs) :
     _log = new Logger(); //new Logger("ecanexpe.log");
     _log->fine("uuid,cycle,sti_old,sti_new,lti,vlti,wage,rent,agent_name");
     _as = &_cs.getAtomSpace();
+    _bank = &attentionbank(_as);
+    _stimulus_rec = &(_bank->stimulusRec);
 
     _scmeval = new SchemeEval(_as);
     _scmeval->eval("(add-to-load-path \"/usr/local/share/opencog/scm\")");
@@ -49,9 +51,9 @@ ExperimentSetupModule::ExperimentSetupModule(CogServer& cs) :
     //_as->AVChangedSignal().connect(std::bind(
     //      &ExperimentSetupModule::AVChangedCBListener, this, _1, _2, _3));
     _as->TVChangedSignal().connect(std::bind(
-          &ExperimentSetupModule::TVChangedCBListener, this, _1,_2,_3));
+                &ExperimentSetupModule::TVChangedCBListener, this, _1,_2,_3));
     _as->atomAddedSignal().connect(std::bind(
-          &ExperimentSetupModule::AtomAddedCBListener, this, _1));
+                &ExperimentSetupModule::AtomAddedCBListener, this, _1));
 }
 
 ExperimentSetupModule::~ExperimentSetupModule()
@@ -116,6 +118,8 @@ void ExperimentSetupModule::registerAgentRequests()
     do_dump_data_register();
     do_start_nlp_stimulate_register();
     do_pause_nlp_stimulate_register();
+    do_dump_af_stat_register();
+    do_start_logger_register();
 }
 
 void ExperimentSetupModule::unregisterAgentRequests()
@@ -128,7 +132,11 @@ void ExperimentSetupModule::unregisterAgentRequests()
     do_dump_data_unregister();
     do_start_nlp_stimulate_unregister();
     do_pause_nlp_stimulate_unregister();
+    do_dump_af_stat_unregister();
+    do_start_logger_unregister();
 }
+
+#define LOGGER_AGENT_PTR(AGENT_PTR) (dynamic_cast<LoggerAgent*>(AGENT_PTR.get()))
 void ExperimentSetupModule::init(void)
 {
     //Load params
@@ -136,6 +144,11 @@ void ExperimentSetupModule::init(void)
     //std::cout << "AF_BOUNDARY = " << _as->get_attentional_focus_boundary()
     //    << std::endl;
     registerAgentRequests();
+    _cs.registerAgent(LoggerAgent::info().id,
+            &loggerAgentFactory);
+    _logger_agentptr = _cs.createAgent(
+            LoggerAgent::info().id, false);
+    _logger_agent = LOGGER_AGENT_PTR(_logger_agentptr);
 }
 
 std::string ExperimentSetupModule::do_ecan_load(Request *req,
@@ -143,96 +156,96 @@ std::string ExperimentSetupModule::do_ecan_load(Request *req,
 {
     //These mind agents have already been made registered by the attention module.So no need to register them.
     /*
-    _forgetting_agentptr = _cs.createAgent(ForgettingAgent::info().id, false);
-    _hebbianupdating_agentptr = _cs.createAgent(
-            SimpleHebbianUpdatingAgent::info().id,
-            false);
-    _importanceupdating_agentptr = _cs.createAgent(
-            ImportanceUpdatingAgent::info().id, false);
-    _simpleimportancediffusion_agentptr = _cs.createAgent(
-            SimpleImportanceDiffusionAgent::info().id, false);
+       _forgetting_agentptr = _cs.createAgent(ForgettingAgent::info().id, false);
+       _hebbianupdating_agentptr = _cs.createAgent(
+       SimpleHebbianUpdatingAgent::info().id,
+       false);
+       _importanceupdating_agentptr = _cs.createAgent(
+       ImportanceUpdatingAgent::info().id, false);
+       _simpleimportancediffusion_agentptr = _cs.createAgent(
+       SimpleImportanceDiffusionAgent::info().id, false);
 
     //Register experiment specific agents. Add more if you have here.
     if (_cs.registerAgent(ArtificialStimulatorAgent::info().id,
-                &artificialStimulatorAgentFactory)) {
-        _artificialstimulatoragentptr = _cs.createAgent(
-                ArtificialStimulatorAgent::info().id, false);
+    &artificialStimulatorAgentFactory)) {
+    _artificialstimulatoragentptr = _cs.createAgent(
+    ArtificialStimulatorAgent::info().id, false);
     }
 
     if (_cs.registerAgent(SmokesDBFCAgent::info().id, &smokesFCAgnetFactory)) {
-        _smokes_fc_agentptr = _cs.createAgent(SmokesDBFCAgent::info().id,
-                false);
+    _smokes_fc_agentptr = _cs.createAgent(SmokesDBFCAgent::info().id,
+    false);
     }
     */
+
+    _cs.registerAgent(SmokesDBFCAgent::info().id, &smokesFCAgnetFactory);
     _cs.registerAgent(AFImportanceDiffusionAgent::info().id, &afImportanceFactory);
     _cs.registerAgent(WAImportanceDiffusionAgent::info().id, &waImportanceFactory);   
     _cs.registerAgent(AFRentCollectionAgent::info().id, &afRentFactory);
     _cs.registerAgent(WARentCollectionAgent::info().id, &waRentFactory);    
-    _cs.registerAgent(SmokesDBFCAgent::info().id, &smokesFCAgnetFactory);
-    
+
     _smokes_fc_agentptr = _cs.createAgent(SmokesDBFCAgent::info().id, false);    
-    _afImportanceAgentPtr = _cogserver.createAgent(AFImportanceDiffusionAgent::info().id,false);
-    _waImportanceAgentPtr = _cogserver.createAgent(WAImportanceDiffusionAgent::info().id,false);    
-    _afRentAgentPtr = _cogserver.createAgent(AFRentCollectionAgent::info().id, false);
-    _waRentAgentPtr = _cogserver.createAgent(WARentCollectionAgent::info().id, false);
-    
+    _afImportanceAgentPtr = _cs.createAgent(AFImportanceDiffusionAgent::info().id,false);
+    _waImportanceAgentPtr = _cs.createAgent(WAImportanceDiffusionAgent::info().id,false);    
+    _afRentAgentPtr = _cs.createAgent(AFRentCollectionAgent::info().id, false);
+    _waRentAgentPtr = _cs.createAgent(WARentCollectionAgent::info().id, false);
+
     return "Loaded the following agents:\n" + ECAN_EXP_AGENTS;
 }
 
 std::string ExperimentSetupModule::do_ecan_start(Request *req,
         std::list<std::string> args)
 {
-     std::string sdb = SmokesDBFCAgent::info().id;
-     
-    _cs.startAgent(_smokes_fc_agentptr, true, sdb);
+
     //_cs.startAgent(_artificialstimulatoragentptr);
     //_cs.startAgent(_forgetting_agentptr);
     //_cs.startAgent(_hebbianupdating_agentptr);
     //_cs.startAgent(_importanceupdating_agentptr);
     //_cs.startAgent(_simpleimportancediffusion_agentptr);
-     
-     std::string afImportance = AFImportanceDiffusionAgent::info().id;
-     std::string waImportance = WAImportanceDiffusionAgent::info().id;
+    //std::dynamic_pointer_cast<AFImportanceDiffusionAgent>
+    //                         (_afImportanceAgentPtr)->set_sleep_time(200);
+    //std::dynamic_pointer_cast<WAImportanceDiffusionAgent>
+    //                         (_waImportanceAgentPtr)->set_sleep_time(700);
 
-     std::string afRent = AFRentCollectionAgent::info().id;
-     std::string waRent = WARentCollectionAgent::info().id;
- 
-     //std::dynamic_pointer_cast<AFImportanceDiffusionAgent>
-     //                         (_afImportanceAgentPtr)->set_sleep_time(200);
-     //std::dynamic_pointer_cast<WAImportanceDiffusionAgent>
-     //                         (_waImportanceAgentPtr)->set_sleep_time(700);
 
-     _cs.startAgent(_afImportanceAgentPtr, true, afImportance);
-     _cs.startAgent(_waImportanceAgentPtr, true, waImportance);
+    //std::dynamic_pointer_cast<AFRentCollectionAgent>
+    //                        (_afRentAgentPtr)->set_sleep_time(1000); 
+    //std::dynamic_pointer_cast<WARentCollectionAgent>
+    //                       (_waRentAgentPtr)->set_sleep_time(2000);
 
-     //std::dynamic_pointer_cast<AFRentCollectionAgent>
-     //                        (_afRentAgentPtr)->set_sleep_time(1000); 
-     //std::dynamic_pointer_cast<WARentCollectionAgent>
-     //                       (_waRentAgentPtr)->set_sleep_time(2000);
+    std::string sdb = SmokesDBFCAgent::info().id;
+    std::string afImportance = AFImportanceDiffusionAgent::info().id;
+    std::string waImportance = WAImportanceDiffusionAgent::info().id;
+    std::string afRent = AFRentCollectionAgent::info().id;
+    std::string waRent = WARentCollectionAgent::info().id;
 
-     _cs.startAgent(_afRentAgentPtr, true, afRent);
-     _cs.startAgent(_waRentAgentPtr, true, waRent);
-     
+
+    _cs.startAgent(_smokes_fc_agentptr, true, sdb);
+    _cs.startAgent(_afImportanceAgentPtr, true, afImportance);
+    _cs.startAgent(_waImportanceAgentPtr, true, waImportance);
+    _cs.startAgent(_afRentAgentPtr, true, afRent);
+    _cs.startAgent(_waRentAgentPtr, true, waRent);
+
     return "The following agents were started:\n" + ECAN_EXP_AGENTS;
 }
 
 std::string ExperimentSetupModule::do_ecan_pause(Request *req,
         std::list<std::string> args)
 {  /*
-    _cs.stopAgent(_forgetting_agentptr);
-    _cs.stopAgent(_hebbianupdating_agentptr);
-    _cs.stopAgent(_importanceupdating_agentptr);
-    _cs.stopAgent(_simpleimportancediffusion_agentptr);
+      _cs.stopAgent(_forgetting_agentptr);
+      _cs.stopAgent(_hebbianupdating_agentptr);
+      _cs.stopAgent(_importanceupdating_agentptr);
+      _cs.stopAgent(_simpleimportancediffusion_agentptr);
 
-    _cs.stopAgent(_artificialstimulatoragentptr);
+      _cs.stopAgent(_artificialstimulatoragentptr);
     * */
+
     _cs.stopAgent(_smokes_fc_agentptr);
-    
     _cs.stopAgent(_afImportanceAgentPtr);
     _cs.stopAgent(_waImportanceAgentPtr);
     _cs.stopAgent(_afRentAgentPtr);
     _cs.stopAgent(_waRentAgentPtr);
-    
+
     return "The following agents were stopped:\n" + ECAN_EXP_AGENTS;
 }
 
@@ -271,7 +284,7 @@ std::string ExperimentSetupModule::do_stimulate(Request *req,
         std::string stimulus = pairs.substr(pos + 1);
         stim_t stim = std::stoi(stimulus);
 
-       // _artificialstimulatoragentptr->stimulateAtom(h, stim);
+        // _artificialstimulatoragentptr->stimulateAtom(h, stim);
     }
 
     return "stimulus provided.\n";
@@ -405,4 +418,64 @@ std::string ExperimentSetupModule::do_load_word_dict(
 
     return "Loading successful.\n";
 }
+
+std::string  ExperimentSetupModule::do_dump_af_stat(Request *req,
+        std::list<std::string> args)
+{
+
+    std::vector<std::vector<LoggerAgent::LogData>>& logdata = _logger_agent->logdata;
+    std::string file_name = args.front(); //get file name if provided.
+
+    // case when dump-af-stat is called with no argument
+    if (file_name.empty()) {
+        file_name = "afstat.data";
+    } else {
+        file_name += ".data";
+    }
+
+    std::ofstream outf(file_name, std::ofstream::trunc);
+
+    outf << "TOTAL_STIMULUS_REC: " << _stimulus_rec->size() << "\n";
+
+    outf << "Logged_at: "
+        << print_timept((_logger_agent)->last_probing_time) << "\n";
+
+    outf  << "Atom(uuid)" << ", Atom(name)" << ", t1(H:m:s:ms)," <<" t2(H:m:s:ms)" <<" STI_1" <<", STI_2" <<", duration" <<", sti_diff"  << "\n";
+
+    for (auto vec : logdata) {
+        for (auto p : vec){
+            Handle h = p.h;
+            outf << h.value() <<", ";
+            if (h->is_node()) {
+                outf << h->get_name();
+            } else {
+                //convert the link to one line
+                std::string str = h->to_short_string();
+                str.erase(std::remove(str.begin(), str.end(), '\n'), str.end());
+                outf <<  nameserver().getTypeName(h->get_type()) << "["
+                    << "-" << "]";
+            }
+
+            outf << ", " << print_timept(p.t1)
+                << ", " << print_timept(p.t2)
+                << ", " << p.sti1
+                << ", " << p.sti2
+                << ", " << p.duration
+                << ", " << p.sti_change
+                << "\n ";
+        }
+    }
+    outf.flush();
+    outf.close();
+    return "Dumped it to " + file_name + "\n";
+}
+
+std::string  ExperimentSetupModule::do_start_logger(Request* req,
+        std::list<std::string> args)
+{
+    _cs.startAgent(_logger_agentptr, false, "AFLogger");
+    return "LoggerAgent started\n";
+}
+
+
 

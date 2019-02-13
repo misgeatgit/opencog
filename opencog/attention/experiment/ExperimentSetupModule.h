@@ -19,6 +19,7 @@
 #include <opencog/attention/AFRentCollectionAgent.h>
 #include <opencog/attention/WARentCollectionAgent.h>
 
+#include "LoggerAgent.h"
 #include "Globals.h"
 
 namespace opencog {
@@ -47,98 +48,124 @@ private:
 
     AgentPtr _sentencegenstim_agentptr;
     AgentPtr _artificialstimulatoragentptr;
+
+    Factory<ArtificialStimulatorAgent, Agent> artificialStimulatorAgentFactory;
+    Factory<SentenceGenStimulateAgent, Agent> sentenceGenStimulateFactory;
+
+    // Active ones 
     AgentPtr _smokes_fc_agentptr;
-    
     AgentPtr _afImportanceAgentPtr; 
     AgentPtr _waImportanceAgentPtr;    
     AgentPtr _waRentAgentPtr;
     AgentPtr _afRentAgentPtr;
+    AgentPtr _logger_agentptr;
 
-    Factory<ArtificialStimulatorAgent, Agent> artificialStimulatorAgentFactory;
-    Factory<SentenceGenStimulateAgent, Agent> sentenceGenStimulateFactory;
     Factory<SmokesDBFCAgent, Agent> smokesFCAgnetFactory;
-    
     Factory<AFImportanceDiffusionAgent, Agent>  afImportanceFactory;
     Factory<WAImportanceDiffusionAgent, Agent>  waImportanceFactory;    
     Factory<AFRentCollectionAgent, Agent>  afRentFactory;
     Factory<WARentCollectionAgent, Agent>  waRentFactory;
-   
+    Factory<LoggerAgent, Agent> loggerAgentFactory;
+
     AtomSpace * _as;
     CogServer& _cs;
     Logger * _log;
     SchemeEval * _scmeval;
+    LoggerAgent* _logger_agent;
+    AttentionBank * _bank;
+    std::map<Handle, AttentionValue::sti_t> * _stimulus_rec;
 
     static std::map<Handle, std::vector<AValues>> _av_data;
     static std::map<Handle, std::vector<TValues>> _hebtv_data;
     static std::map<Handle, std::vector<TValues>> _hascancer_tv_data;
 
     void AVChangedCBListener(const Handle& h, const AttentionValuePtr& av_old,
-                             const AttentionValuePtr& av_new);
+            const AttentionValuePtr& av_new);
 
     void TVChangedCBListener(const Handle& h, const TruthValuePtr& av_old,
-                             const TruthValuePtr& tv_new);
+            const TruthValuePtr& tv_new);
 
     void AtomAddedCBListener(const Handle& h);
 
-    //Start stop ECAN agents commands
-    DECLARE_CMD_REQUEST(ExperimentSetupModule, "ecan-load", do_ecan_load,
-            "Loads all agents of ECAN and experiment\n",
-            "Usage: ecan-load\n"
-            "Loads the following ECAN agents\n"+ECAN_EXP_AGENTS
-            ,
+    std::string print_timept(time_point<system_clock> tpt)
+    {
+        auto ms = duration_cast<milliseconds>(tpt.time_since_epoch()) % 1000;
+        std::time_t t = system_clock::to_time_t(tpt);
+        std::stringstream ss;
+        std::tm tm = *std::localtime(&t);
+        ss << std::put_time(&tm, "%H:%M:%S");
+        ss << ':' << std::setfill('0') << std::setw(3) << ms.count();
+        return ss.str();
+    };
+    
+    DECLARE_CMD_REQUEST(ExperimentSetupModule, "dump-af-stat", do_dump_af_stat,
+            "Dumps AF stastics to a file",
+            "Usage: dump-af-stat <FILE_NAME>\n",
             false, true)
-
-    DECLARE_CMD_REQUEST(ExperimentSetupModule, "ecan-start", do_ecan_start,
-            "Starts main ECAN agents\n",
-            "Usage: ecan-start\n"
-            "Starts the following ECAN agents\n"+ECAN_EXP_AGENTS,
-            false, true)
-
-    DECLARE_CMD_REQUEST(ExperimentSetupModule, "ecan-pause", do_ecan_pause,
-            "Pause main ECAN agents\n",
-            "Usage: ecan-pause\n"
-            "Stops the following ECAN agents\n"+ECAN_EXP_AGENTS,
-            true, true)
-
-    DECLARE_CMD_REQUEST(ExperimentSetupModule, "start-word-stimulator",do_start_nlp_stimulate,
-            "Starts NLP atoms stimulator agent\n",
-            "Usage: start-nlp-stimulator\n"
-            "Starts the following ECAN agents\nopencog::SentenceGenStimulateAgent",
-            false, true)
-
-    DECLARE_CMD_REQUEST(ExperimentSetupModule, "pause-word-stimulator",do_pause_nlp_stimulate,
-            "Pauses NLP atoms stimulator agent\n",
-            "Usage: pause-nlp-stimulator\n"
-            "Starts the following ECAN agents\nopencog::SentenceGenStimulateAgent",
-            false, true)
+        DECLARE_CMD_REQUEST(ExperimentSetupModule, "start-logger", do_start_logger,
+                "Starts logger agent",
+                "Usage: start-logger\n",
+                false, true)
 
 
-    //For manually stimulating some atoms by referring them via their UUID
-    DECLARE_CMD_REQUEST(ExperimentSetupModule, "stimulate-atoms", do_stimulate,
-            "Stimulate an atom or set of atoms\n",
-            "Usage: stimulate-atoms UUID,STIMULUS \n"
-            "Stimulates atoms with certain stimulus value\n"
-            "arguments are a pair of uuid and stimulus vaue\n"
-            "separated by comma and each pair separated by space\n",
-            false, true)
+        //Start stop ECAN agents commands
+        DECLARE_CMD_REQUEST(ExperimentSetupModule, "ecan-load", do_ecan_load,
+                "Loads all agents of ECAN and experiment\n",
+                "Usage: ecan-load\n"
+                "Loads the following ECAN agents\n"+ECAN_EXP_AGENTS,
+                false, true)
 
-    //Dump all STI,LTI changes recorded till now to a file.
-    DECLARE_CMD_REQUEST(ExperimentSetupModule, "dump", do_dump_data,
-            "Dumps ECAN time series data to file\n",
-            "Usage: dump [av|heb|smokes] [FILE_NAME]\n"
-            "Dump time serise ECAN data\n",
-            false, true)
+        DECLARE_CMD_REQUEST(ExperimentSetupModule, "ecan-start", do_ecan_start,
+                "Starts main ECAN agents\n",
+                "Usage: ecan-start\n"
+                "Starts the following ECAN agents\n"+ECAN_EXP_AGENTS,
+                false, true)
 
-    //Load word dict.
-    DECLARE_CMD_REQUEST(ExperimentSetupModule, "load-word-dict",do_load_word_dict,
-            "Loads word dict for experimentation. The word dict file should have two sections\n"
-            "SPEICAL_WORDS = [comma separated words]\n"
-            "NON_SPECIAL_WORDS = [comma separated words] size\n",
-            "Usage: load-word-dict [FILE_NAME]\n"
-            "Dump time serise ECAN data\n",
-            false, true)
+        DECLARE_CMD_REQUEST(ExperimentSetupModule, "ecan-pause", do_ecan_pause,
+                "Pause main ECAN agents\n",
+                "Usage: ecan-pause\n"
+                "Stops the following ECAN agents\n"+ECAN_EXP_AGENTS,
+                true, true)
 
-    void registerAgentRequests();
+        DECLARE_CMD_REQUEST(ExperimentSetupModule, "start-word-stimulator",do_start_nlp_stimulate,
+                "Starts NLP atoms stimulator agent\n",
+                "Usage: start-nlp-stimulator\n"
+                "Starts the following ECAN agents\nopencog::SentenceGenStimulateAgent",
+                false, true)
+
+        DECLARE_CMD_REQUEST(ExperimentSetupModule, "pause-word-stimulator",do_pause_nlp_stimulate,
+                "Pauses NLP atoms stimulator agent\n",
+                "Usage: pause-nlp-stimulator\n"
+                "Starts the following ECAN agents\nopencog::SentenceGenStimulateAgent",
+                false, true)
+
+
+        //For manually stimulating some atoms by referring them via their UUID
+        DECLARE_CMD_REQUEST(ExperimentSetupModule, "stimulate-atoms", do_stimulate,
+                "Stimulate an atom or set of atoms\n",
+                "Usage: stimulate-atoms UUID,STIMULUS \n"
+                "Stimulates atoms with certain stimulus value\n"
+                "arguments are a pair of uuid and stimulus vaue\n"
+                "separated by comma and each pair separated by space\n",
+                false, true)
+
+        //Dump all STI,LTI changes recorded till now to a file.
+        DECLARE_CMD_REQUEST(ExperimentSetupModule, "dump", do_dump_data,
+                "Dumps ECAN time series data to file\n",
+                "Usage: dump [av|heb|smokes] [FILE_NAME]\n"
+                "Dump time serise ECAN data\n",
+                false, true)
+
+        //Load word dict.
+        DECLARE_CMD_REQUEST(ExperimentSetupModule, "load-word-dict",do_load_word_dict,
+                "Loads word dict for experimentation. The word dict file should have two sections\n"
+                "SPEICAL_WORDS = [comma separated words]\n"
+                "NON_SPECIAL_WORDS = [comma separated words] size\n",
+                "Usage: load-word-dict [FILE_NAME]\n"
+                "Dump time serise ECAN data\n",
+                false, true)
+
+        void registerAgentRequests();
     void unregisterAgentRequests();
 
 public:
