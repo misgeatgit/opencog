@@ -56,7 +56,6 @@ void LoggerAgent::run(void)
 
     std::vector<LogData> now;
     
-    
     if(not logdata.empty()) {
         std::vector<LogData>& topdata = logdata[logdata.size()-1];
         for(auto h : afset) {
@@ -114,5 +113,6 @@ void LoggerAgent::run(void)
     //topdata.insert(topdata.end(), now.begin(), now.end());
     //logdata.pop();
     logdata.push_back(now);
+    std::cerr << "---------------+++++++++++++===---------------------------------LOGDATA_SIZE:-------------------++++--" << logdata.size() << "\n";
 }
 

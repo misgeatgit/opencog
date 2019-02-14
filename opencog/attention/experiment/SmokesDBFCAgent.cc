@@ -134,8 +134,8 @@ SmokesDBFCAgent::SmokesDBFCAgent(CogServer& cs) :
     //load_scm_files_from_config(_atomspace); //TODO What is its effect?
     smokes_logger = new Logger(loggername);
     rule_base = _atomspace.get_node(CONCEPT_NODE, "SMOKES_RB");
-    std::cout << "RULE_bASE:\n";
-    std::cout << rule_base->to_string() << "\n";
+    //std::cout << "RULE_bASE:\n";
+    //std::cout << rule_base->to_string() << "\n";
 }
 
 SmokesDBFCAgent::~SmokesDBFCAgent() { }
@@ -223,24 +223,21 @@ void SmokesDBFCAgent::run()
 
         HandleSeq hseq;
         _bank->get_handle_set_in_attentional_focus(std::back_inserter(hseq));
+        auto prev_afsize = hseq.size();
         auto prev_afb = hseq[0];
-        HandleSeq temphseq;
-        _bank->get_handle_set_in_attentional_focus(
-            std::back_inserter(temphseq));
-        auto prev_afsize = temphseq.size();
 
         // Dynamically set the AF boundary with lbound of the top K STI values
         // K=50
-        adjust_af_boundary(30);
+        //adjust_af_boundary(30);
 
         af_set.clear();
         _bank->get_handle_set_in_attentional_focus(std::back_inserter(af_set));
 
-        std::cerr << "--ADJUSTED AF CONTENT AT CYCLE: "
+        /*std::cerr << "--ADJUSTED AF CONTENT AT CYCLE: "
                   << cogserver().getCycleCount() << "--AF_SIZE: " << af_set.size()
                   << "--PRE_AF_SIZE: " << prev_afsize <<
                   "--INITAIL_AF_BOUNDARY: " << prev_afb << "--ADJUSTED_AF_BOUNDARY: "
-                  << af_set[0] << "--\n";
+                  << af_set[0] << "--\n";*/
 
         for (const Handle& h : af_set)
             std::cerr << h->to_string() << "\n";
@@ -254,9 +251,9 @@ void SmokesDBFCAgent::run()
         source = select_source(); // tournament selection by STI
 
         // Do one step forward chaining.
-        std::cerr << "------------FCing-------------" << std::endl;
-        std::cerr << "RULE_BASE: " << rule_base->to_string() << "\n";
-        std::cerr << "SOURCE: " << source->to_string() << "\n";
+        //std::cerr << "------------FCing-------------" << std::endl;
+        //std::cerr << "RULE_BASE: " << rule_base->to_string() << "\n";
+        //std::cerr << "SOURCE: " << source->to_string() << "\n";
 
         ForwardChainer fc(_atomspace, rule_base, source, Handle::UNDEFINED, HandleSeq{af_set});
 
@@ -264,7 +261,7 @@ void SmokesDBFCAgent::run()
         for (int i = 0; i < 5; i++)
             fc.do_step();
 
-        std::cerr << "FORWARD CHAINER STEPPED\n\t";
+        //std::cerr << "FORWARD CHAINER STEPPED\n\t";
 
         HandleSet temp = fc.get_chaining_result();
         HandleSeq cur_fcresult;
@@ -275,7 +272,7 @@ void SmokesDBFCAgent::run()
         std::cerr << "Found " << cur_fcresult.size() << " results.\n";
         for (const Handle& h : cur_fcresult) {
             auto hinserted = _atomspace.add_atom(h);
-            std::cerr << "\t" << hinserted->to_string() << "\n";
+            //std::cerr << "\t" << hinserted->to_string() << "\n";
             bool unique = true;
             for (const Handle& hi : fc_result) {
                 if (hinserted == hi) {

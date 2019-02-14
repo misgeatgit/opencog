@@ -136,7 +136,6 @@ void ExperimentSetupModule::unregisterAgentRequests()
     do_start_logger_unregister();
 }
 
-#define LOGGER_AGENT_PTR(AGENT_PTR) (dynamic_cast<LoggerAgent*>(AGENT_PTR.get()))
 void ExperimentSetupModule::init(void)
 {
     //Load params
@@ -144,13 +143,9 @@ void ExperimentSetupModule::init(void)
     //std::cout << "AF_BOUNDARY = " << _as->get_attentional_focus_boundary()
     //    << std::endl;
     registerAgentRequests();
-    _cs.registerAgent(LoggerAgent::info().id,
-            &loggerAgentFactory);
-    _logger_agentptr = _cs.createAgent(
-            LoggerAgent::info().id, false);
-    _logger_agent = LOGGER_AGENT_PTR(_logger_agentptr);
 }
 
+#define LOGGER_AGENT_PTR(AGENT_PTR) (dynamic_cast<LoggerAgent*>(AGENT_PTR.get()))
 std::string ExperimentSetupModule::do_ecan_load(Request *req,
         std::list<std::string> args)
 {
@@ -179,12 +174,15 @@ std::string ExperimentSetupModule::do_ecan_load(Request *req,
     */
 
     _cs.registerAgent(SmokesDBFCAgent::info().id, &smokesFCAgnetFactory);
+    _cs.registerAgent(LoggerAgent::info().id, &loggerAgentFactory);
     _cs.registerAgent(AFImportanceDiffusionAgent::info().id, &afImportanceFactory);
     _cs.registerAgent(WAImportanceDiffusionAgent::info().id, &waImportanceFactory);   
     _cs.registerAgent(AFRentCollectionAgent::info().id, &afRentFactory);
     _cs.registerAgent(WARentCollectionAgent::info().id, &waRentFactory);    
 
     _smokes_fc_agentptr = _cs.createAgent(SmokesDBFCAgent::info().id, false);    
+    _logger_agentptr = _cs.createAgent(LoggerAgent::info().id, false);
+    _logger_agent = LOGGER_AGENT_PTR(_logger_agentptr);
     _afImportanceAgentPtr = _cs.createAgent(AFImportanceDiffusionAgent::info().id,false);
     _waImportanceAgentPtr = _cs.createAgent(WAImportanceDiffusionAgent::info().id,false);    
     _afRentAgentPtr = _cs.createAgent(AFRentCollectionAgent::info().id, false);
@@ -422,7 +420,6 @@ std::string ExperimentSetupModule::do_load_word_dict(
 std::string  ExperimentSetupModule::do_dump_af_stat(Request *req,
         std::list<std::string> args)
 {
-
     std::vector<std::vector<LoggerAgent::LogData>>& logdata = _logger_agent->logdata;
     std::string file_name = args.front(); //get file name if provided.
 
@@ -435,6 +432,7 @@ std::string  ExperimentSetupModule::do_dump_af_stat(Request *req,
 
     std::ofstream outf(file_name, std::ofstream::trunc);
 
+    outf << "LOG_DATA_SIZE: "<<logdata.size()<<"\n"; 
     outf << "TOTAL_STIMULUS_REC: " << _stimulus_rec->size() << "\n";
 
     outf << "Logged_at: "
@@ -465,6 +463,7 @@ std::string  ExperimentSetupModule::do_dump_af_stat(Request *req,
                 << "\n ";
         }
     }
+    std::cout << "Dumped\n";
     outf.flush();
     outf.close();
     return "Dumped it to " + file_name + "\n";
